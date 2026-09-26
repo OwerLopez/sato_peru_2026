@@ -1,0 +1,23 @@
+|                                                              |   SANEAMIENTO |   TRANSPORTE |   EDUCACION |   SALUD |   AGROPECUARIA |   OTROS |   SIN CUI |   TOTAL |
+|:-------------------------------------------------------------|--------------:|-------------:|------------:|--------:|---------------:|--------:|----------:|--------:|
+| Inversiones MEF en Arequipa (activas+cerradas)               |           951 |         2837 |        1601 |     642 |            896 |    4161 |         0 |   11088 |
+| Obras INFOBRAS en Arequipa                                   |           702 |         2441 |         982 |     253 |            512 |    2351 |      2690 |    9931 |
+| Obras INFOBRAS con CUI                                       |           702 |         2441 |         982 |     253 |            512 |    2351 |         0 |    7241 |
+| Obras INFOBRAS con CUI en Banco de Inversiones               |           702 |         2441 |         982 |     253 |            512 |    2346 |         0 |    7236 |
+| Obras INFOBRAS por contrata (con RUC ejecutor)               |           365 |         1204 |         414 |      60 |            191 |     962 |       861 |    4057 |
+| Obras INFOBRAS con avance registrado                         |           567 |         2003 |         801 |     202 |            407 |    1908 |      2098 |    7986 |
+| Obras INFOBRAS con informes de control                       |           236 |          735 |         330 |      81 |            130 |     535 |       657 |    2704 |
+| Obras INFOBRAS con paralizacion registrada                   |            69 |          104 |          42 |      17 |             19 |     132 |        48 |     431 |
+| Obras en panel Contraloria de paralizadas (2023-09..2026-06) |            52 |           57 |          19 |      11 |             16 |      65 |        26 |     246 |
+| Obras INFOBRAS con CUI con devengado SIAF 2020-2026          |           385 |         1750 |         580 |     202 |            337 |    1636 |         0 |    4890 |
+| Cuadernos de obra digital (OECE, 2024-2026)                  |            47 |          216 |          77 |      16 |             43 |     229 |        68 |     696 |
+| Cuadernos con asientos                                       |            42 |          196 |          71 |      15 |             40 |     213 |        52 |     629 |
+| Cuadernos con valorizaciones OECE                            |             7 |            8 |           1 |       2 |              6 |      27 |         4 |      55 |
+| Cuadernos con historia completa                              |            34 |          171 |          60 |      13 |             37 |     192 |        45 |     552 |
+| Cuadernos con historia completa y >= 3 meses con asientos    |            29 |          156 |          52 |      11 |             31 |     171 |        40 |     490 |
+| Cuadernos con evento de atraso normativo (art. 203/207)      |            14 |           42 |          18 |       3 |              4 |      42 |        12 |     135 |
+| Cuadernos con suspension del plazo                           |            24 |           90 |          48 |       4 |             18 |     113 |        17 |     314 |
+| Cuadernos con resolucion de contrato                         |             0 |            2 |           3 |       0 |              1 |       3 |         6 |      15 |
+| Cuadernos integrables (CUI + MEF + INFOBRAS)                 |            40 |          206 |          76 |      16 |             38 |     217 |         0 |     593 |
+| Cuadernos utilizables para ML (historia completa, >=3 meses) |            29 |          156 |          52 |      11 |             31 |     171 |        40 |     490 |
+| ...de ellos con evento de atraso normativo                   |             9 |           38 |          13 |       3 |              4 |      36 |        10 |     113 |

@@ -1,0 +1,16 @@
+{
+ "valorizaciones_oficiales_con_cuaderno": 4528,
+ "ejec": {
+  "pares_valorizacion_con_valor_extraido": 540,
+  "exactitud_primer_valor_1pp": 0.7092592592592593,
+  "exactitud_primer_valor_0_1pp": 0.6444444444444445,
+  "error_absoluto_mediano_pp": 0.0
+ },
+ "prog": {
+  "pares_valorizacion_con_valor_extraido": 459,
+  "exactitud_primer_valor_1pp": 0.7211328976034859,
+  "exactitud_primer_valor_0_1pp": 0.6862745098039216,
+  "error_absoluto_mediano_pp": 0.0
+ },
+ "cobertura_ejec": 0.11925795053003534
+}

@@ -1,0 +1,218 @@
+[
+ {
+  "query": "Gondia Siam El-Dakhakhni Nassar Machine learning algorithms for construction projects delay risk prediction",
+  "title": "Machine Learning Algorithms for Construction Projects Delay Risk Prediction",
+  "authors": "Gondia, Siam, El-Dakhakhni, Nassar",
+  "year": 2020,
+  "venue": "Journal of Construction Engineering and Management",
+  "doi": "10.1061/(asce)co.1943-7862.0001736",
+  "type": "journal-article"
+ },
+ {
+  "query": "Egwim Alaka Toriola-Coker Balogun Sunmola Applied artificial intelligence for predicting construction projects delay",
+  "title": "Applied artificial intelligence for predicting construction projects delay",
+  "authors": "Egwim, Alaka, Toriola-Coker, Balogun",
+  "year": 2021,
+  "venue": "Machine Learning with Applications",
+  "doi": "10.1016/j.mlwa.2021.100166",
+  "type": "journal-article"
+ },
+ {
+  "query": "Assaf Al-Hejji Causes of delay in large construction projects",
+  "title": "Causes of delay in large construction projects",
+  "authors": "Assaf, Al-Hejji",
+  "year": 2006,
+  "venue": "International Journal of Project Management",
+  "doi": "10.1016/j.ijproman.2005.11.010",
+  "type": "journal-article"
+ },
+ {
+  "query": "Gallego Rivero Martinez Preventing rather than punishing: An early warning model of malfeasance in public procurement",
+  "title": "Preventing rather than punishing: An early warning model of malfeasance in public procurement",
+  "authors": "Gallego, Rivero, Martínez",
+  "year": 2021,
+  "venue": "International Journal of Forecasting",
+  "doi": "10.1016/j.ijforecast.2020.06.006",
+  "type": "journal-article"
+ },
+ {
+  "query": "Decarolis Giuffrida Iossa Mollisi Spagnolo Bureaucratic competence and procurement outcomes",
+  "title": "Bureaucratic Competence and Procurement Outcomes",
+  "authors": "Decarolis, Giuffrida, Iossa, Mollisi",
+  "year": 2018,
+  "venue": "",
+  "doi": "10.3386/w24201",
+  "type": "report"
+ },
+ {
+  "query": "Bajari Houghton Tadelis Bidding for incomplete contracts: an empirical analysis of adaptation costs",
+  "title": "Bidding for Incomplete Contracts: An Empirical Analysis",
+  "authors": "Bajari, Houghton, Tadelis",
+  "year": 2006,
+  "venue": "",
+  "doi": "10.3386/w12051",
+  "type": "report"
+ },
+ {
+  "query": "Flyvbjerg What you should know about megaprojects and why: an overview",
+  "title": "What you Should Know about Megaprojects and Why: An Overview",
+  "authors": "Flyvbjerg",
+  "year": 2014,
+  "venue": "Project Management Journal",
+  "doi": "10.1002/pmj.21409",
+  "type": "journal-article"
+ },
+ {
+  "query": "Kaufman Rosset Perlich Stitelman Leakage in data mining: formulation, detection, and avoidance",
+  "title": "Leakage in data mining",
+  "authors": "Kaufman, Rosset, Perlich, Stitelman",
+  "year": 2012,
+  "venue": "ACM Transactions on Knowledge Discovery from Data",
+  "doi": "10.1145/2382577.2382579",
+  "type": "journal-article"
+ },
+ {
+  "query": "Saito Rehmsmeier The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets",
+  "title": "The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets",
+  "authors": "Saito, Rehmsmeier",
+  "year": 2015,
+  "venue": "PLOS ONE",
+  "doi": "10.1371/journal.pone.0118432",
+  "type": "journal-article"
+ },
+ {
+  "query": "Lundberg Lee A unified approach to interpreting model predictions",
+  "title": "Unified Deep Learning Model for Multitask Reaction Predictions with Explanation",
+  "authors": "",
+  "year": null,
+  "venue": "",
+  "doi": "10.1021/acs.jcim.1c01467.s001",
+  "type": "component"
+ },
+ {
+  "query": "Lundberg Erion Chen From local explanations to global understanding with explainable AI for trees",
+  "title": "From local explanations to global understanding with explainable AI for trees",
+  "authors": "Lundberg, Erion, Chen, DeGrave",
+  "year": 2020,
+  "venue": "Nature Machine Intelligence",
+  "doi": "10.1038/s42256-019-0138-9",
+  "type": "journal-article"
+ },
+ {
+  "query": "Ke Meng Finley LightGBM: a highly efficient gradient boosting decision tree",
+  "title": "lightgbm: Light Gradient Boosting Machine",
+  "authors": "Shi, Ke, Soukhavong, Lamb",
+  "year": 2020,
+  "venue": "CRAN: Contributed Packages",
+  "doi": "10.32614/cran.package.lightgbm",
+  "type": "dataset"
+ },
+ {
+  "query": "Reimers Gurevych Sentence-BERT: sentence embeddings using siamese BERT-networks",
+  "title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+  "authors": "Reimers, Gurevych",
+  "year": 2019,
+  "venue": "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+  "doi": "10.18653/v1/d19-1410",
+  "type": "proceedings-article"
+ },
+ {
+  "query": "Reimers Gurevych Making monolingual sentence embeddings multilingual using knowledge distillation",
+  "title": "Making Monolingual Sentence Embeddings Multilingual using Knowledge Distillation",
+  "authors": "Reimers, Gurevych",
+  "year": 2020,
+  "venue": "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+  "doi": "10.18653/v1/2020.emnlp-main.365",
+  "type": "proceedings-article"
+ },
+ {
+  "query": "Canete Chaperon Fuentes Ho Kang Perez Spanish pre-trained BERT model and evaluation data",
+  "title": "Sentiment Analysis Using Bert Pre-Trained Model",
+  "authors": "Enagandula",
+  "year": 2024,
+  "venue": "",
+  "doi": "10.2139/ssrn.4949766",
+  "type": "posted-content"
+ },
+ {
+  "query": "Zhang Tixier construction site accident analysis using text mining and natural language processing techniques",
+  "title": "Construction site accident analysis using text mining and natural language processing techniques",
+  "authors": "Zhang, Fleyeh, Wang, Lu",
+  "year": 2019,
+  "venue": "Automation in Construction",
+  "doi": "10.1016/j.autcon.2018.12.016",
+  "type": "journal-article"
+ },
+ {
+  "query": "Tixier Hallowell Rajagopalan Bowman Automated content analysis for construction safety: a natural language processing system",
+  "title": "Automated content analysis for construction safety: A natural language processing system to extract precursors and outcomes from unstructured injury reports",
+  "authors": "Tixier, Hallowell, Rajagopalan, Bowman",
+  "year": 2016,
+  "venue": "Automation in Construction",
+  "doi": "10.1016/j.autcon.2015.11.001",
+  "type": "journal-article"
+ },
+ {
+  "query": "Cerqueira Torgo Mozetic Evaluating time series forecasting models: an empirical study on performance estimation methods",
+  "title": "Evaluating time series forecasting models: an empirical study on performance estimation methods",
+  "authors": "Cerqueira, Torgo, Mozetič",
+  "year": 2020,
+  "venue": "Machine Learning",
+  "doi": "10.1007/s10994-020-05910-7",
+  "type": "journal-article"
+ },
+ {
+  "query": "Fazekas Kocsis Uncovering high-level corruption: cross-national objective corruption risk indicators using public procurement data",
+  "title": "Uncovering High-Level Corruption: Cross-National Objective Corruption Risk Indicators Using Public Procurement Data",
+  "authors": "Fazekas, Kocsis",
+  "year": 2017,
+  "venue": "British Journal of Political Science",
+  "doi": "10.1017/s0007123417000461",
+  "type": "journal-article"
+ },
+ {
+  "query": "Sambasivan Soon Causes and effects of delays in Malaysian construction industry",
+  "title": "Causes and effects of delays in Malaysian construction industry",
+  "authors": "Sambasivan, Soon",
+  "year": 2007,
+  "venue": "International Journal of Project Management",
+  "doi": "10.1016/j.ijproman.2006.11.007",
+  "type": "journal-article"
+ },
+ {
+  "query": "Niculescu-Mizil Caruana Predicting good probabilities with supervised learning",
+  "title": "Predicting good probabilities with supervised learning",
+  "authors": "Niculescu-Mizil, Caruana",
+  "year": 2005,
+  "venue": "Proceedings of the 22nd international conference on Machine learning  - ICML '05",
+  "doi": "10.1145/1102351.1102430",
+  "type": "proceedings-article"
+ },
+ {
+  "query": "Chen Guestrin XGBoost: a scalable tree boosting system",
+  "title": "XGBoost",
+  "authors": "Chen, Guestrin",
+  "year": 2016,
+  "venue": "Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining",
+  "doi": "10.1145/2939672.2939785",
+  "type": "proceedings-article"
+ },
+ {
+  "query": "Roberts Bergmeir cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure",
+  "title": "Cross‐validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure",
+  "authors": "Roberts, Bahn, Ciuti, Boyce",
+  "year": 2017,
+  "venue": "Ecography",
+  "doi": "10.1111/ecog.02881",
+  "type": "journal-article"
+ },
+ {
+  "query": "Sanni-Anibire Zin Olatunji Machine learning model for delay risk assessment in tall building projects",
+  "title": "Machine learning model for delay risk assessment in tall building projects",
+  "authors": "Sanni-Anibire, Zin, Olatunji",
+  "year": 2020,
+  "venue": "International Journal of Construction Management",
+  "doi": "10.1080/15623599.2020.1768326",
+  "type": "journal-article"
+ }
+]
