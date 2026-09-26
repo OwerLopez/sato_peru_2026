@@ -69,7 +69,7 @@ Ver `EVIDENCE_LOG.md` (E1–E9) y reportes de calidad `data/staging/*.quality.js
 * **Decimales y fechas:** INFOBRAS exporta decimales con espacio; SIAF/OECE con coma; fechas `aaaammdd`, `dd/mm/aaaa`
   e ISO según fuente → normalizadas en staging.
 * **Catálogos cambiantes:** tipos de asiento cambian en 2025-05 y 2026-04 → armonización (`TIPO_MAP`).
-* **Granularidad:** una obra (contrato) ↔ un cuaderno; una inversión (CUI) puede tener varios contratos/cuadernos
+* **Granularidad:** una obra (contrato) <-> un cuaderno; una inversión (CUI) puede tener varios contratos/cuadernos
   (en Arequipa 32 CUI con 2 cuadernos, 8 con 3).
 
 ## 5. Comparación real de sectores (Arequipa)
@@ -245,28 +245,28 @@ Bootstrap pareado por obra (1 000 remuestreos de obras completas) sobre las mism
 | 30 | arequipa | ROC-AUC | B_full | 0,691 | 0,705 | 0,013 | [-0,047; 0,078] | 0,326 | 253 |
 | 30 | arequipa | PR-AUC | B_full_sinproxy | 0,136 | 0,173 | 0,038 | [-0,028; 0,122] | 0,144 | 253 |
 | 30 | arequipa | ROC-AUC | B_full_sinproxy | 0,691 | 0,706 | 0,015 | [-0,045; 0,080] | 0,324 | 253 |
-| 30 | nacional | PR-AUC | B_full | 0,082 | 0,103 | 0,021 **✓** | [0,008; 0,034] | 0,000 | 5734 |
-| 30 | nacional | ROC-AUC | B_full | 0,750 | 0,788 | 0,038 **✓** | [0,023; 0,054] | 0,000 | 5734 |
-| 30 | nacional | PR-AUC | B_full_sinproxy | 0,082 | 0,099 | 0,017 **✓** | [0,004; 0,031] | 0,002 | 5734 |
-| 30 | nacional | ROC-AUC | B_full_sinproxy | 0,750 | 0,778 | 0,028 **✓** | [0,011; 0,044] | 0,000 | 5734 |
+| 30 | nacional | PR-AUC | B_full | 0,082 | 0,103 | 0,021 (*) | [0,008; 0,034] | 0,000 | 5734 |
+| 30 | nacional | ROC-AUC | B_full | 0,750 | 0,788 | 0,038 (*) | [0,023; 0,054] | 0,000 | 5734 |
+| 30 | nacional | PR-AUC | B_full_sinproxy | 0,082 | 0,099 | 0,017 (*) | [0,004; 0,031] | 0,002 | 5734 |
+| 30 | nacional | ROC-AUC | B_full_sinproxy | 0,750 | 0,778 | 0,028 (*) | [0,011; 0,044] | 0,000 | 5734 |
 | 60 | arequipa | PR-AUC | B_full | 0,209 | 0,230 | 0,021 | [-0,038; 0,083] | 0,250 | 233 |
 | 60 | arequipa | ROC-AUC | B_full | 0,704 | 0,719 | 0,015 | [-0,037; 0,068] | 0,288 | 233 |
 | 60 | arequipa | PR-AUC | B_full_sinproxy | 0,209 | 0,220 | 0,011 | [-0,050; 0,078] | 0,375 | 233 |
 | 60 | arequipa | ROC-AUC | B_full_sinproxy | 0,704 | 0,705 | 0,001 | [-0,054; 0,057] | 0,496 | 233 |
-| 60 | nacional | PR-AUC | B_full | 0,141 | 0,159 | 0,018 **✓** | [0,005; 0,032] | 0,006 | 5158 |
-| 60 | nacional | ROC-AUC | B_full | 0,742 | 0,774 | 0,032 **✓** | [0,019; 0,045] | 0,000 | 5158 |
-| 60 | nacional | PR-AUC | B_full_sinproxy | 0,141 | 0,164 | 0,024 **✓** | [0,008; 0,039] | 0,002 | 5158 |
-| 60 | nacional | ROC-AUC | B_full_sinproxy | 0,742 | 0,776 | 0,034 **✓** | [0,021; 0,047] | 0,000 | 5158 |
+| 60 | nacional | PR-AUC | B_full | 0,141 | 0,159 | 0,018 (*) | [0,005; 0,032] | 0,006 | 5158 |
+| 60 | nacional | ROC-AUC | B_full | 0,742 | 0,774 | 0,032 (*) | [0,019; 0,045] | 0,000 | 5158 |
+| 60 | nacional | PR-AUC | B_full_sinproxy | 0,141 | 0,164 | 0,024 (*) | [0,008; 0,039] | 0,002 | 5158 |
+| 60 | nacional | ROC-AUC | B_full_sinproxy | 0,742 | 0,776 | 0,034 (*) | [0,021; 0,047] | 0,000 | 5158 |
 | 90 | arequipa | PR-AUC | B_full | 0,241 | 0,281 | 0,040 | [-0,020; 0,112] | 0,092 | 196 |
 | 90 | arequipa | ROC-AUC | B_full | 0,693 | 0,721 | 0,028 | [-0,029; 0,096] | 0,172 | 196 |
 | 90 | arequipa | PR-AUC | B_full_sinproxy | 0,241 | 0,294 | 0,053 | [-0,008; 0,123] | 0,045 | 196 |
 | 90 | arequipa | ROC-AUC | B_full_sinproxy | 0,693 | 0,716 | 0,023 | [-0,031; 0,082] | 0,217 | 196 |
-| 90 | nacional | PR-AUC | B_full | 0,183 | 0,198 | 0,015 **✓** | [0,000; 0,031] | 0,025 | 4535 |
-| 90 | nacional | ROC-AUC | B_full | 0,740 | 0,758 | 0,018 **✓** | [0,004; 0,033] | 0,003 | 4535 |
-| 90 | nacional | PR-AUC | B_full_sinproxy | 0,183 | 0,206 | 0,024 **✓** | [0,008; 0,039] | 0,001 | 4535 |
-| 90 | nacional | ROC-AUC | B_full_sinproxy | 0,740 | 0,764 | 0,024 **✓** | [0,012; 0,035] | 0,000 | 4535 |
+| 90 | nacional | PR-AUC | B_full | 0,183 | 0,198 | 0,015 (*) | [0,000; 0,031] | 0,025 | 4535 |
+| 90 | nacional | ROC-AUC | B_full | 0,740 | 0,758 | 0,018 (*) | [0,004; 0,033] | 0,003 | 4535 |
+| 90 | nacional | PR-AUC | B_full_sinproxy | 0,183 | 0,206 | 0,024 (*) | [0,008; 0,039] | 0,001 | 4535 |
+| 90 | nacional | ROC-AUC | B_full_sinproxy | 0,740 | 0,764 | 0,024 (*) | [0,012; 0,035] | 0,000 | 4535 |
 
-✓ = el IC 95 % de la mejora excluye el cero. Tabla completa (todas las variantes y el objetivo *disrupción*):
+(*) = el IC 95 % de la mejora excluye el cero. Tabla completa (todas las variantes y el objetivo *disrupción*):
 `artifacts/experiments/comparacion_A_vs_B.csv`.
 
 **Conclusiones del experimento central** [VERIFICADO]:
@@ -300,6 +300,49 @@ Trabajos relacionados: predicción de atrasos con ML en construcción (Gondia et
 causas de atraso (Assaf & Al-Hejji 2006; Sambasivan & Soon 2007), alerta temprana en contratación pública (Gallego et al. 2021),
 NLP en construcción (Tixier et al. 2016; Zhang et al. 2019). La diferencia: datos longitudinales oficiales de todo un país, evento
 legal, predicción *as-of* y evidencia documental enlazada.
+
+## 17-bis. Cartera nacional INFOBRAS: riesgo de retraso significativo al término
+
+**Motivación.** El modelo de alerta (§8-§17) solo cubre contratos con cuaderno de obra digital (desde junio de 2024). Para
+cubrir la cartera completa (todas las modalidades, incluida administración directa, y todos los sectores) se construyó un
+segundo problema sobre el dataset abierto de INFOBRAS a escala nacional (139 159 obras).
+
+* **Etiqueta** `y_30`: fin real posterior al fin programado en más del 30 % del plazo original. Solo se etiquetan obras con
+  evidencia de término (fecha de finalización real); las obras abandonadas o sin registro se excluyen de la etiqueta.
+  Sensibilidad: umbrales de 10 %, 50 % y 100 %.
+* **Variables** (44): atributos fijados al inicio (modalidad, tipo de obra, nivel de gobierno, plazo, costo, supervisión,
+  entrega de terreno, antigüedad del expediente, código de inversión), historial *as-of* de la entidad, del contratista y de la
+  provincia, y una puntuación TF-IDF del nombre de la obra calculada fuera de muestra. Modelo de seguimiento (53 variables):
+  añade el devengado SIAF mensual acumulado respecto del costo, meses sin devengado y brecha de ritmo (con un mes de rezago).
+* **Particiones** por fecha de inicio (inicio): train 2012-01-01 a 2020-06-22 (72 551), valid 2020-07 a 2021-12 (13 965),
+  test 2022-01-01 a 2024-06-30 (26 025). Seguimiento por fecha de corte mensual: train 2017-07 a 2022-11 (83 419 filas,
+  41 443 obras), valid 2023 (10 661), test 2024-01 a 2025-12 (25 063 filas, 13 161 obras). Bootstrap por entidad (300).
+
+| Objetivo (test) | Modelo | ROC-AUC nacional | PR-AUC nacional | ROC-AUC Arequipa | PR-AUC Arequipa | Prevalencia nacional |
+|---|---|---|---|---|---|---|
+| y_30 inicio | Regla (tasa histórica de la entidad) | 0,658 | 0,690 | 0,661 | 0,764 | 0,524 |
+| y_30 inicio | Regresión logística | 0,718 | 0,742 | 0,730 | 0,802 | 0,524 |
+| y_30 inicio | Bosque aleatorio | 0,741 | 0,767 | 0,734 | 0,804 | 0,524 |
+| y_30 inicio | LightGBM | 0,733 | 0,759 | 0,742 | 0,815 | 0,524 |
+| y_30 inicio | XGBoost | 0,701 | 0,729 | 0,699 | 0,778 | 0,524 |
+| y_30 seguimiento | LightGBM inicio (misma muestra) | 0,723 | 0,831 | 0,736 | 0,883 | 0,649 |
+| y_30 seguimiento | LightGBM seguimiento (+ SIAF mensual) | 0,753 | 0,855 | 0,763 | 0,900 | 0,649 |
+
+* LightGBM supera a la regla de historial de la entidad: +0,075 ROC-AUC (IC 95 % [0,063; 0,086]) y +0,069 PR-AUC
+  ([0,049; 0,088]) a nivel nacional; en Arequipa +0,084 ROC-AUC ([0,035; 0,145]).
+* El seguimiento con SIAF mejora al modelo de inicio en la misma muestra: +0,030 ROC-AUC ([0,026; 0,033]) y +0,024 PR-AUC
+  ([0,020; 0,028]) nacional; en Arequipa +0,025 ROC-AUC ([0,004; 0,046]).
+* **Sensibilidad del umbral de la etiqueta** (LightGBM, test nacional): 10 % → ROC 0,762 / PR 0,834 (prevalencia 0,614);
+  30 % → 0,733 / 0,759 (0,524); 50 % → 0,721 / 0,698 (0,449); 100 % → 0,705 / 0,587 (0,334). En todos los umbrales la mejora
+  sobre la regla tiene IC que excluye el cero (ROC +0,041 a +0,103). Archivos `artifacts/exante/resultados_y_{10,30,50,100}.json`.
+* **Ablación del texto del nombre** (`resultados_y_30_sintexto.json`): ROC 0,732 vs 0,733 con texto; el nombre de la obra no
+  aporta señal medible. Se mantiene por costo nulo, pero no se reporta como contribución.
+* **Operación**: reentrenamiento anual *as-of* (inicio 2016-2026, seguimiento 2019-2026). Niveles por cuantiles de predicciones
+  fuera de tiempo anteriores al test (ALTO = 20 % superior, MEDIO = 30 % siguiente). Tasa de retraso observada por nivel en el
+  periodo de prueba: inicio ALTO 78,3 % / MEDIO 54,4 % / BAJO 32,7 % (base 52,8 %); seguimiento ALTO 91,6 % / MEDIO 69,7 % /
+  BAJO 44,4 % (base 65,3 %). Obras activas evaluadas al corte: 2 014 (74 en Arequipa). Archivo `artifacts/cartera/cartera_card.json`.
+* **Limitación**: la etiqueta depende del registro de la fecha de finalización real en INFOBRAS; la prevalencia alta (52-65 %)
+  refleja que el retraso significativo es la norma, no la excepción, en la cartera con término registrado.
 
 ## 18. Arquitectura
 

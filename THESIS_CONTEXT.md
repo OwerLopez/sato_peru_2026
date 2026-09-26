@@ -266,20 +266,20 @@ No queremos:
 
 LO QUE YA TENEMOS IDENTIFICADO
 
-✓ Problema general: retrasos/deterioro/paralización de obras públicas.
-✓ Enfoque: detección temprana, no solamente predicción de paralización.
-✓ Área geográfica: departamento de Arequipa.
-✓ Cobertura: las 8 provincias.
-✓ Posibles fuentes: MEF, OECE/SEACE, INFOBRAS y Contraloría.
-✓ Posibles sectores: Saneamiento, Transporte, Educación y Salud.
-✓ Candidato actual: Saneamiento.
-✓ Idea de integración de fuentes.
-✓ Idea de línea temporal por obra.
-✓ Idea de ML con datos estructurados.
-✓ Posible incorporación de NLP sobre registros documentales.
-✓ Comparación modelo estructurado vs estructurado + documentos.
-✓ Necesidad de explicabilidad.
-✓ Necesidad de validación temporal y prevención de data leakage.
+- Problema general: retrasos/deterioro/paralización de obras públicas.
+- Enfoque: detección temprana, no solamente predicción de paralización.
+- Área geográfica: departamento de Arequipa.
+- Cobertura: las 8 provincias.
+- Posibles fuentes: MEF, OECE/SEACE, INFOBRAS y Contraloría.
+- Posibles sectores: Saneamiento, Transporte, Educación y Salud.
+- Candidato actual: Saneamiento.
+- Idea de integración de fuentes.
+- Idea de línea temporal por obra.
+- Idea de ML con datos estructurados.
+- Posible incorporación de NLP sobre registros documentales.
+- Comparación modelo estructurado vs estructurado + documentos.
+- Necesidad de explicabilidad.
+- Necesidad de validación temporal y prevención de data leakage.
 
 LO QUE TODAVÍA FALTA IDENTIFICAR
 

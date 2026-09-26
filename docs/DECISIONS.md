@@ -88,3 +88,22 @@ es reproducible con los scripts de `research/` y los módulos de `sato/` (ver `d
   recall 78 %); umbral F1 marca 21 % (precisión 18 %, recall 47 %).
 * **Motivo:** una alerta que marca la mitad de la cartera no sirve para priorizar la supervisión.
 * **Adoptada:** alerta = ALTO; MEDIO = "en vigilancia". Ambos umbrales se eligen en validación.
+
+## D12. Alcance: solo contratos con cuaderno digital → + cartera nacional INFOBRAS (todas las modalidades)
+
+* **Evidencia:** el cuaderno de obra digital cubre solo contratos desde junio de 2024; INFOBRAS publica 139 159 obras de todas
+  las modalidades y sectores con fechas programadas y reales de término.
+* **Adoptada:** segundo problema (retraso significativo al término, umbral 30 % del plazo) con modelos de inicio y seguimiento
+  SIAF, entrenados a nivel nacional con particiones temporales. El modelo de alerta a 60 días se mantiene como núcleo de la tesis.
+
+## D13. Niveles de riesgo de la cartera por cuantiles fuera de tiempo (no por umbral F1/F0.5)
+
+* **Evidencia:** con prevalencias de 52-65 %, el umbral F0.5 marcaba cerca del 47 % de las obras como ALTO.
+* **Adoptada:** ALTO = percentil 80 y MEDIO = percentil 50 de predicciones fuera de tiempo anteriores al test; se publica la
+  tasa observada por nivel en el periodo de prueba.
+
+## D14. Alcance nacional con selector de ámbito
+
+* **Motivo:** el entrenamiento ya era nacional; restringir la interfaz a Arequipa ocultaba 97 % de las obras evaluadas.
+* **Adoptada:** carga nacional en la base de datos; Arequipa se conserva como caso de estudio y en todas las métricas separadas.
+
