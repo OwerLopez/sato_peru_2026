@@ -11,6 +11,7 @@ Pasos (cada uno es idempotente: re-ejecutarlo sobreescribe su salida):
   embeddings    embeddings Sentence-BERT por asiento (GPU recomendada; ~40 min en RTX 4060 Ti)
   experiments   grilla experimental + rolling-origin + comparacion A/B -> artifacts/experiments
   release       modelo operativo, backtest as-of, SHAP y evidencia -> artifacts/release
+  monitor       reporte de drift (cobertura, catalogos, PSI, desempeno realizado) -> artifacts/monitoring
   load          carga PostgreSQL (DATABASE_URL)
 
 No hay orquestador externo (Airflow/Prefect/Dagster): el volumen (~3 GB brutos,
@@ -93,6 +94,12 @@ def release():
     r.build(feature_set="B_full", H=60)
 
 
+def monitor():
+    from sato.models import monitor as m
+
+    m.report()
+
+
 def load():
     from sato.serving import load_db
 
@@ -101,8 +108,8 @@ def load():
 
 
 STEPS = dict(ingest=ingest, staging=staging, integration=integration, features=features, embeddings=embeddings,
-             experiments=experiments, release=release, load=load)
-ALL = ["ingest", "staging", "integration", "features", "embeddings", "experiments", "release", "load"]
+             experiments=experiments, release=release, monitor=monitor, load=load)
+ALL = ["ingest", "staging", "integration", "features", "embeddings", "experiments", "release", "monitor", "load"]
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")

@@ -103,7 +103,7 @@ def _window_matrix(panel: pd.DataFrame, asi: pd.DataFrame) -> sp.csr_matrix:
     by_c = asi.groupby("cuaderno_id").indices
     rows, cols, vals = [], [], []
     fechas = asi["fecha"].to_numpy()
-    for i, (cid, T) in enumerate(zip(panel["cuaderno_id"], panel["T"].to_numpy())):
+    for i, (cid, T) in enumerate(zip(panel["cuaderno_id"], panel["T"].to_numpy(), strict=True)):
         idx = by_c.get(cid)
         if idx is None:
             continue

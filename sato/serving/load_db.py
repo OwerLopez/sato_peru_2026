@@ -12,7 +12,6 @@ Si algo falla, la transaccion se revierte y la base queda como estaba.
 
 from __future__ import annotations
 
-import io
 import json
 import logging
 import os

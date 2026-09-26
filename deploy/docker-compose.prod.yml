@@ -1,0 +1,22 @@
+# Superposicion para produccion en una VM con dominio propio (HTTPS automatico con Caddy / Let's Encrypt).
+#   DOMAIN=sato.ejemplo.pe docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml up -d --build
+services:
+  web:
+    ports: !reset []
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?definir DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+volumes:
+  caddy_data:
+  caddy_config:

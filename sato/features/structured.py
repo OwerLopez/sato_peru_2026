@@ -150,7 +150,7 @@ def build(out: Path = FEATURES) -> Path:
             from read_parquet('{(STAGING / 'siaf').as_posix()}/*.parquet') where mes = 0 group by all"""
     )
     con.sql(
-        f"""
+        """
         create table f_siaf as
         select p.cuaderno_id, p.t,
           sum(s.dev) as siaf_dev_acum,

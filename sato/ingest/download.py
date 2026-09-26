@@ -45,7 +45,7 @@ def _sha256(path: Path) -> str:
 
 def _record(source: str, url: str, path: Path, last_modified: str | None) -> None:
     rec = dict(source=source, url=url, path=path.relative_to(RAW).as_posix(), bytes=path.stat().st_size, sha256=_sha256(path),
-               last_modified=last_modified, downloaded_at=dt.datetime.now(dt.timezone.utc).isoformat())
+               last_modified=last_modified, downloaded_at=dt.datetime.now(dt.UTC).isoformat())
     with MANIFEST.open("a", encoding="utf-8") as f:
         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 

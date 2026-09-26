@@ -32,7 +32,21 @@ interface Modelo {
   umbral_alerta: number
   sha256: string
   features: string[]
-  metricas: { arequipa: Metricas; nacional: Metricas; valid_pr_auc: number; umbral_alto: number; periodos: Record<string, [string, string, number, number]> }
+  metricas: {
+    arequipa: Metricas
+    nacional: Metricas
+    valid_pr_auc: number
+    umbral_alto: number
+    umbral_vigilancia?: number
+    periodos: Record<string, [string, string, number, number]>
+    operacion_backtest_arequipa?: {
+      filas_observables: number
+      prevalencia: number
+      alerta_alto: { tasa_marcadas: number; precision: number; recall: number }
+      vigilancia_o_alto: { tasa_marcadas: number; precision: number; recall: number }
+      [k: string]: unknown
+    }
+  }
 }
 interface Comp {
   horizonte: number
@@ -123,7 +137,40 @@ export default function ModeloPage() {
         <Kpi titulo="PR-AUC nacional" valor={f3(mn.pr_auc)} detalle={`prevalencia ${f3(mn.prevalencia)}`} />
         <Kpi titulo="ROC-AUC nacional" valor={f3(mn.roc_auc)} />
       </div>
-      <Seccion titulo="Matriz de confusión en el test (Arequipa, umbral de alerta)">
+      {md.metricas.operacion_backtest_arequipa && (
+        <Seccion
+          titulo="Desempeño operativo en Arequipa (backtest as-of)"
+          subtitulo={`Predicciones que la plataforma habría emitido cada mes con modelos reentrenados trimestralmente solo con datos anteriores; ${fmtNum(md.metricas.operacion_backtest_arequipa.filas_observables)} obra-mes con resultado ya observado (prevalencia ${f3(md.metricas.operacion_backtest_arequipa.prevalencia)}).`}
+        >
+          <table className="tabla w-full max-w-2xl">
+            <thead>
+              <tr>
+                <th>Política</th>
+                <th className="text-right">Obras marcadas</th>
+                <th className="text-right">Precisión</th>
+                <th className="text-right">Recall</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(
+                [
+                  ['Alerta (nivel alto)', md.metricas.operacion_backtest_arequipa.alerta_alto],
+                  ['Alerta o vigilancia (alto + medio)', md.metricas.operacion_backtest_arequipa.vigilancia_o_alto],
+                  ...(['top_5', 'top_10', 'top_20', 'top_30'] as const).map((k) => [`Revisar el ${k.split('_')[1]}% de mayor riesgo`, { ...(md.metricas.operacion_backtest_arequipa![k] as { precision: number; recall: number }), tasa_marcadas: Number(k.split('_')[1]) / 100 }] as const),
+                ] as const
+              ).map(([n, v]) => (
+                <tr key={n}>
+                  <td>{n}</td>
+                  <td className="text-right">{f3(v.tasa_marcadas)}</td>
+                  <td className="text-right">{f3(v.precision)}</td>
+                  <td className="text-right">{f3(v.recall)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Seccion>
+      )}
+      <Seccion titulo="Matriz de confusión en el test (Arequipa, umbral F2 de validación)">
         <table className="tabla w-full max-w-md text-center">
           <thead>
             <tr>

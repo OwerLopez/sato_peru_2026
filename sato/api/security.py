@@ -22,7 +22,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_token(user: dict) -> str:
     s = get_settings()
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     payload = {"sub": str(user["id"]), "rol": user["rol"], "iat": now, "exp": now + dt.timedelta(minutes=s.jwt_minutes)}
     return jwt.encode(payload, s.jwt_secret, algorithm="HS256")
 
@@ -33,7 +33,7 @@ def current_user(cred: HTTPAuthorizationCredentials | None = Depends(bearer)) ->
     try:
         data = jwt.decode(cred.credentials, get_settings().jwt_secret, algorithms=["HS256"])
     except jwt.PyJWTError:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token invalido o expirado", headers={"WWW-Authenticate": "Bearer"})
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token invalido o expirado", headers={"WWW-Authenticate": "Bearer"}) from None
     u = db.one("select id, email, nombre, rol, activo from usuario where id = :id", id=int(data["sub"]))
     if not u or not u["activo"]:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuario inactivo")

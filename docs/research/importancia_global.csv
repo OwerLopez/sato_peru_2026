@@ -1,0 +1,225 @@
+feature,mean_abs_shap,mean_shap,grupo,alcance,descripcion,share
+txt_stack_tfidf,0.32350446118595194,0.16275586680841814,Contenido de los asientos (NLP),arequipa,Riesgo inferido del vocabulario de los asientos recientes (modelo TF-IDF),0.16811562906232153
+txt_lx_atraso,0.1509176580712245,0.026272374368731973,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan atraso/retraso/demora,0.07842741002780955
+est_dep_code,0.1178610135624293,0.1178610135624293,Caracteristicas de la obra,arequipa,Departamento de la obra (codigo INEI),0.06124885686068257
+txt_lx_incumplimiento,0.11115960799888212,0.03400568776882837,Contenido de los asientos (NLP),arequipa,"Asientos de los ultimos 60 dias que mencionan penalidades, incumplimientos o cartas notariales",0.057766336070127246
+asi_dias_desde_ultimo,0.09672493441645746,-0.003525126132510733,Registros del cuaderno de obra,arequipa,Dias desde el ultimo asiento,0.05026506631723899
+siaf_dev_acum_sobre_viable,0.06171864076896143,-0.02694981343037705,Ejecucion financiera (SIAF),arequipa,Devengado acumulado / monto viable,0.032073338586144855
+est_tipo_entidad,0.05676691258320064,-0.025799721834992344,Caracteristicas de la obra,arequipa,Tipo de entidad contratante,0.02950007299393932
+txt_lx_calidad,0.05377539204456269,0.016816208291902897,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan observaciones o no conformidades de calidad,0.027945468907917482
+ib_dias_para_fin_programado,0.05252986519461563,-0.017900678991223874,"Contrato (INFOBRAS, al inicio)",arequipa,Dias para el fin programado original,0.02729820571678485
+asi_n_30d,0.051670306394237094,-0.015089188730816255,Registros del cuaderno de obra,arequipa,Asientos en los ultimos 30 dias,0.02685151862037838
+asi_frac_supervision_90d,0.047287086107846876,0.00887954499476523,Registros del cuaderno de obra,arequipa,Proporcion de asientos del supervisor/inspector (90 dias),0.024573689643727407
+asi_90d_ordenes,0.04664758289197929,0.008496043364347115,Registros del cuaderno de obra,arequipa,Asientos de ordenes en los ultimos 90 dias,0.024241358877626597
+txt_stack_emb,0.03993510633156513,0.014128280542673505,Contenido de los asientos (NLP),arequipa,Riesgo inferido del significado de los asientos recientes (modelo de embeddings),0.02075308481988041
+siaf_dev_3m,0.03977459754757324,-0.007042510969927657,Ejecucion financiera (SIAF),arequipa,Devengado de los ultimos 3 meses (S/),0.020669673187497035
+asi_ritmo_30d_vs_90d,0.03891594459874545,-0.009278595285989483,Registros del cuaderno de obra,arequipa,Ritmo de asientos del ultimo mes vs. trimestre,0.02022345683514996
+txt_len_media_60d,0.03827432262568949,-0.008425787852747967,Contenido de los asientos (NLP),arequipa,Longitud media de los asientos (caracteres),0.01989002501407066
+asi_dias_activos_30d,0.03259461033591008,-0.01195481652530087,Registros del cuaderno de obra,arequipa,Dias con asientos en los ultimos 30 dias,0.016938447774644545
+asi_90d_respuestas_consultas,0.03163164376230258,0.0011282045045212783,Registros del cuaderno de obra,arequipa,Asientos de respuestas a consultas en los ultimos 90 dias,0.01643802273971757
+ib_log_monto_contrato,0.029238231510314096,0.014906070984139538,"Contrato (INFOBRAS, al inicio)",arequipa,Monto del contrato,0.015194237708520648
+txt_lx_expediente,0.025117603504961714,0.0009856069765101915,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan deficiencias del expediente tecnico,0.013052870115900516
+asi_dias_desde_inicio_plazo,0.025052997810622063,-0.00840866828824233,Registros del cuaderno de obra,arequipa,Dias desde el inicio del plazo de ejecucion,0.013019296461598804
+siaf_dev_ytd_sobre_pia,0.022149342300184796,0.005617164395177239,Ejecucion financiera (SIAF),arequipa,Devengado del anio / PIA,0.011510353212631223
+ib_frac_plazo_transcurrido,0.021292030456939132,-0.007025750339405493,"Contrato (INFOBRAS, al inicio)",arequipa,Fraccion del plazo original transcurrida,0.011064833792894448
+txt_lx_personal,0.020594979962376397,0.0008539203645988595,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan falta o cambio de personal,0.010702597420783777
+txt_lx_adicionales,0.01821179046363393,-0.007499098851574774,Contenido de los asientos (NLP),arequipa,"Asientos de los ultimos 60 dias que mencionan adicionales, deductivos o mayores metrados",0.009464124849842902
+asi_90d_consultas,0.017836394487094665,0.005199376395848876,Registros del cuaderno de obra,arequipa,Asientos de consultas en los ultimos 90 dias,0.009269042746455501
+est_log_monto_viable,0.01660629367586075,0.005666424445245125,Caracteristicas de la obra,arequipa,Monto viable de la inversion,0.00862979600799463
+txt_lx_equipo,0.01565167113523542,-0.0021279411201535537,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan maquinaria o equipos,0.008133707118382532
+txt_lx_progreso,0.014775730581787303,0.003931058294899125,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan avance normal o adelantado,0.007678506913030548
+asi_cum_respuestas_consultas,0.013574160927879561,0.00015352915926814293,Registros del cuaderno de obra,arequipa,Asientos de respuestas a consultas acumulados,0.007054086966893286
+ib_plazo_original_dias,0.013419963978472465,-0.004902539579967779,"Contrato (INFOBRAS, al inicio)",arequipa,Plazo de ejecucion original (dias),0.006973955406870797
+asi_consultas_pendientes,0.012945716431278932,0.00420394997684453,Registros del cuaderno de obra,arequipa,Consultas sin respuesta registrada,0.006727503087680443
+asi_dias_desde_primero,0.012385001853743121,-0.004232994898559065,Registros del cuaderno de obra,arequipa,Dias desde la apertura del cuaderno,0.0064361164292669045
+txt_lx_clima,0.012038761953004523,-0.00013916816412513978,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan lluvias u otros eventos climaticos,0.006256185869713704
+actor_entidad_atrasos_previos,0.011280922604530107,0.008216876605186921,Historial de actores,arequipa,Obras previas de la entidad con atraso normativo,0.005862359341541891
+asi_cum_consultas,0.010967441668739763,0.00522036252935524,Registros del cuaderno de obra,arequipa,Asientos de consultas acumulados,0.005699452639958118
+txt_lx_suspension,0.010565196766147934,0.0010411906405288227,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan suspension o reinicio,0.005490417949714799
+actor_entidad_obras_previas,0.00940028794944005,0.004318142959449604,Historial de actores,arequipa,Obras previas de la entidad con cuaderno digital,0.004885049548292597
+est_nivel_gobierno,0.008244891227277451,-0.003041247954637573,Caracteristicas de la obra,arequipa,Nivel de gobierno,0.004284624298975063
+txt_lx_proxy_80,0.00813797357192018,0.0008482675800161271,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan la regla del 80% o calendario acelerado,0.004229062379295927
+est_plazo_vigencia_dias,0.00795493974457415,0.0006078791896255614,Caracteristicas de la obra,arequipa,Vigencia original del contrato SEACE (dias),0.004133945153056889
+asi_cum_inicio_plazo,0.007561387220185219,0.00014841910224419966,Registros del cuaderno de obra,arequipa,Asientos de inicio del plazo acumulados,0.003929427632760069
+asi_cum_otras_ocurrencias,0.007144846565665484,-0.0005859682883050012,Registros del cuaderno de obra,arequipa,Asientos de otras ocurrencias acumulados,0.0037129638662082853
+asi_90d_otras_ocurrencias,0.007114715748905659,2.6397850961076382e-06,Registros del cuaderno de obra,arequipa,Asientos de otras ocurrencias en los ultimos 90 dias,0.0036973057785418284
+asi_90d_ampliacion_plazo,0.006827774722896616,0.0018761897283585513,Registros del cuaderno de obra,arequipa,Asientos de ampliaciones de plazo en los ultimos 90 dias,0.0035481910772655143
+siaf_dev_ytd,0.006736928757076306,-0.00039262723314590665,Ejecucion financiera (SIAF),arequipa,Devengado del anio (S/),0.0035009811357529096
+est_log_monto_contratado,0.006701575116079018,0.00020635218184801978,Caracteristicas de la obra,arequipa,Monto contratado SEACE,0.003482608901953988
+asi_cum_calendario_valorizado,0.006424019607237822,0.002183816308054825,Registros del cuaderno de obra,arequipa,Asientos de calendarios de avance valorizado acumulados,0.003338371574290895
+txt_lx_paralizacion,0.00602884843904357,0.0014611508596661762,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan paralizacion o frentes sin trabajo,0.0031330128930389463
+asi_90d_penalidades,0.005977356397282998,-0.0026195184457205177,Registros del cuaderno de obra,arequipa,Asientos de aplicacion de penalidades en los ultimos 90 dias,0.003106254013236958
+txt_lx_materiales,0.005207641593981505,0.0015215249873631812,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan falta o desabastecimiento de materiales,0.002706256165042738
+asi_cum_ordenes,0.004783351843656779,0.0029938655099382215,Registros del cuaderno de obra,arequipa,Asientos de ordenes acumulados,0.0024857654242997963
+asi_90d_valorizaciones,0.004741747454927107,-0.0024098021895983027,Registros del cuaderno de obra,arequipa,Asientos de valorizaciones y metrados en los ultimos 90 dias,0.0024641448631569883
+siaf_meses_desde_ultimo_dev,0.004706369501709195,0.0005838469346543386,Ejecucion financiera (SIAF),arequipa,Meses desde el ultimo devengado,0.0024457599950214355
+siaf_dev_acum,0.004626865551796447,-0.0005488851558838975,Ejecucion financiera (SIAF),arequipa,Devengado acumulado de la inversion (S/),0.0024044441612195698
+actor_contratista_obras_previas,0.004520343259365893,-0.00031354316928231717,Historial de actores,arequipa,Obras previas del contratista con cuaderno digital,0.002349087699872876
+asi_90d_constatacion_fisica,0.004512434258730634,0.0004599719153935978,Registros del cuaderno de obra,arequipa,Asientos de constataciones fisicas en los ultimos 90 dias,0.0023449776279060894
+est_link_method,0.0038935613995954173,-0.0004174342939542584,Caracteristicas de la obra,arequipa,Metodo de enlace con el CUI,0.0020233678434793127
+siaf_pia_anio,0.0037737467133937028,0.0018114620707971865,Ejecucion financiera (SIAF),arequipa,PIA del anio (S/),0.001961103721161297
+asi_90d_calendario_valorizado,0.0037219957857395386,0.00022902228093168477,Registros del cuaderno de obra,arequipa,Asientos de calendarios de avance valorizado en los ultimos 90 dias,0.0019342103060743946
+txt_lx_terreno,0.0035533209128327816,0.0008200205428932089,Contenido de los asientos (NLP),arequipa,"Asientos de los ultimos 60 dias que mencionan interferencias, terreno o conflictos con la poblacion",0.0018465550006057417
+asi_cum_ampliacion_plazo,0.003520432085059613,0.0010243192758115486,Registros del cuaderno de obra,arequipa,Asientos de ampliaciones de plazo acumulados,0.0018294636567957087
+asi_cum_constatacion_fisica,0.0033868532167988124,0.001384285710369899,Registros del cuaderno de obra,arequipa,Asientos de constataciones fisicas acumulados,0.001760046699190944
+tmp_mes,0.003197959309435771,0.0021218651249664882,Calendario,arequipa,Mes del corte,0.0016618841639790291
+txt_lx_financiero,0.003143409755511025,0.00017521951151291674,Contenido de los asientos (NLP),arequipa,"Asientos de los ultimos 60 dias que mencionan pagos, adelantos o presupuesto",0.0016335363862095707
+est_sector,0.003025044692835637,0.00012267894158632546,Caracteristicas de la obra,arequipa,Sector de la inversion,0.0015720255900439626
+asi_cum_personal_clave,0.0029445821582324465,-0.0007140136186273854,Registros del cuaderno de obra,arequipa,Asientos de participacion de personal clave acumulados,0.0015302116083412843
+txt_n_asientos_60d,0.0029286398131568325,-0.0004965745537147124,Contenido de los asientos (NLP),arequipa,Asientos con texto en los ultimos 60 dias,0.0015219268466372567
+est_regimen_ley32069,0.0029156566186083906,-0.00277400412198314,Caracteristicas de la obra,arequipa,Cuaderno bajo el regimen de la Ley 32069,0.001515179867288817
+ie_ratio_ultimo,0.0028698114849663135,-2.369259803676952e-05,Avance reportado en asientos (NLP),arequipa,Ultimo avance reportado ejecutado/programado,0.0014913555173758993
+asi_90d_riesgos,0.002710110267426794,-0.0001287086779523175,Registros del cuaderno de obra,arequipa,Asientos de administracion de riesgos en los ultimos 90 dias,0.0014083635532148781
+asi_90d_adicionales,0.0026027336832183793,0.0019092809109882106,Registros del cuaderno de obra,arequipa,Asientos de adicionales de obra en los ultimos 90 dias,0.0013525631418864396
+ie_ratio_min_90d,0.00253572420557718,0.0008185685086171354,Avance reportado en asientos (NLP),arequipa,Minimo ejecutado/programado reportado (90 dias),0.0013177403130281
+asi_cum_valorizaciones,0.0023578730318847864,-0.0006729273288864054,Registros del cuaderno de obra,arequipa,Asientos de valorizaciones y metrados acumulados,0.0012253163574660697
+asi_cum_riesgos,0.002201700607859381,0.000307276083864999,Registros del cuaderno de obra,arequipa,Asientos de administracion de riesgos acumulados,0.0011441582021473795
+ie_dias_desde_reporte,0.0020714671445638804,0.001075356482589578,Avance reportado en asientos (NLP),arequipa,Dias desde el ultimo avance reportado,0.0010764797518205294
+asi_90d_programa_cpm,0.001842375542302122,0.00021491993359081278,Registros del cuaderno de obra,arequipa,Asientos de programas de ejecucion (CPM) en los ultimos 90 dias,0.0009574276723346993
+asi_n_total,0.0017619133400817739,-0.0005545476966547963,Registros del cuaderno de obra,arequipa,Total de asientos registrados,0.0009156138633614801
+asi_cum_suspension_plazo,0.0017237230575563433,-0.0006554746307543396,Registros del cuaderno de obra,arequipa,Asientos de suspensiones del plazo acumulados,0.0008957675114833832
+asi_cum_penalidades,0.001558702017179811,-0.0005775925029314425,Registros del cuaderno de obra,arequipa,Asientos de aplicacion de penalidades acumulados,0.0008100109939079644
+asi_cum_adicionales,0.001543708559102373,0.0005991875403815212,Registros del cuaderno de obra,arequipa,Asientos de adicionales de obra acumulados,0.0008022193405030391
+est_arequipa,0.0014044559341690414,-0.0014044559341690414,Caracteristicas de la obra,arequipa,Obra en Arequipa,0.0007298539006156737
+ie_brecha_ultima,0.0013666082739148618,0.00010821197091950434,Avance reportado en asientos (NLP),arequipa,Ultima brecha ejecutado - programado (puntos porcentuales),0.0007101855993228792
+asi_cum_programa_cpm,0.001270436505017791,0.0002243833396213643,Registros del cuaderno de obra,arequipa,Asientos de programas de ejecucion (CPM) acumulados,0.0006602079966434719
+mefseg_registros_180d,0.0012592800359242646,0.000604514904859626,Seguimiento Invierte.pe (F12B),arequipa,Registros de seguimiento F12B (180 dias),0.0006544103120832751
+txt_lx_controversia,0.001220700369733259,-1.207632310058378e-05,Contenido de los asientos (NLP),arequipa,Asientos de los ultimos 60 dias que mencionan controversias o arbitraje,0.0006343616091165881
+est_marco,0.0011831314426829673,-8.708297500288729e-06,Caracteristicas de la obra,arequipa,Marco de inversion (SNIP/Invierte.pe),0.000614838157164481
+asi_90d_personal_clave,0.0011376768114548456,-4.47439185272521e-05,Registros del cuaderno de obra,arequipa,Asientos de participacion de personal clave en los ultimos 90 dias,0.0005912167397203516
+asi_90d_suspension_plazo,0.0011329272823668048,0.0002793438554139375,Registros del cuaderno de obra,arequipa,Asientos de suspensiones del plazo en los ultimos 90 dias,0.0005887485509743336
+est_n_miembros_consorcio,0.0010688997529108067,0.0002176335507278506,Caracteristicas de la obra,arequipa,Miembros del consorcio,0.0005554753517351608
+asi_cum_otras_modificaciones,0.0008535559223452574,0.00036887251893823387,Registros del cuaderno de obra,arequipa,Asientos de otras modificaciones contractuales acumulados,0.0004435675795594694
+asi_cum_mayores_metrados,0.0006910002826329334,-4.811575976849504e-05,Registros del cuaderno de obra,arequipa,Asientos de mayores metrados acumulados,0.0003590922572480497
+asi_90d_inicio_plazo,0.0006873188692986502,-0.0003472311492352066,Registros del cuaderno de obra,arequipa,Asientos de inicio del plazo en los ultimos 90 dias,0.0003571791364327677
+est_tipo_inversion,0.0006195274719768493,-0.00010909387876177184,Caracteristicas de la obra,arequipa,Tipo de inversion,0.00032194996721516796
+asi_n_90d,0.0004535534329411778,-0.00016150232740722866,Registros del cuaderno de obra,arequipa,Asientos en los ultimos 90 dias,0.00023569820463295875
+ie_n_atrasada_60d,0.0003197132690662219,5.096634804851015e-05,Avance reportado en asientos (NLP),arequipa,Asientos que declaran la obra atrasada (60 dias),0.0001661454594833055
+tmp_vigencia_ley32069,0.00031243255820179367,0.00031243255820179367,Calendario,arequipa,Corte posterior a la vigencia de la Ley 32069,0.00016236189098935922
+asi_90d_mayores_metrados,0.0002534665813026723,-0.00012014512855459898,Registros del cuaderno de obra,arequipa,Asientos de mayores metrados en los ultimos 90 dias,0.00013171902979563984
+asi_90d_otras_modificaciones,0.00023193665921500102,3.016823934063552e-05,Registros del cuaderno de obra,arequipa,Asientos de otras modificaciones contractuales en los ultimos 90 dias,0.00012053057081067669
+asi_90d_reducciones,0.00020011024208678606,0.0001213779381159258,Registros del cuaderno de obra,arequipa,Asientos de reducciones de obra en los ultimos 90 dias,0.00010399133015632849
+est_es_consorcio,9.736591232879369e-05,1.760111219932224e-05,Caracteristicas de la obra,arequipa,Contratista es consorcio,5.059816343915323e-05
+asi_cum_reducciones,0.0,0.0,Registros del cuaderno de obra,arequipa,Asientos de reducciones de obra acumulados,0.0
+asi_cum_expediente_tecnico,0.0,0.0,Registros del cuaderno de obra,arequipa,Asientos de expediente tecnico acumulados,0.0
+asi_cum_adelantos,0.0,0.0,Registros del cuaderno de obra,arequipa,Asientos de adelantos acumulados,0.0
+asi_90d_expediente_tecnico,0.0,0.0,Registros del cuaderno de obra,arequipa,Asientos de expediente tecnico en los ultimos 90 dias,0.0
+asi_90d_adelantos,0.0,0.0,Registros del cuaderno de obra,arequipa,Asientos de adelantos en los ultimos 90 dias,0.0
+est_tiene_cui,0.0,0.0,Caracteristicas de la obra,arequipa,Obra enlazada a una inversion (CUI),0.0
+est_tiene_seace,0.0,0.0,Caracteristicas de la obra,arequipa,Contrato disponible en SEACE,0.0
+actor_contratista_atrasos_previos,0.0,0.0,Historial de actores,arequipa,Obras previas del contratista con atraso normativo,0.0
+mefseg_problemas_180d,0.0,0.0,Seguimiento Invierte.pe (F12B),arequipa,Problemas registrados en F12B (180 dias),0.0
+mefseg_problema_atraso_180d,0.0,0.0,Seguimiento Invierte.pe (F12B),arequipa,Problemas de atraso/paralizacion en F12B (180 dias),0.0
+ie_n_adelantada_60d,0.0,0.0,Avance reportado en asientos (NLP),arequipa,Asientos que declaran la obra adelantada (60 dias),0.0
+txt_stack_tfidf,0.30596953493793244,-0.037126213582913806,Contenido de los asientos (NLP),nacional,Riesgo inferido del vocabulario de los asientos recientes (modelo TF-IDF),0.17824637993946257
+txt_lx_atraso,0.13239411502338952,0.0026010072125864582,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan atraso/retraso/demora,0.07712784781986591
+txt_lx_incumplimiento,0.10351670470330157,0.016382257226327454,Contenido de los asientos (NLP),nacional,"Asientos de los ultimos 60 dias que mencionan penalidades, incumplimientos o cartas notariales",0.060304951211462364
+asi_dias_desde_ultimo,0.10348845297021278,-0.021421006588605587,Registros del cuaderno de obra,nacional,Dias desde el ultimo asiento,0.060288492810951624
+est_dep_code,0.0749838475848924,-0.005980862317393669,Caracteristicas de la obra,nacional,Departamento de la obra (codigo INEI),0.04368277838069979
+est_tipo_entidad,0.055186729074280474,-0.0003831070789609616,Caracteristicas de la obra,nacional,Tipo de entidad contratante,0.0321497193509342
+asi_n_30d,0.05150600789591796,-0.011088305391210938,Registros del cuaderno de obra,nacional,Asientos en los ultimos 30 dias,0.030005469186476744
+siaf_dev_acum_sobre_viable,0.05137165021562028,-0.01716761682847804,Ejecucion financiera (SIAF),nacional,Devengado acumulado / monto viable,0.029927197439144182
+txt_lx_calidad,0.04877178902892405,0.00329427185089661,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan observaciones o no conformidades de calidad,0.028412615783268782
+asi_ritmo_30d_vs_90d,0.04468281124042448,-0.011610160628855476,Registros del cuaderno de obra,nacional,Ritmo de asientos del ultimo mes vs. trimestre,0.02603053062370946
+ib_dias_para_fin_programado,0.04066308707124088,-0.01512686570339865,"Contrato (INFOBRAS, al inicio)",nacional,Dias para el fin programado original,0.02368879002637356
+asi_frac_supervision_90d,0.039292565030042866,0.00021641302764876087,Registros del cuaderno de obra,nacional,Proporcion de asientos del supervisor/inspector (90 dias),0.022890375267465145
+siaf_dev_3m,0.03929208954656138,-0.0058825596077986455,Ejecucion financiera (SIAF),nacional,Devengado de los ultimos 3 meses (S/),0.0228900982686152
+txt_len_media_60d,0.0384038197876115,-0.016542752273498846,Contenido de los asientos (NLP),nacional,Longitud media de los asientos (caracteres),0.022372625609206043
+asi_dias_activos_30d,0.03639610081606829,-0.007197063622376969,Registros del cuaderno de obra,nacional,Dias con asientos en los ultimos 30 dias,0.02120300380785267
+asi_90d_ordenes,0.033413742254516945,-0.0019471527966256428,Registros del cuaderno de obra,nacional,Asientos de ordenes en los ultimos 90 dias,0.019465593521610196
+txt_stack_emb,0.03164362379344647,-0.0054343446143869135,Contenido de los asientos (NLP),nacional,Riesgo inferido del significado de los asientos recientes (modelo de embeddings),0.018434388869768538
+asi_90d_respuestas_consultas,0.025255095717695287,-0.003013430623085545,Registros del cuaderno de obra,nacional,Asientos de respuestas a consultas en los ultimos 90 dias,0.014712671925382989
+ib_log_monto_contrato,0.02464700276598532,0.007784694533068294,"Contrato (INFOBRAS, al inicio)",nacional,Monto del contrato,0.014358419769752556
+txt_lx_expediente,0.02360162701787347,-0.0006787304451771384,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan deficiencias del expediente tecnico,0.0137494230511242
+ib_frac_plazo_transcurrido,0.020605654088736602,-0.010276088189279803,"Contrato (INFOBRAS, al inicio)",nacional,Fraccion del plazo original transcurrida,0.012004081544743169
+asi_dias_desde_inicio_plazo,0.020457238808316732,-0.0045275299746701915,Registros del cuaderno de obra,nacional,Dias desde el inicio del plazo de ejecucion,0.01191762036661343
+est_log_monto_viable,0.01909467823776832,0.0014649598255172664,Caracteristicas de la obra,nacional,Monto viable de la inversion,0.011123843662021677
+txt_lx_adicionales,0.016844180449442192,-0.004132038181135786,Contenido de los asientos (NLP),nacional,"Asientos de los ultimos 60 dias que mencionan adicionales, deductivos o mayores metrados",0.009812788024040356
+siaf_dev_ytd_sobre_pia,0.016082813824539473,0.001113671033795219,Ejecucion financiera (SIAF),nacional,Devengado del anio / PIA,0.009369244372796888
+txt_lx_progreso,0.015684619776135056,-0.00041691636340705725,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan avance normal o adelantado,0.009137271448904563
+txt_lx_personal,0.015375850575115589,-0.0002496073510704954,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan falta o cambio de personal,0.008957394088468386
+txt_lx_equipo,0.015374527036116577,0.0008800688848896754,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan maquinaria o equipos,0.008956623044268412
+actor_entidad_obras_previas,0.013505046455974912,0.00415388918945452,Historial de actores,nacional,Obras previas de la entidad con cuaderno digital,0.007867533747044833
+asi_90d_consultas,0.012511124970365953,1.2954430005719085e-05,Registros del cuaderno de obra,nacional,Asientos de consultas en los ultimos 90 dias,0.007288512352676966
+asi_dias_desde_primero,0.011237283204391565,-0.004460727749773054,Registros del cuaderno de obra,nacional,Dias desde la apertura del cuaderno,0.006546419897469991
+asi_cum_respuestas_consultas,0.010982135122765671,4.9611803036784276e-05,Registros del cuaderno de obra,nacional,Asientos de respuestas a consultas acumulados,0.006397780190881099
+txt_lx_clima,0.010023022213840828,-0.00046526722490366996,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan lluvias u otros eventos climaticos,0.005839036968279736
+ib_plazo_original_dias,0.009336594962694717,-0.0015407694201359172,"Contrato (INFOBRAS, al inicio)",nacional,Plazo de ejecucion original (dias),0.005439150186631979
+actor_entidad_atrasos_previos,0.008323796035420054,0.0034245300058386927,Historial de actores,nacional,Obras previas de la entidad con atraso normativo,0.004849131502484549
+asi_cum_consultas,0.008321981619206583,0.0025151134258655132,Registros del cuaderno de obra,nacional,Asientos de consultas acumulados,0.004848074491622928
+txt_lx_suspension,0.008154913901064261,-0.0010454084368685067,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan suspension o reinicio,0.004750747102575335
+asi_consultas_pendientes,0.008143547468157446,0.00183132805356442,Registros del cuaderno de obra,nacional,Consultas sin respuesta registrada,0.004744125444903189
+asi_cum_otras_ocurrencias,0.007909057392054181,-0.0013740735170162553,Registros del cuaderno de obra,nacional,Asientos de otras ocurrencias acumulados,0.004607520317841716
+asi_90d_ampliacion_plazo,0.007593938516746517,0.00015492862732518144,Registros del cuaderno de obra,nacional,Asientos de ampliaciones de plazo en los ultimos 90 dias,0.004423943875221113
+est_nivel_gobierno,0.007332484835341256,-0.0010430614370081674,Caracteristicas de la obra,nacional,Nivel de gobierno,0.00427163076260424
+asi_cum_inicio_plazo,0.006920261760952428,2.545741512389504e-05,Registros del cuaderno de obra,nacional,Asientos de inicio del plazo acumulados,0.004031485054136142
+txt_lx_proxy_80,0.006281322847546282,-0.0008943423807716605,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan la regla del 80% o calendario acelerado,0.003659263197668628
+asi_90d_valorizaciones,0.005850487367266939,-0.00024649337049317084,Registros del cuaderno de obra,nacional,Asientos de valorizaciones y metrados en los ultimos 90 dias,0.0034082745993271263
+asi_90d_otras_ocurrencias,0.005555764614709385,0.00017542316105910067,Registros del cuaderno de obra,nacional,Asientos de otras ocurrencias en los ultimos 90 dias,0.0032365801731489303
+est_log_monto_contratado,0.005549566923173679,-0.0010759579946643004,Caracteristicas de la obra,nacional,Monto contratado SEACE,0.0032329696304181144
+siaf_dev_ytd,0.005542506290724149,-0.00037298244434100805,Ejecucion financiera (SIAF),nacional,Devengado del anio (S/),0.003228856370663456
+asi_90d_penalidades,0.005483905089102666,-0.001184371469029381,Registros del cuaderno de obra,nacional,Asientos de aplicacion de penalidades en los ultimos 90 dias,0.003194717507618641
+est_plazo_vigencia_dias,0.005395612953075425,-0.0005212643509332508,Caracteristicas de la obra,nacional,Vigencia original del contrato SEACE (dias),0.003143281819332973
+txt_lx_paralizacion,0.004988416891596405,0.0007624222769227194,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan paralizacion o frentes sin trabajo,0.002906064660118198
+asi_cum_calendario_valorizado,0.004352821641607239,-0.0003417445515259364,Registros del cuaderno de obra,nacional,Asientos de calendarios de avance valorizado acumulados,0.0025357906966000047
+siaf_dev_acum,0.004339739697281893,-0.00048361374223332464,Ejecucion financiera (SIAF),nacional,Devengado acumulado de la inversion (S/),0.002528169646291726
+txt_lx_materiales,0.0041729540420994615,0.0008788814836218935,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan falta o desabastecimiento de materiales,0.002431006576549732
+est_sector,0.00401099292106255,0.0001472421550213364,Caracteristicas de la obra,nacional,Sector de la inversion,0.0023366540995241256
+asi_cum_valorizaciones,0.003796328485154413,0.0012942951096763901,Registros del cuaderno de obra,nacional,Asientos de valorizaciones y metrados acumulados,0.00221159864715651
+siaf_meses_desde_ultimo_dev,0.0036924292589837174,0.00021801580700202822,Ejecucion financiera (SIAF),nacional,Meses desde el ultimo devengado,0.0021510708532792707
+actor_contratista_obras_previas,0.0036194728327757536,0.000579592756432428,Historial de actores,nacional,Obras previas del contratista con cuaderno digital,0.002108569174582638
+asi_cum_ordenes,0.0034059755764822112,0.0010089542845294669,Registros del cuaderno de obra,nacional,Asientos de ordenes acumulados,0.0019841936772997102
+tmp_mes,0.003263893086893715,0.0018725873050841502,Calendario,nacional,Mes del corte,0.0019014217456854291
+asi_90d_constatacion_fisica,0.0030895747537396335,-0.00036576258158691225,Registros del cuaderno de obra,nacional,Asientos de constataciones fisicas en los ultimos 90 dias,0.0017998704201650658
+asi_cum_ampliacion_plazo,0.0027966293009266175,0.0003210175387328861,Registros del cuaderno de obra,nacional,Asientos de ampliaciones de plazo acumulados,0.0016292113821852253
+txt_lx_terreno,0.002780064673227834,0.0006307125159368153,Contenido de los asientos (NLP),nacional,"Asientos de los ultimos 60 dias que mencionan interferencias, terreno o conflictos con la poblacion",0.0016195614511129957
+est_regimen_ley32069,0.0027696466221598898,-0.002605419952504793,Caracteristicas de la obra,nacional,Cuaderno bajo el regimen de la Ley 32069,0.0016134922851443571
+asi_cum_penalidades,0.0026375728673614807,0.00018638999182633256,Registros del cuaderno de obra,nacional,Asientos de aplicacion de penalidades acumulados,0.0015365510671809276
+est_link_method,0.0025413926055210187,0.00020413165899372705,Caracteristicas de la obra,nacional,Metodo de enlace con el CUI,0.0014805200525304994
+ie_ratio_ultimo,0.0025206087878383646,0.00027360984711626924,Avance reportado en asientos (NLP),nacional,Ultimo avance reportado ejecutado/programado,0.001468412179555478
+txt_n_asientos_60d,0.002515824470233698,-0.0003513248651142414,Contenido de los asientos (NLP),nacional,Asientos con texto en los ultimos 60 dias,0.0014656250154880311
+txt_lx_financiero,0.002476574714420707,0.00034709807255311906,Contenido de los asientos (NLP),nacional,"Asientos de los ultimos 60 dias que mencionan pagos, adelantos o presupuesto",0.0014427595792654584
+asi_90d_calendario_valorizado,0.0024595729146481738,-0.0007657845984604976,Registros del cuaderno de obra,nacional,Asientos de calendarios de avance valorizado en los ultimos 90 dias,0.001432854968133097
+asi_n_total,0.0023545295792394222,-0.0010246556866521951,Registros del cuaderno de obra,nacional,Total de asientos registrados,0.001371660659107609
+siaf_pia_anio,0.002234522539352577,2.3711256932409712e-05,Ejecucion financiera (SIAF),nacional,PIA del anio (S/),0.0013017490568579925
+ie_dias_desde_reporte,0.0019555295940565545,0.0010176452252538138,Avance reportado en asientos (NLP),nacional,Dias desde el ultimo avance reportado,0.0011392182266635668
+asi_cum_personal_clave,0.0019069135164777036,-4.6438544110130166e-05,Registros del cuaderno de obra,nacional,Asientos de participacion de personal clave acumulados,0.0011108963225333268
+asi_90d_riesgos,0.0018396746780594514,0.00023401039789230007,Registros del cuaderno de obra,nacional,Asientos de administracion de riesgos en los ultimos 90 dias,0.0010717254961246808
+asi_cum_constatacion_fisica,0.0017871572661139184,8.301088279448727e-05,Registros del cuaderno de obra,nacional,Asientos de constataciones fisicas acumulados,0.0010411308208574856
+asi_cum_riesgos,0.001664510452200475,-5.498531364401792e-05,Registros del cuaderno de obra,nacional,Asientos de administracion de riesgos acumulados,0.0009696813852278407
+asi_cum_suspension_plazo,0.0015117445810591697,-0.00023658461099276137,Registros del cuaderno de obra,nacional,Asientos de suspensiones del plazo acumulados,0.0008806857160519541
+mefseg_registros_180d,0.0014233235272201415,0.0006692939458307686,Seguimiento Invierte.pe (F12B),nacional,Registros de seguimiento F12B (180 dias),0.0008291749250824014
+est_marco,0.001418525527683441,0.00014803628993469517,Caracteristicas de la obra,nacional,Marco de inversion (SNIP/Invierte.pe),0.0008263797904343014
+asi_90d_adicionales,0.0014171607597817085,0.0005708836037897128,Registros del cuaderno de obra,nacional,Asientos de adicionales de obra en los ultimos 90 dias,0.0008255847278213169
+txt_lx_controversia,0.0013819826962482762,0.0001949562409698993,Contenido de los asientos (NLP),nacional,Asientos de los ultimos 60 dias que mencionan controversias o arbitraje,0.0008050913068688463
+ie_ratio_min_90d,0.0013638363899893355,0.00010948262237112772,Avance reportado en asientos (NLP),nacional,Minimo ejecutado/programado reportado (90 dias),0.0007945199491662399
+asi_cum_adicionales,0.001308448492045676,0.0004570769805809966,Registros del cuaderno de obra,nacional,Asientos de adicionales de obra acumulados,0.0007622530363740351
+ie_brecha_ultima,0.0013028638081117858,0.00013824116882177575,Avance reportado en asientos (NLP),nacional,Ultima brecha ejecutado - programado (puntos porcentuales),0.0007589996088897468
+est_tipo_inversion,0.00121651254596217,-5.0812866561628506e-05,Caracteristicas de la obra,nacional,Tipo de inversion,0.0007086946009598074
+asi_90d_programa_cpm,0.001186104719358093,-0.00010555184162693198,Registros del cuaderno de obra,nacional,Asientos de programas de ejecucion (CPM) en los ultimos 90 dias,0.0006909801412012464
+asi_90d_inicio_plazo,0.001065867056188702,-0.0003022678529630915,Registros del cuaderno de obra,nacional,Asientos de inicio del plazo en los ultimos 90 dias,0.0006209341864735251
+asi_90d_suspension_plazo,0.0010539534100730988,0.0004239326275703566,Registros del cuaderno de obra,nacional,Asientos de suspensiones del plazo en los ultimos 90 dias,0.0006139937429015306
+asi_n_90d,0.0010101205447666723,-0.0001516487610470288,Registros del cuaderno de obra,nacional,Asientos en los ultimos 90 dias,0.0005884583589136133
+est_n_miembros_consorcio,0.0009270060725551144,-0.0001236568845695553,Caracteristicas de la obra,nacional,Miembros del consorcio,0.0005400389834509728
+asi_cum_programa_cpm,0.0009147807509923956,9.992993950466368e-05,Registros del cuaderno de obra,nacional,Asientos de programas de ejecucion (CPM) acumulados,0.0005329169694485246
+asi_cum_otras_modificaciones,0.0008946899478323237,0.00020537496259166767,Registros del cuaderno de obra,nacional,Asientos de otras modificaciones contractuales acumulados,0.000521212820752526
+asi_90d_personal_clave,0.0008938111719213808,-1.606780050222244e-05,Registros del cuaderno de obra,nacional,Asientos de participacion de personal clave en los ultimos 90 dias,0.0005207008788530315
+asi_cum_mayores_metrados,0.0005743598062557387,4.457129813954682e-05,Registros del cuaderno de obra,nacional,Asientos de mayores metrados acumulados,0.0003346004897794297
+asi_90d_otras_modificaciones,0.0005070787509837021,-1.1463721610116333e-05,Registros del cuaderno de obra,nacional,Asientos de otras modificaciones contractuales en los ultimos 90 dias,0.00029540506941452246
+est_es_consorcio,0.00033629283620489436,8.099212396891783e-05,Caracteristicas de la obra,nacional,Contratista es consorcio,0.00019591159840556287
+est_arequipa,0.0002573179252571033,0.00014114605101752832,Caracteristicas de la obra,nacional,Obra en Arequipa,0.00014990377613874543
+ie_n_atrasada_60d,0.0002074411975250729,1.8929260944500164e-05,Avance reportado en asientos (NLP),nacional,Asientos que declaran la obra atrasada (60 dias),0.00012084746449234547
+tmp_vigencia_ley32069,0.0001771627325657384,0.0001771627325657384,Calendario,nacional,Corte posterior a la vigencia de la Ley 32069,0.00010320836597810922
+asi_90d_reducciones,0.00017384342923669745,2.8227619279207314e-05,Registros del cuaderno de obra,nacional,Asientos de reducciones de obra en los ultimos 90 dias,0.0001012746643027363
+asi_90d_mayores_metrados,0.00010212513536889898,-5.609926158679702e-06,Registros del cuaderno de obra,nacional,Asientos de mayores metrados en los ultimos 90 dias,5.949427508861782e-05
+asi_cum_reducciones,0.0,0.0,Registros del cuaderno de obra,nacional,Asientos de reducciones de obra acumulados,0.0
+asi_cum_expediente_tecnico,0.0,0.0,Registros del cuaderno de obra,nacional,Asientos de expediente tecnico acumulados,0.0
+asi_cum_adelantos,0.0,0.0,Registros del cuaderno de obra,nacional,Asientos de adelantos acumulados,0.0
+asi_90d_expediente_tecnico,0.0,0.0,Registros del cuaderno de obra,nacional,Asientos de expediente tecnico en los ultimos 90 dias,0.0
+asi_90d_adelantos,0.0,0.0,Registros del cuaderno de obra,nacional,Asientos de adelantos en los ultimos 90 dias,0.0
+est_tiene_cui,0.0,0.0,Caracteristicas de la obra,nacional,Obra enlazada a una inversion (CUI),0.0
+est_tiene_seace,0.0,0.0,Caracteristicas de la obra,nacional,Contrato disponible en SEACE,0.0
+actor_contratista_atrasos_previos,0.0,0.0,Historial de actores,nacional,Obras previas del contratista con atraso normativo,0.0
+mefseg_problemas_180d,0.0,0.0,Seguimiento Invierte.pe (F12B),nacional,Problemas registrados en F12B (180 dias),0.0
+mefseg_problema_atraso_180d,0.0,0.0,Seguimiento Invierte.pe (F12B),nacional,Problemas de atraso/paralizacion en F12B (180 dias),0.0
+ie_n_adelantada_60d,0.0,0.0,Avance reportado en asientos (NLP),nacional,Asientos que declaran la obra adelantada (60 dias),0.0

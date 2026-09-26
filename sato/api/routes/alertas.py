@@ -19,9 +19,12 @@ def alertas(
     nivel: Literal["ALTO", "MEDIO"] | None = None,
     provincia: str | None = None,
     sector: str | None = None,
+    incluir_vigilancia: bool = False,
     limite: int = Query(100, ge=1, le=500),
 ):
-    """Alertas del corte indicado (por defecto el corte vigente) con sus 3 principales factores de riesgo."""
+    """Alertas (nivel ALTO) del corte indicado -por defecto el vigente- con sus 3 principales factores de riesgo.
+
+    Con `incluir_vigilancia=true` tambien se devuelven las obras de nivel MEDIO ("en vigilancia")."""
     corte = fecha_corte or (db.one("select max(fecha_corte) f from prediccion where tipo = 'vigente'") or {}).get("f")
     items = db.rows(
         """select p.id prediccion_id, p.fecha_corte, p.tipo, p.score, p.nivel, p.percentil, p.y_observado,
@@ -32,10 +35,10 @@ def alertas(
                     where r.cuaderno_id = o.cuaderno_id and r.fecha_corte = p.fecha_corte order by r.creado_en desc limit 1) ultima_revision
            from prediccion p join modelo m on m.id = p.modelo_id and m.activo
            join obra o on o.cuaderno_id = p.cuaderno_id left join entidad e on e.ruc = o.entidad_ruc
-           where p.fecha_corte = :corte and p.alerta and (cast(:nivel as text) is null or p.nivel = :nivel)
+           where p.fecha_corte = :corte and (p.alerta or (:vig and p.nivel = 'MEDIO')) and (cast(:nivel as text) is null or p.nivel = :nivel)
              and (cast(:prov as text) is null or o.provincia = :prov) and (cast(:sector as text) is null or o.sector = :sector)
            order by p.score desc limit :lim""",
-        corte=corte, nivel=nivel, prov=provincia, sector=sector, lim=limite,
+        corte=corte, nivel=nivel, prov=provincia, sector=sector, vig=incluir_vigilancia or nivel == "MEDIO", lim=limite,
     )
     return {"fecha_corte": corte, "total": len(items), "items": items}
 

@@ -125,4 +125,5 @@ pipeline; las únicas tablas no reproducibles son `usuario`, `revision_alerta` y
 | Desempeño | cuando el horizonte H se cumple, `y_observado` permite calcular PR-AUC/recall del mes | caída > 30 % en 3 cortes → recalibrar umbral / reentrenar |
 | Normativa | cambios de reglamento (p.ej. DS 001-2026-EF) | revisar definición del evento y tipos de asiento |
 
+Implementación: `sato/models/monitor.py` → `artifacts/monitoring/reporte.json` (paso `monitor` del pipeline).
 Reentrenamiento programado: trimestral con ventana expansiva (el backtest de la plataforma ya simula esta política).

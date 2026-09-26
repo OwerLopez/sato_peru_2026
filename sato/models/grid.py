@@ -20,7 +20,6 @@ Conjuntos de features:
 
 from __future__ import annotations
 
-import json
 import logging
 import sys
 
@@ -87,7 +86,7 @@ def rolling():
                              test_months=3, **FEATURE_SETS[fs])
                 try:
                     r = run(cfg)
-                except Exception as e:
+                except Exception:
                     log.exception("fallo %s", cfg)
                     continue
                 v = r["modelos"]["lgbm"]

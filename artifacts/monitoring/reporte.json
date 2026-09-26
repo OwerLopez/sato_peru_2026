@@ -1,0 +1,235 @@
+{
+ "cobertura_mensual": [
+  {
+   "mes": "2025-09",
+   "asientos": 119448,
+   "cuadernos_activos": 3861,
+   "var_vs_6m": 0.18771398930757788
+  },
+  {
+   "mes": "2025-10",
+   "asientos": 128270,
+   "cuadernos_activos": 4117,
+   "var_vs_6m": 0.19373861898454203
+  },
+  {
+   "mes": "2025-11",
+   "asientos": 126023,
+   "cuadernos_activos": 4329,
+   "var_vs_6m": 0.0911664836362116
+  },
+  {
+   "mes": "2025-12",
+   "asientos": 122005,
+   "cuadernos_activos": 4367,
+   "var_vs_6m": 0.022899718015432224
+  },
+  {
+   "mes": "2026-01",
+   "asientos": 102035,
+   "cuadernos_activos": 3773,
+   "var_vs_6m": -0.15599499836633512
+  },
+  {
+   "mes": "2026-02",
+   "asientos": 86625,
+   "cuadernos_activos": 3450,
+   "var_vs_6m": -0.2689914543378097
+  },
+  {
+   "mes": "2026-03",
+   "asientos": 88319,
+   "cuadernos_activos": 3280,
+   "var_vs_6m": -0.22573151024391958
+  },
+  {
+   "mes": "2026-04",
+   "asientos": 90114,
+   "cuadernos_activos": 3389,
+   "var_vs_6m": -0.17235108537419808
+  },
+  {
+   "mes": "2026-05",
+   "asientos": 116786,
+   "cuadernos_activos": 3813,
+   "var_vs_6m": 0.13915148401696564
+  },
+  {
+   "mes": "2026-06",
+   "asientos": 129579,
+   "cuadernos_activos": 4057,
+   "var_vs_6m": 0.2832060262360452
+  },
+  {
+   "mes": "2026-07",
+   "asientos": 133165,
+   "cuadernos_activos": 4242,
+   "var_vs_6m": 0.3024363526109366
+  },
+  {
+   "mes": "2026-08",
+   "asientos": 136429,
+   "cuadernos_activos": 4519,
+   "var_vs_6m": 0.2699181492674392
+  }
+ ],
+ "tipos_sin_armonizar": {},
+ "psi_ultimo_corte": {
+  "ib_frac_plazo_transcurrido": 1.9546,
+  "mefseg_registros_180d": 1.3485,
+  "ib_dias_para_fin_programado": 1.3108,
+  "mefseg_problemas_180d": 0.5681,
+  "ib_log_monto_contrato": 0.5371,
+  "ib_plazo_original_dias": 0.5142,
+  "est_log_monto_contratado": 0.2747,
+  "est_plazo_vigencia_dias": 0.2742,
+  "txt_len_media_60d": 0.201,
+  "asi_dias_desde_ultimo": 0.1628,
+  "actor_contratista_obras_previas": 0.1519,
+  "actor_entidad_obras_previas": 0.1492,
+  "siaf_dev_ytd_sobre_pia": 0.1482,
+  "txt_lx_clima": 0.1144,
+  "asi_dias_desde_primero": 0.1106,
+  "asi_dias_desde_inicio_plazo": 0.109,
+  "actor_entidad_atrasos_previos": 0.1042,
+  "actor_contratista_atrasos_previos": 0.0596,
+  "txt_lx_controversia": 0.0418,
+  "siaf_meses_desde_ultimo_dev": 0.0397,
+  "asi_cum_otras_ocurrencias": 0.0341,
+  "asi_n_total": 0.033,
+  "siaf_dev_ytd": 0.0321,
+  "siaf_pia_anio": 0.0238,
+  "asi_cum_suspension_plazo": 0.0237
+ },
+ "desempeno_realizado": [
+  {
+   "T": "2025-01-31",
+   "n": 84,
+   "eventos": 5,
+   "pr_auc": 0.23049596443731749,
+   "recall_alerta": 0.6
+  },
+  {
+   "T": "2025-02-28",
+   "n": 81,
+   "eventos": 2,
+   "pr_auc": 0.2640845070422535,
+   "recall_alerta": 0.5
+  },
+  {
+   "T": "2025-03-31",
+   "n": 85,
+   "eventos": 4,
+   "pr_auc": 0.14703196347031963,
+   "recall_alerta": 0.5
+  },
+  {
+   "T": "2025-04-30",
+   "n": 86,
+   "eventos": 11,
+   "pr_auc": 0.33734164250477566,
+   "recall_alerta": 0.5454545454545454
+  },
+  {
+   "T": "2025-05-31",
+   "n": 89,
+   "eventos": 14,
+   "pr_auc": 0.349938195216118,
+   "recall_alerta": 0.5
+  },
+  {
+   "T": "2025-06-30",
+   "n": 91,
+   "eventos": 7,
+   "pr_auc": 0.24154757510239236,
+   "recall_alerta": 0.5714285714285714
+  },
+  {
+   "T": "2025-07-31",
+   "n": 90,
+   "eventos": 6,
+   "pr_auc": 0.2610908057179987,
+   "recall_alerta": 0.5
+  },
+  {
+   "T": "2025-08-31",
+   "n": 96,
+   "eventos": 6,
+   "pr_auc": 0.2301061235115989,
+   "recall_alerta": 0.5
+  },
+  {
+   "T": "2025-09-30",
+   "n": 99,
+   "eventos": 8,
+   "pr_auc": 0.19606434384667829,
+   "recall_alerta": 0.5
+  },
+  {
+   "T": "2025-10-31",
+   "n": 125,
+   "eventos": 10,
+   "pr_auc": 0.2088677791412672,
+   "recall_alerta": 0.4
+  },
+  {
+   "T": "2025-11-30",
+   "n": 121,
+   "eventos": 11,
+   "pr_auc": 0.2782609922154575,
+   "recall_alerta": 0.36363636363636365
+  },
+  {
+   "T": "2025-12-31",
+   "n": 107,
+   "eventos": 12,
+   "pr_auc": 0.35907330907827506,
+   "recall_alerta": 0.5833333333333334
+  },
+  {
+   "T": "2026-01-31",
+   "n": 98,
+   "eventos": 8,
+   "pr_auc": 0.20621479215229216,
+   "recall_alerta": 0.625
+  },
+  {
+   "T": "2026-02-28",
+   "n": 90,
+   "eventos": 8,
+   "pr_auc": 0.15055156449553,
+   "recall_alerta": 0.125
+  },
+  {
+   "T": "2026-03-31",
+   "n": 93,
+   "eventos": 10,
+   "pr_auc": 0.29879664092357594,
+   "recall_alerta": 0.3
+  },
+  {
+   "T": "2026-04-30",
+   "n": 91,
+   "eventos": 7,
+   "pr_auc": 0.19174003986377214,
+   "recall_alerta": 0.2857142857142857
+  },
+  {
+   "T": "2026-05-31",
+   "n": 98,
+   "eventos": 8,
+   "pr_auc": 0.14809249798284885,
+   "recall_alerta": 0.375
+  },
+  {
+   "T": "2026-06-30",
+   "n": 116,
+   "eventos": 10,
+   "pr_auc": 0.47892717717717714,
+   "recall_alerta": 0.7
+  }
+ ],
+ "alertas": [
+  "PSI > 0.25 en 8 features: ['ib_frac_plazo_transcurrido', 'mefseg_registros_180d', 'ib_dias_para_fin_programado', 'mefseg_problemas_180d', 'ib_log_monto_contrato', 'ib_plazo_original_dias', 'est_log_monto_contratado', 'est_plazo_vigencia_dias'] -> evaluar reentrenamiento"
+ ]
+}

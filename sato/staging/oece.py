@@ -89,7 +89,7 @@ def _split_record(parts: list[str], header: list[str], spec: Spec) -> tuple[list
     k = len(parts) - n
     i = header.index(spec.free_field)
     fixed = parts[:i] + ["|".join(parts[i : i + 1 + k])] + parts[i + 1 + k :]
-    rec = dict(zip(header, fixed))
+    rec = dict(zip(header, fixed, strict=True))
     for col, rx in spec.anchors.items():
         if not rx.match(rec.get(col, "")):
             return None, "rejected"
@@ -130,7 +130,7 @@ def stage(kind: str, raw_dir: Path = RAW / "oece", out_dir: Path = STAGING) -> d
             fs[status] += 1
             if parts is None:
                 continue
-            for h, v in zip(header, parts):
+            for h, v in zip(header, parts, strict=True):
                 cols[h].append(v)
             cols["src_file"].append(Path(f).name)
             cols["parse_status"].append(status)

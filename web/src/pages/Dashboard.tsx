@@ -49,7 +49,7 @@ export default function Dashboard() {
         <Kpi titulo="Obras registradas" valor={fmtNum(d.kpi.obras)} detalle={`${d.kpi.provincias} provincias`} />
         <Kpi titulo="En ejecución" valor={fmtNum(d.kpi.en_ejecucion)} detalle="con asientos en los últimos 90 días" />
         <Kpi titulo="Evaluadas hoy" valor={fmtNum(d.vigente.evaluadas)} detalle="elegibles para predicción" />
-        <Kpi titulo="Alertas vigentes" valor={fmtNum(d.vigente.alertas)} tono="medio" detalle={`${d.vigente.alto} nivel alto · ${d.vigente.medio} medio`} />
+        <Kpi titulo="Alertas vigentes" valor={fmtNum(d.vigente.alertas)} tono="medio" detalle={`nivel alto · ${d.vigente.medio} más en vigilancia`} />
         <Kpi titulo="Atraso normativo" valor={fmtNum(d.kpi.con_atraso_normativo)} tono="alto" detalle="obras con evento art. 203/207" />
         <Kpi titulo="Asientos analizados" valor={fmtNum(d.kpi.asientos)} detalle="cuaderno de obra digital (OECE)" />
       </div>

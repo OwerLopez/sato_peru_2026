@@ -5,7 +5,7 @@
  "horizonte_dias": 60,
  "conjunto_features": "B_full",
  "algoritmo": "LightGBM (TreeSHAP)",
- "entrenado_hasta": "2026-07-02",
+ "entrenado_hasta": "2026-06-30",
  "fecha_corte_datos": "2026-08-31",
  "umbral_alerta": 0.12564634376773112,
  "umbral_vigilancia": 0.06474360687199299,
@@ -243,7 +243,7 @@
   ]
  },
  "artefacto": "modelo_produccion.joblib",
- "sha256": "694094790eacfd72d280dd0a0493dec2ef6c7acfa7159b1dffd3fed91c281786",
+ "sha256": "f6e5688cc372f9c9a081ede03c7bd63264d7c1c601263c5f821429a60caa3e48",
  "filas_entrenamiento": 46066,
  "obras_entrenamiento": 11076
 }

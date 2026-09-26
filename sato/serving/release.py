@@ -24,14 +24,11 @@ import hashlib
 import json
 import logging
 import re
-import unicodedata
 from pathlib import Path
 
 import joblib
-import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from sklearn.metrics import f1_score
 
 from sato.config import ARTIFACTS, CURATED, FEATURES, STAGING
 from sato.features.text import LEXICON, WINDOW_DAYS, norm_text
@@ -119,7 +116,7 @@ def build(feature_set: str = "B_full", H: int = 60, target: str = "atraso", out:
     prod = _fit(cols, dfo[cols], dfo["y"], params)
     art = out / "modelo_produccion.joblib"
     joblib.dump({"model": prod, "features": cols, "params": params, "H": H, "target": target, "feature_set": feature_set,
-                 "thr_alerta": thr_alerta, "thr_alto": thr_alto, "entrenado_hasta": str((D - pd.Timedelta(days=H)).date())}, art)
+                 "thr_alerta": thr_alerta, "thr_alto": thr_alto, "entrenado_hasta": str(dfo["T"].max().date())}, art)
     sha = hashlib.sha256(art.read_bytes()).hexdigest()
 
     aqp = df["dep_code"] == "04"
@@ -187,7 +184,7 @@ def build(feature_set: str = "B_full", H: int = 60, target: str = "atraso", out:
         op[f"top_{int(k * 100)}"] = {"precision": tp / max(1, int(m.sum())), "recall": tp / max(1, int((o["y_observado"] == 1).sum()))}
     card = dict(
         nombre="SATO-AQP alerta de atraso", version=f"{target}-H{H}-{feature_set}-{str(D.date())}", objetivo=target, horizonte_dias=H,
-        conjunto_features=feature_set, algoritmo="LightGBM (TreeSHAP)", entrenado_hasta=str((D - pd.Timedelta(days=H)).date()),
+        conjunto_features=feature_set, algoritmo="LightGBM (TreeSHAP)", entrenado_hasta=str(df.loc[obs, "T"].max().date()),
         fecha_corte_datos=str(D.date()), umbral_alerta=thr_alto, umbral_vigilancia=thr_alerta, umbral_alto=thr_alto,
         operacion_backtest_arequipa=op, params=params, features=cols,
         metricas_test=grid_res["modelos"]["lgbm"], periodos_evaluacion=grid_res["periodos"], artefacto=str(art.name), sha256=sha,

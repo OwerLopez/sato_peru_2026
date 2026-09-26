@@ -21,24 +21,28 @@ interface Alerta {
 }
 
 export default function Alertas() {
-  const [f, setF] = useState({ nivel: '', provincia: '', sector: '' })
-  const q = useQuery({ queryKey: ['alertas', f], queryFn: () => api<{ fecha_corte: string; total: number; items: Alerta[] }>(`/alertas${qs({ ...f, limite: 300 })}`) })
+  const [f, setF] = useState({ nivel: 'ALTO', provincia: '', sector: '' })
+  const q = useQuery({
+    queryKey: ['alertas', f],
+    queryFn: () => api<{ fecha_corte: string; total: number; items: Alerta[] }>(`/alertas${qs({ ...f, incluir_vigilancia: f.nivel === '' ? true : undefined, limite: 300 })}`),
+  })
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-bold text-marca-900">Alertas vigentes</h1>
         <p className="text-sm text-slate-500">
           Obras en ejecución con probabilidad elevada de registrar un <b>atraso significativo normativo</b> (valorización acumulada &lt; 80% de lo programado, RLCE art.
-          203 / RLGCP art. 207) en los próximos 60 días. Corte: {fmtFecha(q.data?.fecha_corte)}.
+          203 / RLGCP art. 207) en los próximos 60 días. Corte: {fmtFecha(q.data?.fecha_corte)}. <b>Alerta</b> = nivel alto (umbral que maximiza F1 en validación);{' '}
+          <b>en vigilancia</b> = nivel medio (umbral orientado a recall).
         </p>
       </div>
       <div className="tarjeta flex flex-wrap items-end gap-3 p-3">
         <label className="text-sm">
           <div className="etiqueta mb-1">Nivel</div>
           <select className="entrada" value={f.nivel} onChange={(e) => setF({ ...f, nivel: e.target.value })}>
-            <option value="">Alto y medio</option>
-            <option value="ALTO">Alto</option>
-            <option value="MEDIO">Medio</option>
+            <option value="ALTO">Alerta (nivel alto)</option>
+            <option value="MEDIO">En vigilancia (nivel medio)</option>
+            <option value="">Ambos</option>
           </select>
         </label>
         <label className="text-sm">
@@ -59,7 +63,7 @@ export default function Alertas() {
             ))}
           </select>
         </label>
-        <span className="ml-auto text-sm text-slate-500">{q.data?.total ?? 0} alertas</span>
+        <span className="ml-auto text-sm text-slate-500">{q.data?.total ?? 0} obras</span>
       </div>
       {q.isLoading ? (
         <Cargando />
