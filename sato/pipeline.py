@@ -94,6 +94,21 @@ def release():
     r.build(feature_set="B_full", H=60)
 
 
+def cartera():
+    from sato.exante import dataset, seguimiento, serving
+
+    dataset.build()
+    seguimiento.build_panel()
+    serving.build()
+
+
+def cartera_experimentos():
+    from sato.exante import seguimiento, train
+
+    train.run("y_30")
+    seguimiento.run()
+
+
 def monitor():
     from sato.models import monitor as m
 
@@ -108,8 +123,10 @@ def load():
 
 
 STEPS = dict(ingest=ingest, staging=staging, integration=integration, features=features, embeddings=embeddings,
-             experiments=experiments, release=release, monitor=monitor, load=load)
-ALL = ["ingest", "staging", "integration", "features", "embeddings", "experiments", "release", "monitor", "load"]
+             experiments=experiments, release=release, cartera=cartera, cartera_experimentos=cartera_experimentos,
+             monitor=monitor, load=load)
+ALL = ["ingest", "staging", "integration", "features", "embeddings", "experiments", "release", "cartera_experimentos", "cartera",
+       "monitor", "load"]
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")

@@ -119,7 +119,7 @@ def build(feature_set: str = "B_full", H: int = 60, target: str = "atraso", out:
                  "thr_alerta": thr_alerta, "thr_alto": thr_alto, "entrenado_hasta": str(dfo["T"].max().date())}, art)
     sha = hashlib.sha256(art.read_bytes()).hexdigest()
 
-    aqp = df["dep_code"] == "04"
+    aqp = pd.Series(True, index=df.index)  # alcance nacional (todas las obras con cuaderno digital)
     preds, shaps = [], []
     # Backtest as-of con reentrenamiento trimestral
     origins = pd.date_range("2024-12-31", D, freq="QE")
@@ -138,7 +138,7 @@ def build(feature_set: str = "B_full", H: int = 60, target: str = "atraso", out:
         p["modelo_origen"] = str(o.date())
         preds.append(p)
         shaps.append((p.index, _shap(m, df.loc[sel, cols])))
-        log.info("backtest origen %s: entrenado con %s filas, %s predicciones AQP", o.date(), int(tr.sum()), int(sel.sum()))
+        log.info("backtest origen %s: entrenado con %s filas, %s predicciones", o.date(), int(tr.sum()), int(sel.sum()))
     sel = aqp & (df["T"] == D)
     p = df.loc[sel, ["cuaderno_id", "T", "y"]].copy()
     p["score"] = prod.predict_proba(df.loc[sel, cols])[:, 1]
@@ -171,29 +171,78 @@ def build(feature_set: str = "B_full", H: int = 60, target: str = "atraso", out:
     E = pd.DataFrame(E)
     P.to_parquet(out / "predicciones.parquet", index=False)
     E.to_parquet(out / "explicaciones.parquet", index=False)
-    evidence(E, out)
+    keep = P.loc[(P["tipo"] == "vigente") | (P["nivel"] != "BAJO"), ["cuaderno_id", "T"]]
+    evidence(E.merge(keep, on=["cuaderno_id", "T"]), out)
+    simulate(prod, df.loc[df["T"] == D], cols, thr_alto, out)
 
-    o = P[P["y_observado"].notna()]
-    op = {"filas_observables": int(len(o)), "prevalencia": float((o["y_observado"] == 1).mean())}
-    for name, m in (("alerta_alto", o["nivel"] == "ALTO"), ("vigilancia_o_alto", o["nivel"] != "BAJO")):
-        tp = int(((m) & (o["y_observado"] == 1)).sum())
-        op[name] = {"tasa_marcadas": float(m.mean()), "precision": tp / max(1, int(m.sum())), "recall": tp / max(1, int((o["y_observado"] == 1).sum()))}
-    for k in (0.05, 0.10, 0.20, 0.30):
-        m = o["score"] >= o["score"].quantile(1 - k)
-        tp = int(((m) & (o["y_observado"] == 1)).sum())
-        op[f"top_{int(k * 100)}"] = {"precision": tp / max(1, int(m.sum())), "recall": tp / max(1, int((o["y_observado"] == 1).sum()))}
+    dep = df.drop_duplicates("cuaderno_id").set_index("cuaderno_id")["dep_code"]
+
+    def operacion(o):
+        r = {"filas_observables": int(len(o)), "prevalencia": float((o["y_observado"] == 1).mean())}
+        for name, m in (("alerta_alto", o["nivel"] == "ALTO"), ("vigilancia_o_alto", o["nivel"] != "BAJO")):
+            tp = int(((m) & (o["y_observado"] == 1)).sum())
+            r[name] = {"tasa_marcadas": float(m.mean()), "precision": tp / max(1, int(m.sum())), "recall": tp / max(1, int((o["y_observado"] == 1).sum()))}
+        for k in (0.05, 0.10, 0.20, 0.30):
+            m = o["score"] >= o["score"].quantile(1 - k)
+            tp = int(((m) & (o["y_observado"] == 1)).sum())
+            r[f"top_{int(k * 100)}"] = {"precision": tp / max(1, int(m.sum())), "recall": tp / max(1, int((o["y_observado"] == 1).sum()))}
+        return r
+
+    o_all = P[P["y_observado"].notna()]
+    op = operacion(o_all[o_all["cuaderno_id"].map(dep) == "04"])
+    op_nac = operacion(o_all)
     card = dict(
         nombre="SATO-AQP alerta de atraso", version=f"{target}-H{H}-{feature_set}-{str(D.date())}", objetivo=target, horizonte_dias=H,
         conjunto_features=feature_set, algoritmo="LightGBM (TreeSHAP)", entrenado_hasta=str(df.loc[obs, "T"].max().date()),
         fecha_corte_datos=str(D.date()), umbral_alerta=thr_alto, umbral_vigilancia=thr_alerta, umbral_alto=thr_alto,
-        operacion_backtest_arequipa=op, params=params, features=cols,
+        operacion_backtest_arequipa=op, operacion_backtest_nacional=op_nac, params=params, features=cols,
         metricas_test=grid_res["modelos"]["lgbm"], periodos_evaluacion=grid_res["periodos"], artefacto=str(art.name), sha256=sha,
         filas_entrenamiento=int(obs.sum()), obras_entrenamiento=int(df.loc[obs, "cuaderno_id"].nunique()),
     )
     (out / "modelo_card.json").write_text(json.dumps(card, indent=1, default=str), encoding="utf-8")
-    log.info("release: %s predicciones AQP (%s vigentes, %s alertas vigentes)", len(P), int((P.tipo == "vigente").sum()),
+    log.info("release: %s predicciones (%s vigentes, %s alertas vigentes)", len(P), int((P.tipo == "vigente").sum()),
              int(((P.tipo == "vigente") & P.alerta).sum()))
     return out
+
+
+# ---------------------------------------------------------------- simulador (sensibilidad del modelo)
+ESCENARIOS = {
+    "consultas": ("Absolver todas las consultas pendientes", {"asi_consultas_pendientes": 0}),
+    "suspensiones": ("Sin suspensiones del plazo en los ultimos 90 dias", {"asi_90d_suspension_plazo": 0}),
+    "penalidades": ("Sin aplicacion de penalidades en los ultimos 90 dias", {"asi_90d_penalidades": 0}),
+    "ampliaciones": ("Sin nuevas ampliaciones de plazo en los ultimos 90 dias", {"asi_90d_ampliacion_plazo": 0}),
+    "registro": ("Registro activo del cuaderno (asiento reciente)", {"asi_dias_desde_ultimo": 0}),
+    "devengado": ("Ejecucion financiera al dia (devengado en el ultimo mes)", {"siaf_meses_desde_ultimo_dev": 1}),
+}
+
+
+def simulate(model, cur: pd.DataFrame, cols: list[str], thr: float, out: Path) -> Path:
+    """Recalcula el riesgo vigente modificando UNA variable accionable a la vez.
+
+    Es un analisis de SENSIBILIDAD del modelo (cuanto cambia la prediccion si esa senal
+    cambiara), NO una estimacion causal del efecto de una intervencion real.
+    Solo se reportan escenarios aplicables (la variable existe y su valor cambia).
+    """
+    base = model.predict_proba(cur[cols])[:, 1]
+    rows = []
+    for key, (desc, changes) in ESCENARIOS.items():
+        X = cur[cols].copy()
+        aplica = pd.Series(False, index=cur.index)
+        for f, v in changes.items():
+            if f not in X.columns:
+                continue
+            aplica |= X[f].notna() & (X[f] != v)
+            X[f] = X[f].where(~(X[f].notna() & (X[f] != v)), v)
+        s = model.predict_proba(X)[:, 1]
+        for i, ix in enumerate(cur.index):
+            if aplica.loc[ix]:
+                rows.append(dict(cuaderno_id=cur.at[ix, "cuaderno_id"], T=cur.at[ix, "T"], escenario=key, descripcion=desc,
+                                 score_base=float(base[i]), score_escenario=float(s[i]), alerta_escenario=bool(s[i] >= thr)))
+    sim = pd.DataFrame(rows)
+    dst = out / "simulaciones.parquet"
+    sim.to_parquet(dst, index=False)
+    log.info("simulaciones: %s escenarios aplicables", len(sim))
+    return dst
 
 
 # ---------------------------------------------------------------- evidencia
@@ -219,10 +268,16 @@ def evidence(E: pd.DataFrame, out: Path) -> Path:
     asi["txt"] = (asi["titulo"].fillna("") + " . " + asi["descripcion"].fillna("")).map(norm_text)
     by_c = {c: g for c, g in asi.groupby("cuaderno_id")}
     siaf = pd.concat([pd.read_parquet(f, columns=["cui", "anio", "mes", "monto_devengado"]) for f in sorted((STAGING / "siaf").glob("*.parquet"))])
-    siaf = siaf[(siaf["mes"] >= 1)]
     cua = pd.read_parquet(CURATED / "cuaderno.parquet").set_index("cuaderno_id")
+    cuis = set(cua.loc[cua.index.isin(pos["cuaderno_id"].unique()), "cui"].dropna())
+    siaf = siaf[(siaf["mes"] >= 1) & (siaf["anio"] >= 2020) & siaf["cui"].isin(cuis)].copy()
+    siaf["mes_ini"] = pd.to_datetime(dict(year=siaf["anio"], month=siaf["mes"], day=1))
+    siaf_by = {c: g.sort_values("mes_ini", ascending=False) for c, g in siaf.groupby("cui")}
     mefseg = pd.read_parquet(STAGING / "mef_estado_situacional.parquet")
-    mefseg = mefseg[mefseg["cui"].isin(cua["cui"].dropna().unique())]
+    mefseg = mefseg[mefseg["cui"].isin(cuis)]
+    mefseg_by = {c: g for c, g in mefseg.groupby("cui")}
+    cua["onset"] = pd.concat([pd.to_datetime(cua[c]) for c in ("f_valorizacion_menor_80", "f_calendario_acelerado")], axis=1).min(axis=1)
+    actor_by = {k: {v: g for v, g in cua[cua["onset"].notna()].groupby(k)} for k in ("ruc_contratista", "ruc_entidad")}
     vec, clf = _tfidf_ranker()
     coef = clf.coef_.ravel()
     lex = {k: re.compile(v) for k, v in LEXICON.items()}
@@ -262,23 +317,22 @@ def evidence(E: pd.DataFrame, out: Path) -> Path:
                 continue
         cui = cua.at[r.cuaderno_id, "cui"] if r.cuaderno_id in cua.index else None
         if f.startswith("siaf_") and cui:
-            s = siaf[(siaf["cui"] == cui)].copy()
-            s["mes_ini"] = pd.to_datetime(dict(year=s["anio"], month=s["mes"], day=1))
-            s = s[s["mes_ini"] < T.replace(day=1)].sort_values("mes_ini", ascending=False).head(6)
+            s = siaf_by.get(cui)
+            s = s[s["mes_ini"] < T.replace(day=1)].head(6) if s is not None else siaf.iloc[:0]
             for x in s.itertuples():
                 add(r, "SIAF", fecha=x.mes_ini, referencia=f"https://ofi5.mef.gob.pe/ssi/Ssi/Index?codigo={cui}&tipo=2",
                     extracto=f"Devengado {x.anio}-{x.mes:02d}: S/ {x.monto_devengado:,.2f}")
         elif f.startswith("mefseg_") and cui:
-            s = mefseg[(mefseg["cui"] == cui) & (mefseg["fecha_registro"] <= T) & (mefseg["fecha_registro"] > T - pd.Timedelta(days=180))]
+            s = mefseg_by.get(cui, mefseg.iloc[:0])
+            s = s[(s["fecha_registro"] <= T) & (s["fecha_registro"] > T - pd.Timedelta(days=180))]
             for x in s.sort_values("fecha_registro", ascending=False).head(4).itertuples():
                 add(r, "MEF_SEGUIMIENTO", fecha=x.fecha_registro, referencia=x.tipo_registro, extracto=_s(x.descripcion)[:400])
         elif f.startswith("actor_contratista") or f.startswith("actor_entidad"):
             key = "ruc_contratista" if "contratista" in f else "ruc_entidad"
             val = cua.at[r.cuaderno_id, key] if r.cuaderno_id in cua.index else None
             if val:
-                prev = cua[(cua[key] == val) & (cua.index != r.cuaderno_id)].copy()
-                prev["onset"] = pd.concat([pd.to_datetime(prev[c]) for c in ("f_valorizacion_menor_80", "f_calendario_acelerado")], axis=1).min(axis=1)
-                prev = prev[prev["onset"] < T].sort_values("onset", ascending=False).head(4)
+                prev = actor_by[key].get(val, cua.iloc[:0])
+                prev = prev[(prev.index != r.cuaderno_id) & (prev["onset"] < T)].sort_values("onset", ascending=False).head(4)
                 for cid, x in prev.iterrows():
                     add(r, "HISTORIAL", fecha=x.onset, referencia=str(cid), extracto=f"{_s(x.denominacion)[:220]} ({_s(x.departamento)}) - atraso normativo el {x.onset.date()}")
         elif f.startswith("ib_"):

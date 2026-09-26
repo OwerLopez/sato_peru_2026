@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 
 from sato.config import FEATURES, STAGING
-from sato.exante.train import OUT, make, fit_select
+from sato.exante.train import OUT, fit_select, make
 from sato.models.evaluate import cluster_bootstrap, point_metrics, precision_at_k, threshold_for_fbeta
 
 log = logging.getLogger(__name__)
@@ -39,13 +39,20 @@ TEST_START, TEST_END, VALID_START = pd.Timestamp("2024-01-01"), pd.Timestamp("20
 OBS_END = pd.Timestamp("2026-03-31")
 
 
-def build_panel(out: Path = FEATURES) -> Path:
+def panel_for(codigos=None, end: pd.Timestamp = OBS_END, labeled_only: bool = False) -> pd.DataFrame:
+    """Panel obra-mes con features ex-ante + SIAF para las obras indicadas (CUI propia), cortes hasta `end`."""
     ds = pd.read_parquet(FEATURES / "exante_dataset.parquet")
     cnt = ds.groupby("codigo_unico_de_inversion").size()
-    ds = ds[ds["codigo_unico_de_inversion"].map(cnt).eq(1) & ds["y_30"].notna()].copy()
+    ds = ds[ds["codigo_unico_de_inversion"].map(cnt).eq(1)].copy()
+    if labeled_only:
+        ds = ds[ds["y_30"].notna()]
+    if codigos is not None:
+        ds = ds[ds["codigo_infobras"].isin(set(codigos))]
     ds = ds[ds["fecha_de_inicio_de_obra"] >= "2017-07-01"]
     ds["lim"] = ds["fecha_de_inicio_de_obra"] + pd.to_timedelta(np.ceil(ds["plazo_de_ejecucion_en_dias"] * 1.3), unit="D")
-    ds["fin_obs"] = ds[["fecha_de_finalizacion_real", "lim"]].min(axis=1).clip(upper=OBS_END)
+    ds["fin_obs"] = ds[["fecha_de_finalizacion_real", "lim"]].min(axis=1).clip(upper=end)
+    if not labeled_only:  # obras activas: se evalua hasta `end` inclusive
+        ds["fin_obs"] = ds["fin_obs"].where(ds["fecha_de_finalizacion_real"].notna() | ds["y_30"].notna(), end + pd.Timedelta(days=1))
     con = duckdb.connect()
     con.register("obras", ds[["codigo_infobras", "codigo_unico_de_inversion", "fecha_de_inicio_de_obra", "fin_obs", "fin_prog",
                               "plazo_de_ejecucion_en_dias", "costo_de_obra_en_soles_segun_et_en_soles"]])
@@ -76,7 +83,11 @@ def build_panel(out: Path = FEATURES) -> Path:
     df["T"] = pd.to_datetime(df["T"])
     df["sg_brecha_ritmo"] = df["sg_dev_desde_inicio_costo"] - df["sg_frac_plazo"]
     df["sg_vencido"] = (df["sg_dias_al_fin_prog"] < 0).astype(int)
-    df = df.merge(ds.drop(columns=["lim", "fin_obs"]), on="codigo_infobras", how="left")
+    return df.merge(ds.drop(columns=["lim", "fin_obs"]), on="codigo_infobras", how="left")
+
+
+def build_panel(out: Path = FEATURES) -> Path:
+    df = panel_for(labeled_only=True)
     dst = out / "seguimiento_panel.parquet"
     df.to_parquet(dst, index=False)
     log.info("panel seguimiento: %s filas, %s obras", len(df), df["codigo_infobras"].nunique())

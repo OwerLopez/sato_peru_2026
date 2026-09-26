@@ -92,7 +92,7 @@ def _history(d: pd.DataFrame, key: str, prefix: str) -> pd.DataFrame:
         yy = g["_y"].to_numpy()
         sp = g["sobreplazo"].to_numpy()
         end = g["fecha_de_finalizacion_real"].fillna(g["fin_prog"]).to_numpy()
-        for i, s in enumerate(starts):
+        for s in starts:
             prev = starts < s
             kmask = (~pd.isna(kn)) & (kn < s)
             n_known = int(kmask.sum())

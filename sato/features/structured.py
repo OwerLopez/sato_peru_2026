@@ -143,11 +143,11 @@ def build(out: Path = FEATURES) -> Path:
     # SIAF: devengado mensual por CUI; en T se usa hasta el mes anterior (rezago 1 mes).
     con.sql(
         f"""create table siaf as select cui, make_date(anio, mes, 1) mes_ini, monto_devengado dev
-            from read_parquet('{(STAGING / 'siaf').as_posix()}/*.parquet') where mes between 1 and 12"""
+            from read_parquet('{(STAGING / 'siaf').as_posix()}/*.parquet') where mes between 1 and 12 and anio >= 2020"""  # configuracion evaluada: SIAF 2020+
     )
     con.sql(
         f"""create table pia as select cui, anio, sum(monto_pia) pia
-            from read_parquet('{(STAGING / 'siaf').as_posix()}/*.parquet') where mes = 0 group by all"""
+            from read_parquet('{(STAGING / 'siaf').as_posix()}/*.parquet') where mes = 0 and anio >= 2020 group by all"""
     )
     con.sql(
         """

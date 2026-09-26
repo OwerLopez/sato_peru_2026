@@ -40,6 +40,36 @@
    "recall": 0.5918367346938775
   }
  },
+ "operacion_backtest_nacional": {
+  "filas_observables": 39038,
+  "prevalencia": 0.0558174086787233,
+  "alerta_alto": {
+   "tasa_marcadas": 0.10172139966186793,
+   "precision": 0.1760261898766054,
+   "recall": 0.3207893529141808
+  },
+  "vigilancia_o_alto": {
+   "tasa_marcadas": 0.2950714688252472,
+   "precision": 0.11615591631217988,
+   "recall": 0.6140431390546122
+  },
+  "top_5": {
+   "precision": 0.21055327868852458,
+   "recall": 0.18861863240018356
+  },
+  "top_10": {
+   "precision": 0.17674180327868852,
+   "recall": 0.3166590178981184
+  },
+  "top_20": {
+   "precision": 0.13729508196721313,
+   "recall": 0.49196879302432306
+  },
+  "top_30": {
+   "precision": 0.11543715846994536,
+   "recall": 0.6204681046351538
+  }
+ },
  "params": {
   "num_leaves": 15,
   "min_child_samples": 20,

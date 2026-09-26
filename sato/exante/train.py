@@ -38,7 +38,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from xgboost import XGBClassifier
 
 from sato.config import ARTIFACTS, FEATURES
-from sato.models.evaluate import cluster_bootstrap, point_metrics, precision_at_k, safe_ap, threshold_for_fbeta
+from sato.models.evaluate import cluster_bootstrap, point_metrics, precision_at_k, threshold_for_fbeta
 
 log = logging.getLogger(__name__)
 TEST_START, TEST_END, VALID_START = pd.Timestamp("2022-01-01"), pd.Timestamp("2024-06-30"), pd.Timestamp("2020-07-01")
