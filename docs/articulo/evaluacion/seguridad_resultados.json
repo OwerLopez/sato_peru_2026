@@ -1,0 +1,78 @@
+{
+ "base": "http://localhost:8080",
+ "fecha": "2026-09-26 10:33",
+ "aprobados": 10,
+ "total": 10,
+ "casos": [
+  {
+   "categoria": "A05 Configuracion de seguridad",
+   "caso": "Cabeceras de seguridad HTTP",
+   "esperado": "CSP, nosniff, X-Frame-Options, Referrer-Policy",
+   "observado": "presentes: ['content-security-policy', 'x-content-type-options', 'x-frame-options', 'referrer-policy']; faltan: []",
+   "aprobado": true
+  },
+  {
+   "categoria": "A03 Inyeccion",
+   "caso": "Inyeccion SQL en busqueda de texto",
+   "esperado": "200 sin efecto sobre los datos",
+   "observado": "codigos [200, 200, 200]; total obras antes 17100 / despues 17100",
+   "aprobado": true
+  },
+  {
+   "categoria": "A03 Inyeccion",
+   "caso": "XSS reflejado en pagina HTML de confirmacion",
+   "esperado": "payload no reflejado",
+   "observado": "status 200; payload reflejado=False",
+   "aprobado": true
+  },
+  {
+   "categoria": "A01 Control de acceso",
+   "caso": "Acciones protegidas sin token",
+   "esperado": "401",
+   "observado": "revision sin token 401; auditoria sin token 401",
+   "aprobado": true
+  },
+  {
+   "categoria": "A07 Autenticacion",
+   "caso": "JWT con firma invalida",
+   "esperado": "401",
+   "observado": "auditoria con JWT falsificado 401",
+   "aprobado": true
+  },
+  {
+   "categoria": "A07 Autenticacion",
+   "caso": "Credenciales invalidas",
+   "esperado": "400/401",
+   "observado": "login con credenciales invalidas 401",
+   "aprobado": true
+  },
+  {
+   "categoria": "A04 Diseno inseguro",
+   "caso": "Validacion de entrada (tamano, UUID, enumeraciones, longitud, correo)",
+   "esperado": "422",
+   "observado": "codigos [422, 422, 422, 422, 422]",
+   "aprobado": true
+  },
+  {
+   "categoria": "A05 Configuracion de seguridad",
+   "caso": "Errores sin trazas internas",
+   "esperado": "404 sin traceback",
+   "observado": "404 cuerpo={\"detail\":\"Obra no encontrada\"}",
+   "aprobado": true
+  },
+  {
+   "categoria": "A05 Configuracion de seguridad",
+   "caso": "Metodos HTTP no expuestos",
+   "esperado": "404/405",
+   "observado": "DELETE /obras -> 405",
+   "aprobado": true
+  },
+  {
+   "categoria": "A04 Diseno inseguro",
+   "caso": "Limitacion de tasa por IP",
+   "esperado": "429 al exceder el limite",
+   "observado": "primer 429 tras 52 solicitudes en 1.1 s",
+   "aprobado": true
+  }
+ ]
+}

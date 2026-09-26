@@ -1,0 +1,1139 @@
+{
+ "verificado_en": "2026-09-26",
+ "fuente": "https://api.crossref.org/works",
+ "referencias": [
+  {
+   "doi": "10.1061/(asce)co.1943-7862.0001736",
+   "tipo": "journal-article",
+   "titulo": "Machine Learning Algorithms for Construction Projects Delay Risk Prediction",
+   "autores": [
+    "Ahmed Gondia",
+    "Ahmad Siam",
+    "Wael El-Dakhakhni",
+    "Ayman H. Nassar"
+   ],
+   "autores_gf": [
+    [
+     "Ahmed",
+     "Gondia"
+    ],
+    [
+     "Ahmad",
+     "Siam"
+    ],
+    [
+     "Wael",
+     "El-Dakhakhni"
+    ],
+    [
+     "Ayman H.",
+     "Nassar"
+    ]
+   ],
+   "anio": 2020,
+   "revista": "Journal of Construction Engineering and Management",
+   "volumen": "146",
+   "numero": "1",
+   "paginas": "04019085",
+   "editorial": "American Society of Civil Engineers (ASCE)",
+   "evento": null
+  },
+  {
+   "doi": "10.1016/j.mlwa.2021.100166",
+   "tipo": "journal-article",
+   "titulo": "Applied artificial intelligence for predicting construction projects delay",
+   "autores": [
+    "Christian Nnaemeka Egwim",
+    "Hafiz Alaka",
+    "Luqman Olalekan Toriola-Coker",
+    "Habeeb Balogun",
+    "Funlade Sunmola"
+   ],
+   "autores_gf": [
+    [
+     "Christian Nnaemeka",
+     "Egwim"
+    ],
+    [
+     "Hafiz",
+     "Alaka"
+    ],
+    [
+     "Luqman Olalekan",
+     "Toriola-Coker"
+    ],
+    [
+     "Habeeb",
+     "Balogun"
+    ],
+    [
+     "Funlade",
+     "Sunmola"
+    ]
+   ],
+   "anio": 2021,
+   "revista": "Machine Learning with Applications",
+   "volumen": "6",
+   "numero": null,
+   "paginas": "100166",
+   "editorial": "Elsevier BV",
+   "evento": null
+  },
+  {
+   "doi": "10.1016/j.ijproman.2005.11.010",
+   "tipo": "journal-article",
+   "titulo": "Causes of delay in large construction projects",
+   "autores": [
+    "Sadi A. Assaf",
+    "Sadiq Al-Hejji"
+   ],
+   "autores_gf": [
+    [
+     "Sadi A.",
+     "Assaf"
+    ],
+    [
+     "Sadiq",
+     "Al-Hejji"
+    ]
+   ],
+   "anio": 2006,
+   "revista": "International Journal of Project Management",
+   "volumen": "24",
+   "numero": "4",
+   "paginas": "349-357",
+   "editorial": "Elsevier BV",
+   "evento": null
+  },
+  {
+   "doi": "10.1016/j.ijproman.2006.11.007",
+   "tipo": "journal-article",
+   "titulo": "Causes and effects of delays in Malaysian construction industry",
+   "autores": [
+    "Murali Sambasivan",
+    "Yau Wen Soon"
+   ],
+   "autores_gf": [
+    [
+     "Murali",
+     "Sambasivan"
+    ],
+    [
+     "Yau Wen",
+     "Soon"
+    ]
+   ],
+   "anio": 2007,
+   "revista": "International Journal of Project Management",
+   "volumen": "25",
+   "numero": "5",
+   "paginas": "517-526",
+   "editorial": "Elsevier BV",
+   "evento": null
+  },
+  {
+   "doi": "10.1002/pmj.21409",
+   "tipo": "journal-article",
+   "titulo": "What you Should Know about Megaprojects and Why: An Overview",
+   "autores": [
+    "Bent Flyvbjerg"
+   ],
+   "autores_gf": [
+    [
+     "Bent",
+     "Flyvbjerg"
+    ]
+   ],
+   "anio": 2014,
+   "revista": "Project Management Journal",
+   "volumen": "45",
+   "numero": "2",
+   "paginas": "6-19",
+   "editorial": "SAGE Publications",
+   "evento": null
+  },
+  {
+   "doi": "10.1080/15623599.2020.1768326",
+   "tipo": "journal-article",
+   "titulo": "Machine learning model for delay risk assessment in tall building projects",
+   "autores": [
+    "Muizz O. Sanni-Anibire",
+    "Rosli Mohamad Zin",
+    "Sunday Olusanya Olatunji"
+   ],
+   "autores_gf": [
+    [
+     "Muizz O.",
+     "Sanni-Anibire"
+    ],
+    [
+     "Rosli Mohamad",
+     "Zin"
+    ],
+    [
+     "Sunday Olusanya",
+     "Olatunji"
+    ]
+   ],
+   "anio": 2022,
+   "revista": "International Journal of Construction Management",
+   "volumen": "22",
+   "numero": "11",
+   "paginas": "2134-2143",
+   "editorial": "Informa UK Limited",
+   "evento": null
+  },
+  {
+   "doi": "10.3390/su12041514",
+   "tipo": "journal-article",
+   "titulo": "Prediction of Risk Delay in Construction Projects Using a Hybrid Artificial Intelligence Model",
+   "autores": [
+    "Zaher Mundher Yaseen",
+    "Zainab Hasan Ali",
+    "Sinan Q. Salih",
+    "Nadhir Al-Ansari"
+   ],
+   "autores_gf": [
+    [
+     "Zaher Mundher",
+     "Yaseen"
+    ],
+    [
+     "Zainab Hasan",
+     "Ali"
+    ],
+    [
+     "Sinan Q.",
+     "Salih"
+    ],
+    [
+     "Nadhir",
+     "Al-Ansari"
+    ]
+   ],
+   "anio": 2020,
+   "revista": "Sustainability",
+   "volumen": "12",
+   "numero": "4",
+   "paginas": "1514",
+   "editorial": "MDPI AG",
+   "evento": null
+  },
+  {
+   "doi": "10.1108/ijmpb-09-2018-0178",
+   "tipo": "journal-article",
+   "titulo": "Causes of delays on construction projects: a comprehensive list",
+   "autores": [
+    "Serdar Durdyev",
+    "M. Reza Hosseini"
+   ],
+   "autores_gf": [
+    [
+     "Serdar",
+     "Durdyev"
+    ],
+    [
+     "M. Reza",
+     "Hosseini"
+    ]
+   ],
+   "anio": 2019,
+   "revista": "International Journal of Managing Projects in Business",
+   "volumen": "13",
+   "numero": "1",
+   "paginas": "20-46",
+   "editorial": "Emerald",
+   "evento": null
+  },
+  {
+   "doi": "10.1016/j.ijforecast.2020.06.006",
+   "tipo": "journal-article",
+   "titulo": "Preventing rather than punishing: An early warning model of malfeasance in public procurement",
+   "autores": [
+    "Jorge Gallego",
+    "Gonzalo Rivero",
+    "Juan Martínez"
+   ],
+   "autores_gf": [
+    [
+     "Jorge",
+     "Gallego"
+    ],
+    [
+     "Gonzalo",
+     "Rivero"
+    ],
+    [
+     "Juan",
+     "Martínez"
+    ]
+   ],
+   "anio": 2021,
+   "revista": "International Journal of Forecasting",
+   "volumen": "37",
+   "numero": "1",
+   "paginas": "360-377",
+   "editorial": "Elsevier BV",
+   "evento": null
+  },
+  {
+   "doi": "10.1093/jleo/ewaa004",
+   "tipo": "journal-article",
+   "titulo": "Bureaucratic Competence and Procurement Outcomes",
+   "autores": [
+    "Francesco Decarolis",
+    "Leonardo M Giuffrida",
+    "Elisabetta Iossa",
+    "Vincenzo Mollisi",
+    "Giancarlo Spagnolo"
+   ],
+   "autores_gf": [
+    [
+     "Francesco",
+     "Decarolis"
+    ],
+    [
+     "Leonardo M",
+     "Giuffrida"
+    ],
+    [
+     "Elisabetta",
+     "Iossa"
+    ],
+    [
+     "Vincenzo",
+     "Mollisi"
+    ],
+    [
+     "Giancarlo",
+     "Spagnolo"
+    ]
+   ],
+   "anio": 2021,
+   "revista": "The Journal of Law, Economics, and Organization",
+   "volumen": "36",
+   "numero": "3",
+   "paginas": "537-597",
+   "editorial": "Oxford University Press (OUP)",
+   "evento": null
+  },
+  {
+   "doi": "10.1017/s0007123417000461",
+   "tipo": "journal-article",
+   "titulo": "Uncovering High-Level Corruption: Cross-National Objective Corruption Risk Indicators Using Public Procurement Data",
+   "autores": [
+    "Mihály Fazekas",
+    "Gábor Kocsis"
+   ],
+   "autores_gf": [
+    [
+     "Mihály",
+     "Fazekas"
+    ],
+    [
+     "Gábor",
+     "Kocsis"
+    ]
+   ],
+   "anio": 2020,
+   "revista": "British Journal of Political Science",
+   "volumen": "50",
+   "numero": "1",
+   "paginas": "155-164",
+   "editorial": "Cambridge University Press (CUP)",
+   "evento": null
+  },
+  {
+   "doi": "10.1257/aer.104.4.1288",
+   "tipo": "journal-article",
+   "titulo": "Bidding for Incomplete Contracts: An Empirical Analysis of Adaptation Costs",
+   "autores": [
+    "Patrick Bajari",
+    "Stephanie Houghton",
+    "Steven Tadelis"
+   ],
+   "autores_gf": [
+    [
+     "Patrick",
+     "Bajari"
+    ],
+    [
+     "Stephanie",
+     "Houghton"
+    ],
+    [
+     "Steven",
+     "Tadelis"
+    ]
+   ],
+   "anio": 2014,
+   "revista": "American Economic Review",
+   "volumen": "104",
+   "numero": "4",
+   "paginas": "1288-1319",
+   "editorial": "American Economic Association",
+   "evento": null
+  },
+  {
+   "doi": "10.1145/2382577.2382579",
+   "tipo": "journal-article",
+   "titulo": "Leakage in data mining: Formulation, detection, and avoidance",
+   "autores": [
+    "Shachar Kaufman",
+    "Saharon Rosset",
+    "Claudia Perlich",
+    "Ori Stitelman"
+   ],
+   "autores_gf": [
+    [
+     "Shachar",
+     "Kaufman"
+    ],
+    [
+     "Saharon",
+     "Rosset"
+    ],
+    [
+     "Claudia",
+     "Perlich"
+    ],
+    [
+     "Ori",
+     "Stitelman"
+    ]
+   ],
+   "anio": 2012,
+   "revista": "ACM Transactions on Knowledge Discovery from Data",
+   "volumen": "6",
+   "numero": "4",
+   "paginas": "1-21",
+   "editorial": "Association for Computing Machinery (ACM)",
+   "evento": null
+  },
+  {
+   "doi": "10.1371/journal.pone.0118432",
+   "tipo": "journal-article",
+   "titulo": "The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets",
+   "autores": [
+    "Takaya Saito",
+    "Marc Rehmsmeier"
+   ],
+   "autores_gf": [
+    [
+     "Takaya",
+     "Saito"
+    ],
+    [
+     "Marc",
+     "Rehmsmeier"
+    ]
+   ],
+   "anio": 2015,
+   "revista": "PLOS ONE",
+   "volumen": "10",
+   "numero": "3",
+   "paginas": "e0118432",
+   "editorial": "Public Library of Science (PLoS)",
+   "evento": null
+  },
+  {
+   "doi": "10.1038/s42256-019-0138-9",
+   "tipo": "journal-article",
+   "titulo": "From local explanations to global understanding with explainable AI for trees",
+   "autores": [
+    "Scott M. Lundberg",
+    "Gabriel Erion",
+    "Hugh Chen",
+    "Alex DeGrave",
+    "Jordan M. Prutkin",
+    "Bala Nair",
+    "Ronit Katz",
+    "Jonathan Himmelfarb",
+    "Nisha Bansal",
+    "Su-In Lee"
+   ],
+   "autores_gf": [
+    [
+     "Scott M.",
+     "Lundberg"
+    ],
+    [
+     "Gabriel",
+     "Erion"
+    ],
+    [
+     "Hugh",
+     "Chen"
+    ],
+    [
+     "Alex",
+     "DeGrave"
+    ],
+    [
+     "Jordan M.",
+     "Prutkin"
+    ],
+    [
+     "Bala",
+     "Nair"
+    ],
+    [
+     "Ronit",
+     "Katz"
+    ],
+    [
+     "Jonathan",
+     "Himmelfarb"
+    ],
+    [
+     "Nisha",
+     "Bansal"
+    ],
+    [
+     "Su-In",
+     "Lee"
+    ]
+   ],
+   "anio": 2020,
+   "revista": "Nature Machine Intelligence",
+   "volumen": "2",
+   "numero": "1",
+   "paginas": "56-67",
+   "editorial": "Springer Science and Business Media LLC",
+   "evento": null
+  },
+  {
+   "doi": "10.18653/v1/d19-1410",
+   "tipo": "proceedings-article",
+   "titulo": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+   "autores": [
+    "Nils Reimers",
+    "Iryna Gurevych"
+   ],
+   "autores_gf": [
+    [
+     "Nils",
+     "Reimers"
+    ],
+    [
+     "Iryna",
+     "Gurevych"
+    ]
+   ],
+   "anio": 2019,
+   "revista": "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+   "volumen": null,
+   "numero": null,
+   "paginas": "3980-3990",
+   "editorial": "Association for Computational Linguistics",
+   "evento": "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)"
+  },
+  {
+   "doi": "10.18653/v1/2020.emnlp-main.365",
+   "tipo": "proceedings-article",
+   "titulo": "Making Monolingual Sentence Embeddings Multilingual using Knowledge Distillation",
+   "autores": [
+    "Nils Reimers",
+    "Iryna Gurevych"
+   ],
+   "autores_gf": [
+    [
+     "Nils",
+     "Reimers"
+    ],
+    [
+     "Iryna",
+     "Gurevych"
+    ]
+   ],
+   "anio": 2020,
+   "revista": "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+   "volumen": null,
+   "numero": null,
+   "paginas": "4512-4525",
+   "editorial": "Association for Computational Linguistics",
+   "evento": "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)"
+  },
+  {
+   "doi": "10.1016/j.autcon.2015.11.001",
+   "tipo": "journal-article",
+   "titulo": "Automated content analysis for construction safety: A natural language processing system to extract precursors and outcomes from unstructured injury reports",
+   "autores": [
+    "Antoine J.-P. Tixier",
+    "Matthew R. Hallowell",
+    "Balaji Rajagopalan",
+    "Dean Bowman"
+   ],
+   "autores_gf": [
+    [
+     "Antoine J.-P.",
+     "Tixier"
+    ],
+    [
+     "Matthew R.",
+     "Hallowell"
+    ],
+    [
+     "Balaji",
+     "Rajagopalan"
+    ],
+    [
+     "Dean",
+     "Bowman"
+    ]
+   ],
+   "anio": 2016,
+   "revista": "Automation in Construction",
+   "volumen": "62",
+   "numero": null,
+   "paginas": "45-56",
+   "editorial": "Elsevier BV",
+   "evento": null
+  },
+  {
+   "doi": "10.1016/j.autcon.2018.12.016",
+   "tipo": "journal-article",
+   "titulo": "Construction site accident analysis using text mining and natural language processing techniques",
+   "autores": [
+    "Fan Zhang",
+    "Hasan Fleyeh",
+    "Xinru Wang",
+    "Minghui Lu"
+   ],
+   "autores_gf": [
+    [
+     "Fan",
+     "Zhang"
+    ],
+    [
+     "Hasan",
+     "Fleyeh"
+    ],
+    [
+     "Xinru",
+     "Wang"
+    ],
+    [
+     "Minghui",
+     "Lu"
+    ]
+   ],
+   "anio": 2019,
+   "revista": "Automation in Construction",
+   "volumen": "99",
+   "numero": null,
+   "paginas": "238-248",
+   "editorial": "Elsevier BV",
+   "evento": null
+  },
+  {
+   "doi": "10.1145/2939672.2939785",
+   "tipo": "proceedings-article",
+   "titulo": "XGBoost: A Scalable Tree Boosting System",
+   "autores": [
+    "Tianqi Chen",
+    "Carlos Guestrin"
+   ],
+   "autores_gf": [
+    [
+     "Tianqi",
+     "Chen"
+    ],
+    [
+     "Carlos",
+     "Guestrin"
+    ]
+   ],
+   "anio": 2016,
+   "revista": "Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining",
+   "volumen": null,
+   "numero": null,
+   "paginas": "785-794",
+   "editorial": "ACM",
+   "evento": "KDD '16: The 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining"
+  },
+  {
+   "doi": "10.1023/a:1010933404324",
+   "tipo": "journal-article",
+   "titulo": "Random Forests",
+   "autores": [
+    "Leo Breiman"
+   ],
+   "autores_gf": [
+    [
+     "Leo",
+     "Breiman"
+    ]
+   ],
+   "anio": 2001,
+   "revista": "Machine Learning",
+   "volumen": "45",
+   "numero": "1",
+   "paginas": "5-32",
+   "editorial": "Springer Science and Business Media LLC",
+   "evento": null
+  },
+  {
+   "doi": "10.1016/s0169-2070(00)00065-0",
+   "tipo": "journal-article",
+   "titulo": "Out-of-sample tests of forecasting accuracy: an analysis and review",
+   "autores": [
+    "Leonard J. Tashman"
+   ],
+   "autores_gf": [
+    [
+     "Leonard J.",
+     "Tashman"
+    ]
+   ],
+   "anio": 2000,
+   "revista": "International Journal of Forecasting",
+   "volumen": "16",
+   "numero": "4",
+   "paginas": "437-450",
+   "editorial": "Elsevier BV",
+   "evento": null
+  },
+  {
+   "doi": "10.1016/j.ins.2011.12.028",
+   "tipo": "journal-article",
+   "titulo": "On the use of cross-validation for time series predictor evaluation",
+   "autores": [
+    "Christoph Bergmeir",
+    "José M. Benítez"
+   ],
+   "autores_gf": [
+    [
+     "Christoph",
+     "Bergmeir"
+    ],
+    [
+     "José M.",
+     "Benítez"
+    ]
+   ],
+   "anio": 2012,
+   "revista": "Information Sciences",
+   "volumen": "191",
+   "numero": null,
+   "paginas": "192-213",
+   "editorial": "Elsevier BV",
+   "evento": null
+  },
+  {
+   "doi": "10.1214/aos/1176344552",
+   "tipo": "journal-article",
+   "titulo": "Bootstrap Methods: Another Look at the Jackknife",
+   "autores": [
+    "B. Efron"
+   ],
+   "autores_gf": [
+    [
+     "B.",
+     "Efron"
+    ]
+   ],
+   "anio": 1979,
+   "revista": "The Annals of Statistics",
+   "volumen": "7",
+   "numero": "1",
+   "paginas": null,
+   "editorial": "Institute of Mathematical Statistics",
+   "evento": null
+  },
+  {
+   "doi": "10.1080/01621459.1969.10501049",
+   "tipo": "journal-article",
+   "titulo": "A Theory for Record Linkage",
+   "autores": [
+    "Ivan P. Fellegi",
+    "Alan B. Sunter"
+   ],
+   "autores_gf": [
+    [
+     "Ivan P.",
+     "Fellegi"
+    ],
+    [
+     "Alan B.",
+     "Sunter"
+    ]
+   ],
+   "anio": 1969,
+   "revista": "Journal of the American Statistical Association",
+   "volumen": "64",
+   "numero": "328",
+   "paginas": "1183-1210",
+   "editorial": "Informa UK Limited",
+   "evento": null
+  },
+  {
+   "doi": "10.2307/25148625",
+   "tipo": "journal-article",
+   "titulo": "Design Science in Information Systems Research1",
+   "autores": [
+    "Alan R. Hevner",
+    "Salvatore T. March",
+    "Jinsoo Park",
+    "Sudha Ram"
+   ],
+   "autores_gf": [
+    [
+     "Alan R.",
+     "Hevner"
+    ],
+    [
+     "Salvatore T.",
+     "March"
+    ],
+    [
+     "Jinsoo",
+     "Park"
+    ],
+    [
+     "Sudha",
+     "Ram"
+    ]
+   ],
+   "anio": 2004,
+   "revista": "MIS Quarterly",
+   "volumen": "28",
+   "numero": "1",
+   "paginas": "75-106",
+   "editorial": "MIS Quarterly",
+   "evento": null
+  },
+  {
+   "doi": "10.2753/mis0742-1222240302",
+   "tipo": "journal-article",
+   "titulo": "A Design Science Research Methodology for Information Systems Research",
+   "autores": [
+    "Ken Peffers",
+    "Tuure Tuunanen",
+    "Marcus A. Rothenberger",
+    "Samir Chatterjee"
+   ],
+   "autores_gf": [
+    [
+     "Ken",
+     "Peffers"
+    ],
+    [
+     "Tuure",
+     "Tuunanen"
+    ],
+    [
+     "Marcus A.",
+     "Rothenberger"
+    ],
+    [
+     "Samir",
+     "Chatterjee"
+    ]
+   ],
+   "anio": 2007,
+   "revista": "Journal of Management Information Systems",
+   "volumen": "24",
+   "numero": "3",
+   "paginas": "45-77",
+   "editorial": "Informa UK Limited",
+   "evento": null
+  },
+  {
+   "doi": "10.1145/1102351.1102430",
+   "tipo": "proceedings-article",
+   "titulo": "Predicting good probabilities with supervised learning",
+   "autores": [
+    "Alexandru Niculescu-Mizil",
+    "Rich Caruana"
+   ],
+   "autores_gf": [
+    [
+     "Alexandru",
+     "Niculescu-Mizil"
+    ],
+    [
+     "Rich",
+     "Caruana"
+    ]
+   ],
+   "anio": 2005,
+   "revista": "Proceedings of the 22nd international conference on Machine learning  - ICML '05",
+   "volumen": null,
+   "numero": null,
+   "paginas": "625-632",
+   "editorial": "ACM Press",
+   "evento": "the 22nd international conference"
+  },
+  {
+   "doi": "10.1038/s42256-019-0048-x",
+   "tipo": "journal-article",
+   "titulo": "Stop explaining black box machine learning models for high stakes decisions and use interpretable models instead",
+   "autores": [
+    "Cynthia Rudin"
+   ],
+   "autores_gf": [
+    [
+     "Cynthia",
+     "Rudin"
+    ]
+   ],
+   "anio": 2019,
+   "revista": "Nature Machine Intelligence",
+   "volumen": "1",
+   "numero": "5",
+   "paginas": "206-215",
+   "editorial": "Springer Science and Business Media LLC",
+   "evento": null
+  },
+  {
+   "doi": "10.1175/1520-0493(1950)078<0001:vofeit>2.0.co;2",
+   "tipo": "journal-article",
+   "titulo": "VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF PROBABILITY",
+   "autores": [
+    "GLENN W. BRIER"
+   ],
+   "autores_gf": [
+    [
+     "GLENN W.",
+     "BRIER"
+    ]
+   ],
+   "anio": 1950,
+   "revista": "Monthly Weather Review",
+   "volumen": "78",
+   "numero": "1",
+   "paginas": "1-3",
+   "editorial": "American Meteorological Society",
+   "evento": null
+  },
+  {
+   "doi": "10.1016/s0263-7863(00)00021-1",
+   "tipo": "journal-article",
+   "titulo": "Project management by early warnings",
+   "autores": [
+    "Ilmari O Nikander",
+    "Eero Eloranta"
+   ],
+   "autores_gf": [
+    [
+     "Ilmari O",
+     "Nikander"
+    ],
+    [
+     "Eero",
+     "Eloranta"
+    ]
+   ],
+   "anio": 2001,
+   "revista": "International Journal of Project Management",
+   "volumen": "19",
+   "numero": "7",
+   "paginas": "385-399",
+   "editorial": "Elsevier BV",
+   "evento": null
+  },
+  {
+   "doi": "10.1007/978-3-642-31164-2",
+   "tipo": "book",
+   "titulo": "Data Matching: Concepts and Techniques for Record Linkage, Entity Resolution, and Duplicate Detection",
+   "autores": [
+    "Peter Christen"
+   ],
+   "autores_gf": [
+    [
+     "Peter",
+     "Christen"
+    ]
+   ],
+   "anio": 2012,
+   "revista": "",
+   "volumen": null,
+   "numero": null,
+   "paginas": null,
+   "editorial": "Springer Berlin Heidelberg",
+   "evento": null
+  },
+  {
+   "doi": "10.3390/en12101956",
+   "tipo": "journal-article",
+   "titulo": "Using Text Mining to Estimate Schedule Delay Risk of 13 Offshore Oil and Gas EPC Case Studies During the Bidding Process",
+   "autores": [
+    "Byung-Yun Son",
+    "Eul-Bum Lee"
+   ],
+   "autores_gf": [
+    [
+     "Byung-Yun",
+     "Son"
+    ],
+    [
+     "Eul-Bum",
+     "Lee"
+    ]
+   ],
+   "anio": 2019,
+   "revista": "Energies",
+   "volumen": "12",
+   "numero": "10",
+   "paginas": "1956",
+   "editorial": "MDPI AG",
+   "evento": null
+  },
+  {
+   "doi": "10.3389/fbuil.2026.1815172",
+   "tipo": "journal-article",
+   "titulo": "Text mining and natural language processing in construction research: a scientometric analysis and qualitative review",
+   "autores": [
+    "Yuxuan Yuan"
+   ],
+   "autores_gf": [
+    [
+     "Yuxuan",
+     "Yuan"
+    ]
+   ],
+   "anio": 2026,
+   "revista": "Frontiers in Built Environment",
+   "volumen": "12",
+   "numero": null,
+   "paginas": "1815172",
+   "editorial": "Frontiers Media SA",
+   "evento": null
+  },
+  {
+   "doi": "10.3390/en17010182",
+   "tipo": "journal-article",
+   "titulo": "Artificial Intelligence in the Construction Industry: A Systematic Review of the Entire Construction Value Chain Lifecycle",
+   "autores": [
+    "Christian Nnaemeka Egwim",
+    "Hafiz Alaka",
+    "Eren Demir",
+    "Habeeb Balogun",
+    "Razak Olu-Ajayi",
+    "Ismail Sulaimon",
+    "Godoyon Wusu",
+    "Wasiu Yusuf",
+    "Adegoke A. Muideen"
+   ],
+   "autores_gf": [
+    [
+     "Christian Nnaemeka",
+     "Egwim"
+    ],
+    [
+     "Hafiz",
+     "Alaka"
+    ],
+    [
+     "Eren",
+     "Demir"
+    ],
+    [
+     "Habeeb",
+     "Balogun"
+    ],
+    [
+     "Razak",
+     "Olu-Ajayi"
+    ],
+    [
+     "Ismail",
+     "Sulaimon"
+    ],
+    [
+     "Godoyon",
+     "Wusu"
+    ],
+    [
+     "Wasiu",
+     "Yusuf"
+    ],
+    [
+     "Adegoke A.",
+     "Muideen"
+    ]
+   ],
+   "anio": 2023,
+   "revista": "Energies",
+   "volumen": "17",
+   "numero": "1",
+   "paginas": "182",
+   "editorial": "MDPI AG",
+   "evento": null
+  },
+  {
+   "doi": "10.1080/15623599.2026.2664477",
+   "tipo": "journal-article",
+   "titulo": "Towards the digital transformation of Peruvian public infrastructure: a framework of critical success factors for the adoption of BIM, machine learning and Digital Twins",
+   "autores": [
+    "Filiberto Rody Montoya Villanueva",
+    "Carlos Sanchez-Carigga",
+    "Edu Delgado-Quispe",
+    "Gonzalo Soto-Pérez"
+   ],
+   "autores_gf": [
+    [
+     "Filiberto Rody",
+     "Montoya Villanueva"
+    ],
+    [
+     "Carlos",
+     "Sanchez-Carigga"
+    ],
+    [
+     "Edu",
+     "Delgado-Quispe"
+    ],
+    [
+     "Gonzalo",
+     "Soto-Pérez"
+    ]
+   ],
+   "anio": 2026,
+   "revista": "International Journal of Construction Management",
+   "volumen": null,
+   "numero": null,
+   "paginas": "1-17",
+   "editorial": "Informa UK Limited",
+   "evento": null
+  },
+  {
+   "doi": "10.1061/9780784486986.002",
+   "tipo": "proceedings-article",
+   "titulo": "Schedule Impact Analysis in Public Transportation Projects: A Case Study Using Daily Work Reports and Natural Language Processing",
+   "autores": [
+    "Md. Shah Jamal",
+    "Md. Tauhidul Karim",
+    "Kalyan R. Piratla",
+    "Ahmed Abdelaty"
+   ],
+   "autores_gf": [
+    [
+     "Md. Shah",
+     "Jamal"
+    ],
+    [
+     "Md. Tauhidul",
+     "Karim"
+    ],
+    [
+     "Kalyan R.",
+     "Piratla"
+    ],
+    [
+     "Ahmed",
+     "Abdelaty"
+    ]
+   ],
+   "anio": 2026,
+   "revista": "Construction Research Congress 2026",
+   "volumen": null,
+   "numero": null,
+   "paginas": "11-21",
+   "editorial": "American Society of Civil Engineers",
+   "evento": "Construction Research Congress 2026"
+  }
+ ],
+ "no_resueltos": []
+}

@@ -49,3 +49,6 @@ artifacts/screenshots_tmp/
 *.db
 credentials*.json
 secrets*/
+
+# Material del curso (derechos de su autor): no se redistribuye
+docs/articulo/plantilla_gesiti*

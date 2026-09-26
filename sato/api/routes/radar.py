@@ -163,4 +163,5 @@ def ambitos():
     return db.rows(
         """select departamento, count(*) obras from (
              select departamento from cartera_obra union all select departamento from obra) x
-           where departamento is not null and departamento not like '%-%' group by 1 order by 2 desc""")
+           where departamento is not null and departamento not like '%-%'
+             and departamento not in ('NO APLICA', 'MULTIDEPARTAMENTAL') group by 1 order by 2 desc""")

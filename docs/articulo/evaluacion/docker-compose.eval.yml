@@ -1,0 +1,9 @@
+# Superposicion SOLO para la prueba de rendimiento (k6 desde una unica IP): publica la API en 127.0.0.1:8000
+# y eleva el limite de tasa de la aplicacion. No usar en produccion.
+#   docker compose -f docker-compose.yml -f docs/articulo/evaluacion/docker-compose.eval.yml up -d api
+services:
+  api:
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      SATO_RATE_LIMIT: 1000000/minute

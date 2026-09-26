@@ -47,6 +47,8 @@ def migrate(conn: psycopg.Connection) -> None:
             conn.execute("insert into public.schema_migrations(version) values (%s)", (f.name,))
 
 
+# INFOBRAS nombra "P C DEL CALLAO" a la Provincia Constitucional que las demas fuentes llaman "CALLAO"
+DEPARTAMENTO_CANONICO = {"P C DEL CALLAO": "CALLAO"}
 TEXTOS_UI = {"explicacion", "cartera_explicacion", "simulacion"}
 
 
@@ -104,7 +106,7 @@ def load_cartera(conn: psycopg.Connection, cart: pd.DataFrame, cartera: Path, me
     copy_df(conn, "cartera_obra", pd.DataFrame(dict(
         codigo_infobras=c["codigo_infobras"], cui=c["codigo_unico_de_inversion"], nombre=c["nombre_de_obra"], entidad=c["entidad_publica"],
         codigo_entidad=c["codigo_entidad"], ruc_ejecucion=c["ruc_ejecucion"], contratista=c["nombre_o_razon_social_de_la_empresa_o_consorcio"],
-        departamento=c["departamento"], provincia=c["provincia"], distrito=c["distrito"], estado_ejecucion=c["estado_de_ejecucion"],
+        departamento=c["departamento"].replace(DEPARTAMENTO_CANONICO), provincia=c["provincia"], distrito=c["distrito"], estado_ejecucion=c["estado_de_ejecucion"],
         estado_operativo=c["estado_operativo"], fecha_inicio=_date(c["fecha_de_inicio_de_obra"]),
         plazo_dias=pd.to_numeric(c["plazo_de_ejecucion_en_dias"], errors="coerce").round().astype("Int64"), fin_programado=_date(c["fin_prog"]),
         fin_real=_date(c["fecha_de_finalizacion_real"]), sobreplazo=c["sobreplazo"], costo=c["costo_de_obra_en_soles_segun_et_en_soles"],

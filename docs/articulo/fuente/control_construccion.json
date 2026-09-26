@@ -1,0 +1,20 @@
+{
+ "palabras": {
+  "Título": 19,
+  "RESUMEN": 246,
+  "ABSTRACT": 250,
+  "1. INTRODUCCIÓN": 899,
+  "2. ESTADO DEL ARTE": 1089,
+  "3. METODOLOGÍA": 1087,
+  "4. PROPUESTA Y DESARROLLO DEL PROTOTIPO": 870,
+  "5. RESULTADOS": 1005,
+  "6. DISCUSIÓN": 1071,
+  "7. CONCLUSIONES": 306,
+  "8. TRABAJO FUTURO": 164,
+  "9. DECLARACIONES": 142
+ },
+ "figuras": 10,
+ "tablas": 10,
+ "referencias_citadas": 50,
+ "no_citadas": []
+}
