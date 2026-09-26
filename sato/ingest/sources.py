@@ -25,7 +25,7 @@ MEF_FILES = [
     "Inversiones_ET_Diccionario.csv", "Proceso_Selecccion_Diccionario.csv", "Gastos_Diccionario.csv",
 ]
 # SIAF: un zip por anio; los anios cerrados usan "AAAA-Gasto.zip", los recientes "AAAA-Gasto-Mensual.zip"
-SIAF_YEARS = {2020: "2020-Gasto.zip", 2021: "2021-Gasto.zip", 2022: "2022-Gasto.zip", 2023: "2023-Gasto.zip",
+SIAF_YEARS = {2017: "2017-Gasto.zip", 2018: "2018-Gasto.zip", 2019: "2019-Gasto.zip", 2020: "2020-Gasto.zip", 2021: "2021-Gasto.zip", 2022: "2022-Gasto.zip", 2023: "2023-Gasto.zip",
               2024: "2024-Gasto.zip", 2025: "2025-Gasto-Mensual.zip", 2026: "2026-Gasto-Mensual.zip"}
 
 INFOBRAS_DATASETS = "https://infobras.contraloria.gob.pe/InfobrasWeb/DataSets"

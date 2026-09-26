@@ -1,4 +1,4 @@
-PROMPT DE CONTEXTO DE TESIS GRUPAL – INGENIERÍA DE SISTEMAS – UNSA
+CONTEXTO DE TESIS GRUPAL – INGENIERÍA DE SISTEMAS – UNSA
 
 Somos un grupo de 5 estudiantes de Ingeniería de Sistemas de la UNSA y estamos buscando desarrollar una tesis aplicada, viable y con impacto real, basada en datos públicos oficiales del Estado peruano.
 
@@ -299,7 +299,7 @@ LO QUE TODAVÍA FALTA IDENTIFICAR
 14. ¿Qué métricas utilizará la evaluación?
 15. ¿Qué metodología de investigación y validación utilizaremos?
 
-IMPORTANTE PARA OTRAS IAS
+CONSIDERACIONES PARA EL EQUIPO DE INVESTIGACIÓN
 
 No den por hecho que Saneamiento es definitivamente el mejor sector.
 

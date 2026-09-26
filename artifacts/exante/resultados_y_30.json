@@ -1,0 +1,637 @@
+{
+ "target": "y_30",
+ "with_text": true,
+ "n_features": 44,
+ "features": [
+  "ea_modalidad",
+  "ea_naturaleza",
+  "ea_tipo1",
+  "ea_tipo2",
+  "ea_tipo3",
+  "ea_nivel_gobierno",
+  "ea_sector_entidad",
+  "ea_departamento",
+  "ea_tipo_inversion",
+  "ea_marco",
+  "ea_funcion",
+  "ea_log_plazo",
+  "ea_log_costo_et",
+  "ea_log_monto_contrato",
+  "ea_ratio_contrato_et",
+  "ea_log_monto_viable",
+  "ea_costo_por_dia",
+  "ea_con_supervision",
+  "ea_terreno_entregado",
+  "ea_entrega_parcial",
+  "ea_dias_expediente_inicio",
+  "ea_dias_viabilidad_inicio",
+  "ea_saldo_de_obra",
+  "ea_reconstruccion",
+  "ea_reactivacion",
+  "ea_mes_inicio",
+  "ea_anio_inicio",
+  "ea_tiene_cui",
+  "hist_entidad_obras_previas",
+  "hist_entidad_resultados_previos",
+  "hist_entidad_tasa_retraso",
+  "hist_entidad_sobreplazo_mediano",
+  "hist_entidad_en_curso",
+  "hist_contratista_obras_previas",
+  "hist_contratista_resultados_previos",
+  "hist_contratista_tasa_retraso",
+  "hist_contratista_sobreplazo_mediano",
+  "hist_contratista_en_curso",
+  "hist_provincia_obras_previas",
+  "hist_provincia_resultados_previos",
+  "hist_provincia_tasa_retraso",
+  "hist_provincia_sobreplazo_mediano",
+  "hist_provincia_en_curso",
+  "ea_txt_nombre"
+ ],
+ "periodos": {
+  "train": [
+   "2012-01-01",
+   "2020-06-22",
+   72551,
+   0.4913095615498063
+  ],
+  "valid": [
+   "2020-07-01",
+   "2021-12-30",
+   13965,
+   0.4790547798066595
+  ],
+  "test": [
+   "2022-01-01",
+   "2024-06-30",
+   26025,
+   0.5242267050912585
+  ]
+ },
+ "modelos": {
+  "regla": {
+   "params": {},
+   "umbral_f1_valid": 0.47431978539131897,
+   "arequipa": {
+    "n": 1487,
+    "positivos": 908,
+    "prevalencia": 0.6106254203093476,
+    "pr_auc": 0.7637740323241271,
+    "roc_auc": 0.6610430789832082,
+    "brier": 0.22602714627963316,
+    "umbral": 0.47431978539131897,
+    "alertas": 917,
+    "precision": 0.6924754634678298,
+    "recall": 0.6993392070484582,
+    "f1": 0.6958904109589041,
+    "f2": 0.6979555946361837,
+    "tp": 635,
+    "fp": 282,
+    "fn": 273,
+    "tn": 297,
+    "precision_top10": 0.9194630872483222,
+    "recall_top10": 0.15088105726872247,
+    "precision_top20": 0.8181818181818182,
+    "recall_top20": 0.26762114537444937,
+    "precision_top30": 0.7466367713004485,
+    "recall_top30": 0.3667400881057269
+   },
+   "nacional": {
+    "n": 26025,
+    "positivos": 13643,
+    "prevalencia": 0.5242267050912585,
+    "pr_auc": 0.690129045764831,
+    "roc_auc": 0.6577366865973716,
+    "brier": 0.23048378372832304,
+    "umbral": 0.47431978539131897,
+    "alertas": 14225,
+    "precision": 0.6200351493848858,
+    "recall": 0.64648537711647,
+    "f1": 0.6329840677479547,
+    "f2": 0.6410163233861942,
+    "tp": 8820,
+    "fp": 5405,
+    "fn": 4823,
+    "tn": 6977,
+    "precision_top10": 0.8451191391237509,
+    "recall_top10": 0.16118155830828995,
+    "precision_top20": 0.7450528338136407,
+    "recall_top20": 0.2842483324781939,
+    "precision_top30": 0.6928790983606558,
+    "recall_top30": 0.3965403503628234
+   }
+  },
+  "logreg": {
+   "params": {
+    "C": 0.1
+   },
+   "umbral_f1_valid": 0.4756961211167318,
+   "arequipa": {
+    "n": 1487,
+    "positivos": 908,
+    "prevalencia": 0.6106254203093476,
+    "pr_auc": 0.8018300395067133,
+    "roc_auc": 0.7303569118866647,
+    "brier": 0.2045213125719296,
+    "umbral": 0.4756961211167318,
+    "alertas": 1052,
+    "precision": 0.7110266159695817,
+    "recall": 0.8237885462555066,
+    "f1": 0.763265306122449,
+    "f2": 0.798462852263023,
+    "tp": 748,
+    "fp": 304,
+    "fn": 160,
+    "tn": 275,
+    "precision_top10": 0.8791946308724832,
+    "recall_top10": 0.14427312775330398,
+    "precision_top20": 0.8720538720538721,
+    "recall_top20": 0.2852422907488987,
+    "precision_top30": 0.852017937219731,
+    "recall_top30": 0.4185022026431718
+   },
+   "nacional": {
+    "n": 26025,
+    "positivos": 13643,
+    "prevalencia": 0.5242267050912585,
+    "pr_auc": 0.7421422195648439,
+    "roc_auc": 0.7182647200642007,
+    "brier": 0.21482914751335755,
+    "umbral": 0.4756961211167318,
+    "alertas": 15775,
+    "precision": 0.6482408874801902,
+    "recall": 0.7495418896137214,
+    "f1": 0.6952206132299953,
+    "f2": 0.7268255931311925,
+    "tp": 10226,
+    "fp": 5549,
+    "fn": 3417,
+    "tn": 6833,
+    "precision_top10": 0.8716372021521906,
+    "recall_top10": 0.16623909697280656,
+    "precision_top20": 0.8146013448607109,
+    "recall_top20": 0.31078208605145496,
+    "precision_top30": 0.7716444672131147,
+    "recall_top30": 0.4416184123726453
+   }
+  },
+  "rf": {
+   "params": {
+    "leaf": 10
+   },
+   "umbral_f1_valid": 0.5593443202285533,
+   "arequipa": {
+    "n": 1487,
+    "positivos": 908,
+    "prevalencia": 0.6106254203093476,
+    "pr_auc": 0.80410610577639,
+    "roc_auc": 0.7344026994742567,
+    "brier": 0.2032880451234437,
+    "umbral": 0.5593443202285533,
+    "alertas": 788,
+    "precision": 0.7588832487309645,
+    "recall": 0.6585903083700441,
+    "f1": 0.7051886792452831,
+    "f2": 0.6764705882352942,
+    "tp": 598,
+    "fp": 190,
+    "fn": 310,
+    "tn": 389,
+    "precision_top10": 0.8657718120805369,
+    "recall_top10": 0.1420704845814978,
+    "precision_top20": 0.8787878787878788,
+    "recall_top20": 0.28744493392070486,
+    "precision_top30": 0.8385650224215246,
+    "recall_top30": 0.4118942731277533
+   },
+   "nacional": {
+    "n": 26025,
+    "positivos": 13643,
+    "prevalencia": 0.5242267050912585,
+    "pr_auc": 0.7671012951094097,
+    "roc_auc": 0.7406511946127745,
+    "brier": 0.20654561190563234,
+    "umbral": 0.5593443202285533,
+    "alertas": 11850,
+    "precision": 0.7207594936708861,
+    "recall": 0.6260353294729898,
+    "f1": 0.6700662927078022,
+    "f2": 0.6429345698714282,
+    "tp": 8541,
+    "fp": 3309,
+    "fn": 5102,
+    "tn": 9073,
+    "precision_top10": 0.897770945426595,
+    "recall_top10": 0.17122333797551859,
+    "precision_top20": 0.8326609029779058,
+    "recall_top20": 0.3176720662610863,
+    "precision_top30": 0.787781762295082,
+    "recall_top30": 0.4508539177600235
+   }
+  },
+  "lgbm": {
+   "params": {
+    "num_leaves": 31,
+    "mcs": 30,
+    "n_estimators": 100
+   },
+   "umbral_f1_valid": 0.5406021071751979,
+   "arequipa": {
+    "n": 1487,
+    "positivos": 908,
+    "prevalencia": 0.6106254203093476,
+    "pr_auc": 0.8152059826135098,
+    "roc_auc": 0.741562240837537,
+    "brier": 0.2014204623783362,
+    "umbral": 0.5406021071751979,
+    "alertas": 885,
+    "precision": 0.7401129943502824,
+    "recall": 0.7213656387665198,
+    "f1": 0.7306190741773564,
+    "f2": 0.7250387425282268,
+    "tp": 655,
+    "fp": 230,
+    "fn": 253,
+    "tn": 349,
+    "precision_top10": 0.8859060402684564,
+    "recall_top10": 0.14537444933920704,
+    "precision_top20": 0.8922558922558923,
+    "recall_top20": 0.2918502202643172,
+    "precision_top30": 0.8587443946188341,
+    "recall_top30": 0.42180616740088106
+   },
+   "nacional": {
+    "n": 26025,
+    "positivos": 13643,
+    "prevalencia": 0.5242267050912585,
+    "pr_auc": 0.7588026289079625,
+    "roc_auc": 0.7330259587025747,
+    "brier": 0.209168652874553,
+    "umbral": 0.5406021071751979,
+    "alertas": 12872,
+    "precision": 0.6964729645742698,
+    "recall": 0.6571135380781353,
+    "f1": 0.6762210069771827,
+    "f2": 0.6646254670541486,
+    "tp": 8965,
+    "fp": 3907,
+    "fn": 4678,
+    "tn": 8475,
+    "precision_top10": 0.8662567255956957,
+    "recall_top10": 0.16521292970754234,
+    "precision_top20": 0.830355427473583,
+    "recall_top20": 0.3167924943194312,
+    "precision_top30": 0.789702868852459,
+    "recall_top30": 0.4519533826870923
+   }
+  },
+  "xgb": {
+   "params": {
+    "depth": 9,
+    "n_estimators": 3254
+   },
+   "umbral_f1_valid": 0.8747840523719788,
+   "arequipa": {
+    "n": 1487,
+    "positivos": 908,
+    "prevalencia": 0.6106254203093476,
+    "pr_auc": 0.7781147235894885,
+    "roc_auc": 0.6993791513546826,
+    "brier": 0.23542280495166779,
+    "umbral": 0.8747840523719788,
+    "alertas": 262,
+    "precision": 0.8435114503816794,
+    "recall": 0.2433920704845815,
+    "f1": 0.37777777777777777,
+    "f2": 0.2837699024139702,
+    "tp": 221,
+    "fp": 41,
+    "fn": 687,
+    "tn": 538,
+    "precision_top10": 0.8926174496644296,
+    "recall_top10": 0.14647577092511013,
+    "precision_top20": 0.8249158249158249,
+    "recall_top20": 0.2698237885462555,
+    "precision_top30": 0.8026905829596412,
+    "recall_top30": 0.394273127753304
+   },
+   "nacional": {
+    "n": 26025,
+    "positivos": 13643,
+    "prevalencia": 0.5242267050912585,
+    "pr_auc": 0.729473582961443,
+    "roc_auc": 0.7014930642546293,
+    "brier": 0.24154391884803772,
+    "umbral": 0.8747840523719788,
+    "alertas": 4717,
+    "precision": 0.8147127411490354,
+    "recall": 0.28168291431503334,
+    "f1": 0.41862745098039217,
+    "f2": 0.3240904720943177,
+    "tp": 3843,
+    "fp": 874,
+    "fn": 9800,
+    "tn": 11508,
+    "precision_top10": 0.865488086087625,
+    "recall_top10": 0.16506633438393314,
+    "precision_top20": 0.8034582132564841,
+    "recall_top20": 0.30653082166678886,
+    "precision_top30": 0.7521772540983607,
+    "recall_top30": 0.4304771677783479
+   }
+  }
+ },
+ "bootstrap_arequipa": [
+  {
+   "score": "s_regla",
+   "metrica": "pr",
+   "media": 0.7430900756665189,
+   "ic_inf": 0.6199363940158377,
+   "ic_sup": 0.8587394147221582,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_regla",
+   "metrica": "roc",
+   "media": 0.6533131232073967,
+   "ic_inf": 0.5678192825568037,
+   "ic_sup": 0.74174664173743,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_logreg",
+   "metrica": "pr",
+   "media": 0.7926462751221383,
+   "ic_inf": 0.716863914703167,
+   "ic_sup": 0.8737413340247453,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_logreg",
+   "metrica": "roc",
+   "media": 0.7258501677905921,
+   "ic_inf": 0.6727175396346016,
+   "ic_sup": 0.7878785644030207,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_rf",
+   "metrica": "pr",
+   "media": 0.7890009034112269,
+   "ic_inf": 0.7013271117497648,
+   "ic_sup": 0.8832118285855363,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_rf",
+   "metrica": "roc",
+   "media": 0.7293892911454518,
+   "ic_inf": 0.6718898000764371,
+   "ic_sup": 0.7972036800429899,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_lgbm",
+   "metrica": "pr",
+   "media": 0.8051259006764901,
+   "ic_inf": 0.7320343401830915,
+   "ic_sup": 0.8846191352835409,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_lgbm",
+   "metrica": "roc",
+   "media": 0.7370210184252879,
+   "ic_inf": 0.6838920981364148,
+   "ic_sup": 0.8012415118751632,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_xgb",
+   "metrica": "pr",
+   "media": 0.7666373408485576,
+   "ic_inf": 0.6788258338807794,
+   "ic_sup": 0.8559181451530932,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_xgb",
+   "metrica": "roc",
+   "media": 0.6948710079722589,
+   "ic_inf": 0.6373590267440489,
+   "ic_sup": 0.7572918557729533,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_logreg - s_regla",
+   "metrica": "pr",
+   "media": 0.0495561994556195,
+   "ic_inf": 0.00017458363498845943,
+   "ic_sup": 0.11376940773478193,
+   "p_valor_una_cola": 0.023333333333333334
+  },
+  {
+   "score": "s_logreg - s_regla",
+   "metrica": "roc",
+   "media": 0.07253704458319542,
+   "ic_inf": 0.026437462406548064,
+   "ic_sup": 0.12140433747763706,
+   "p_valor_una_cola": 0.0
+  },
+  {
+   "score": "s_rf - s_regla",
+   "metrica": "pr",
+   "media": 0.04591082774470801,
+   "ic_inf": 0.00613750218676075,
+   "ic_sup": 0.10500889445448154,
+   "p_valor_una_cola": 0.006666666666666667
+  },
+  {
+   "score": "s_rf - s_regla",
+   "metrica": "roc",
+   "media": 0.07607616793805519,
+   "ic_inf": 0.03352679127809378,
+   "ic_sup": 0.13215547043194414,
+   "p_valor_una_cola": 0.0033333333333333335
+  },
+  {
+   "score": "s_lgbm - s_regla",
+   "metrica": "pr",
+   "media": 0.06203582500997127,
+   "ic_inf": 0.011082550432538297,
+   "ic_sup": 0.1356116041226934,
+   "p_valor_una_cola": 0.0033333333333333335
+  },
+  {
+   "score": "s_lgbm - s_regla",
+   "metrica": "roc",
+   "media": 0.08370789521789108,
+   "ic_inf": 0.03513686758481167,
+   "ic_sup": 0.14524685851652913,
+   "p_valor_una_cola": 0.0
+  },
+  {
+   "score": "s_xgb - s_regla",
+   "metrica": "pr",
+   "media": 0.023547265182038687,
+   "ic_inf": -0.020408090492534243,
+   "ic_sup": 0.0982955805687631,
+   "p_valor_una_cola": 0.23333333333333334
+  },
+  {
+   "score": "s_xgb - s_regla",
+   "metrica": "roc",
+   "media": 0.04155788476486216,
+   "ic_inf": -0.017798721585028453,
+   "ic_sup": 0.11536952905455937,
+   "p_valor_una_cola": 0.09333333333333334
+  }
+ ],
+ "bootstrap_nacional": [
+  {
+   "score": "s_regla",
+   "metrica": "pr",
+   "media": 0.6884603095849358,
+   "ic_inf": 0.6576086110995092,
+   "ic_sup": 0.7173965010416293,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_regla",
+   "metrica": "roc",
+   "media": 0.6573061301569147,
+   "ic_inf": 0.6346744066705575,
+   "ic_sup": 0.6754094735763049,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_logreg",
+   "metrica": "pr",
+   "media": 0.7410170155534679,
+   "ic_inf": 0.702961669122379,
+   "ic_sup": 0.7715945972097248,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_logreg",
+   "metrica": "roc",
+   "media": 0.717719602318379,
+   "ic_inf": 0.6923130928685516,
+   "ic_sup": 0.7369706647443274,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_rf",
+   "metrica": "pr",
+   "media": 0.7659794204109249,
+   "ic_inf": 0.7309641873784563,
+   "ic_sup": 0.7947845897690419,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_rf",
+   "metrica": "roc",
+   "media": 0.7401054242987505,
+   "ic_inf": 0.7162033209809653,
+   "ic_sup": 0.7576413110942585,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_lgbm",
+   "metrica": "pr",
+   "media": 0.7576185312422963,
+   "ic_inf": 0.7142721897093334,
+   "ic_sup": 0.7914952507174644,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_lgbm",
+   "metrica": "roc",
+   "media": 0.7323141251183358,
+   "ic_inf": 0.7074416504992295,
+   "ic_sup": 0.7513987000380258,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_xgb",
+   "metrica": "pr",
+   "media": 0.7284118482254677,
+   "ic_inf": 0.7043470701471432,
+   "ic_sup": 0.7523854503120513,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_xgb",
+   "metrica": "roc",
+   "media": 0.7009770071522234,
+   "ic_inf": 0.6843322540742863,
+   "ic_sup": 0.7154756845960291,
+   "p_valor_una_cola": NaN
+  },
+  {
+   "score": "s_logreg - s_regla",
+   "metrica": "pr",
+   "media": 0.05255670596853215,
+   "ic_inf": 0.03565359636579273,
+   "ic_sup": 0.06912021320826273,
+   "p_valor_una_cola": 0.0
+  },
+  {
+   "score": "s_logreg - s_regla",
+   "metrica": "roc",
+   "media": 0.0604134721614641,
+   "ic_inf": 0.04964975271896591,
+   "ic_sup": 0.07202023568846509,
+   "p_valor_una_cola": 0.0
+  },
+  {
+   "score": "s_rf - s_regla",
+   "metrica": "pr",
+   "media": 0.07751911082598929,
+   "ic_inf": 0.0626578252846056,
+   "ic_sup": 0.09355933402990305,
+   "p_valor_una_cola": 0.0
+  },
+  {
+   "score": "s_rf - s_regla",
+   "metrica": "roc",
+   "media": 0.08279929414183566,
+   "ic_inf": 0.07111442244203275,
+   "ic_sup": 0.09441170614328591,
+   "p_valor_una_cola": 0.0
+  },
+  {
+   "score": "s_lgbm - s_regla",
+   "metrica": "pr",
+   "media": 0.06915822165736055,
+   "ic_inf": 0.04927414289951631,
+   "ic_sup": 0.08811825728975313,
+   "p_valor_una_cola": 0.0
+  },
+  {
+   "score": "s_lgbm - s_regla",
+   "metrica": "roc",
+   "media": 0.07500799496142108,
+   "ic_inf": 0.06315676869874279,
+   "ic_sup": 0.0863634221391006,
+   "p_valor_una_cola": 0.0
+  },
+  {
+   "score": "s_xgb - s_regla",
+   "metrica": "pr",
+   "media": 0.03995153864053195,
+   "ic_inf": 0.028337745837990546,
+   "ic_sup": 0.052526062571144436,
+   "p_valor_una_cola": 0.0
+  },
+  {
+   "score": "s_xgb - s_regla",
+   "metrica": "roc",
+   "media": 0.043670876995308826,
+   "ic_inf": 0.03191744226649737,
+   "ic_sup": 0.05728945669638325,
+   "p_valor_una_cola": 0.0
+  }
+ ],
+ "segundos": 347.0
+}

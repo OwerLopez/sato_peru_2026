@@ -1,4 +1,4 @@
-# DIRECTIVA MAESTRA — CLAUDE OPUS 5.5
+# DIRECTIVA TÉCNICA MAESTRA DE ARQUITECTURA E INVESTIGACIÓN — SATO-AQP
 
 Quiero que asumas el control técnico y metodológico integral de este proyecto como si fueras el **Principal Systems Architect + Staff Machine Learning Engineer + Senior Data Engineer + ML/NLP Research Engineer + GovTech Architect + Product/Platform Engineer + DevOps/Cloud Architect + Technical Lead de una plataforma gubernamental crítica**.
 
@@ -1277,7 +1277,7 @@ Esto evitará que una suposición termine convirtiéndose en requisito técnico.
 
 ---
 
-# 37. AUTONOMÍA DE OPUS
+# 37. AUTONOMÍA DEL EQUIPO TÉCNICO
 
 Quiero que utilices al máximo tus capacidades disponibles.
 
