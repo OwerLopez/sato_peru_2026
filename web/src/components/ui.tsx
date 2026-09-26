@@ -2,12 +2,12 @@ import type { ReactNode } from 'react'
 import type { Nivel } from '../api'
 
 export function NivelBadge({ nivel, score }: { nivel: Nivel | null | undefined; score?: number | null }) {
-  if (!nivel) return <span className="text-xs text-slate-400">sin evaluación</span>
+  if (!nivel) return <span className="text-xs text-slate-500">sin evaluación</span>
   const cls = { ALTO: 'bg-red-100 text-alto ring-red-200', MEDIO: 'bg-amber-100 text-medio ring-amber-200', BAJO: 'bg-green-100 text-bajo ring-green-200' }[nivel]
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${cls}`}>
       {nivel}
-      {score !== undefined && score !== null && <span className="font-normal opacity-80">{(100 * score).toFixed(0)}%</span>}
+      {score !== undefined && score !== null && <span className="font-normal opacity-95">{(100 * score).toFixed(0)}%</span>}
     </span>
   )
 }

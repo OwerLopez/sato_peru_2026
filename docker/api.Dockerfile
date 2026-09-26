@@ -6,6 +6,7 @@ COPY requirements-api.txt .
 RUN pip install -r requirements-api.txt
 COPY sato/__init__.py sato/config.py sato/
 COPY sato/api sato/api
+COPY sato/services sato/services
 RUN useradd --create-home --uid 10001 sato && mkdir -p /app/data /app/artifacts && chown -R sato /app
 USER sato
 EXPOSE 8000

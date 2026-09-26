@@ -4,8 +4,8 @@
 
 1. Aplica migraciones SQL pendientes (db/migrations/*.sql, tabla schema_migrations).
 2. En UNA transaccion: vacia las tablas de datos y las recarga desde data/curated,
-   data/staging y artifacts/release (solo Arequipa para datos de obra; los datos
-   nacionales solo se usan para entrenar). Usuarios, revisiones y auditoria no se tocan.
+   data/staging, artifacts/release y artifacts/cartera, con ALCANCE NACIONAL (todos los
+   departamentos). Usuarios, revisiones, suscripciones, sincronizaciones y auditoria no se tocan.
 3. Registra el corte de datos y el linaje (manifest.jsonl).
 Si algo falla, la transaccion se revierte y la base queda como estaba.
 """
@@ -22,10 +22,12 @@ import pandas as pd
 import psycopg
 
 from sato.config import ARTIFACTS, CURATED, RAW, ROOT, STAGING
+from sato.serving.texto_es import acentuar
 
 log = logging.getLogger(__name__)
 MIGRATIONS = ROOT / "db" / "migrations"
-DATA_TABLES = ["evidencia", "explicacion", "prediccion", "modelo", "asiento", "obra", "inversion", "entidad", "contratista",
+DATA_TABLES = ["simulacion", "cartera_explicacion", "cartera_riesgo", "cartera_obra", "configuracion",
+               "evidencia", "explicacion", "prediccion", "modelo", "asiento", "obra", "inversion", "entidad", "contratista",
                "siaf_mensual", "infobras_obra", "contraloria_paralizada", "mef_seguimiento", "experimento_resultado",
                "comparacion_ab", "fuente_archivo", "corte_datos"]
 
@@ -45,10 +47,18 @@ def migrate(conn: psycopg.Connection) -> None:
             conn.execute("insert into public.schema_migrations(version) values (%s)", (f.name,))
 
 
+TEXTOS_UI = {"explicacion", "cartera_explicacion", "simulacion"}
+
+
 def copy_df(conn: psycopg.Connection, table: str, df: pd.DataFrame) -> None:
     if df.empty:
         return
     df = df.replace({np.nan: None})
+    if table in TEXTOS_UI:  # textos generados para la interfaz: ortografia con tildes
+        df = df.copy()
+        for c in ("descripcion", "grupo"):
+            if c in df.columns:
+                df[c] = df[c].map(acentuar)
     cols = ", ".join(df.columns)
     with conn.cursor() as cur:
         with cur.copy(f"copy sato.{table} ({cols}) from stdin") as cp:
@@ -61,12 +71,69 @@ def _date(s):
     return pd.to_datetime(s, errors="coerce").dt.date
 
 
-def load(release: Path = ARTIFACTS / "release") -> None:
+def copy_asientos(conn: psycopg.Connection, ids: set) -> None:
+    """Asientos nacionales transferidos por lotes (DuckDB -> COPY) sin cargar todo en memoria."""
+    import duckdb
+
+    con = duckdb.connect()
+    con.register("ids", pd.DataFrame({"cuaderno_id": sorted(ids)}))
+    rel = con.sql(f"""
+        select cuaderno_id, nro_asiento, fecha, fecha_hora, rol, tipo, tipo_std, titulo, descripcion, src_file archivo_fuente
+        from (select *, row_number() over (partition by cuaderno_id, nro_asiento, fecha_hora, descripcion) rn
+              from '{(CURATED / 'asiento.parquet').as_posix()}' where cuaderno_id in (select cuaderno_id from ids))
+        where rn = 1 order by cuaderno_id, fecha_hora, nro_asiento""")
+    cols = "cuaderno_id, nro_asiento, fecha, fecha_hora, rol, tipo, tipo_std, titulo, descripcion, archivo_fuente"
+    n = 0
+    reader = rel.fetch_record_batch(100_000)
+    with conn.cursor() as cur:
+        with cur.copy(f"copy sato.asiento ({cols}) from stdin") as cp:
+            for batch in reader:
+                for row in zip(*[batch.column(i).to_pylist() for i in range(batch.num_columns)], strict=True):
+                    cp.write_row(row)
+                n += batch.num_rows
+    log.info("  asiento: %s filas", n)
+
+
+def load_cartera(conn: psycopg.Connection, cart: pd.DataFrame, cartera: Path, mef: pd.DataFrame, cua: pd.DataFrame) -> None:
+    coords = mef.drop_duplicates("cui").set_index("cui")[["latitud", "longitud"]]
+    ok = coords["latitud"].between(-18.6, 0.1) & coords["longitud"].between(-81.5, -68.5)
+    coords = coords[ok]
+    link = pd.read_parquet(CURATED / "link_cuaderno_infobras.parquet").drop_duplicates("codigo_infobras").set_index("codigo_infobras")["cuaderno_id"]
+    link = link[link.isin(set(cua["cuaderno_id"]))]
+    c = cart.drop_duplicates("codigo_infobras")
+    copy_df(conn, "cartera_obra", pd.DataFrame(dict(
+        codigo_infobras=c["codigo_infobras"], cui=c["codigo_unico_de_inversion"], nombre=c["nombre_de_obra"], entidad=c["entidad_publica"],
+        codigo_entidad=c["codigo_entidad"], ruc_ejecucion=c["ruc_ejecucion"], contratista=c["nombre_o_razon_social_de_la_empresa_o_consorcio"],
+        departamento=c["departamento"], provincia=c["provincia"], distrito=c["distrito"], estado_ejecucion=c["estado_de_ejecucion"],
+        estado_operativo=c["estado_operativo"], fecha_inicio=_date(c["fecha_de_inicio_de_obra"]),
+        plazo_dias=pd.to_numeric(c["plazo_de_ejecucion_en_dias"], errors="coerce").round().astype("Int64"), fin_programado=_date(c["fin_prog"]),
+        fin_real=_date(c["fecha_de_finalizacion_real"]), sobreplazo=c["sobreplazo"], costo=c["costo_de_obra_en_soles_segun_et_en_soles"],
+        modalidad=c["modalidad_de_ejecucion_de_la_obra"], tipo_obra=c["tipo_de_obra_clasificador_nivel_1"], retraso_significativo=c["y_30"].astype("Int64"),
+        latitud=c["codigo_unico_de_inversion"].map(coords["latitud"]), longitud=c["codigo_unico_de_inversion"].map(coords["longitud"]),
+        cuaderno_id=c["codigo_infobras"].map(link))))
+    R = pd.read_parquet(cartera / "riesgo.parquet")
+    R = R[R["codigo_infobras"].isin(set(c["codigo_infobras"]))]
+    copy_df(conn, "cartera_riesgo", pd.DataFrame(dict(
+        codigo_infobras=R["codigo_infobras"], tipo=R["tipo"], fecha_corte=_date(R["T"]), score=R["score"], nivel=R["nivel"],
+        y_observado=R["y_observado"].astype("Int64"), modelo_origen=R["modelo_origen"])))
+    rid = pd.DataFrame(conn.execute("select id, codigo_infobras, tipo, fecha_corte from sato.cartera_riesgo").fetchall(),
+                       columns=["riesgo_id", "codigo_infobras", "tipo", "T"])
+    rid["T"] = pd.to_datetime(rid["T"])
+    E = pd.read_parquet(cartera / "explicaciones.parquet")
+    E["T"] = pd.to_datetime(E["T"])
+    E = E.merge(rid, on=["codigo_infobras", "tipo", "T"])
+    copy_df(conn, "cartera_explicacion", E[["riesgo_id", "rango", "feature", "grupo", "valor", "shap", "descripcion"]])
+    card = json.loads((cartera / "cartera_card.json").read_text(encoding="utf-8"))
+    conn.execute("insert into sato.configuracion values ('modelo_cartera', %s)", (json.dumps(card, default=str),))
+
+
+def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "cartera") -> None:
     cua = pd.read_parquet(CURATED / "cuaderno.parquet")
-    cua = cua[cua["tiene_metadatos"] & (cua["dep_code"] == "04")].copy()
+    cua = cua[cua["tiene_metadatos"]].copy()
     ids = set(cua["cuaderno_id"])
     mef = pd.read_parquet(STAGING / "mef_inversiones.parquet")
-    cuis = set(cua["cui"].dropna())
+    cart = pd.read_parquet(cartera / "obras.parquet") if (cartera / "obras.parquet").exists() else None
+    cuis = set(cua["cui"].dropna()) | (set(cart["codigo_unico_de_inversion"].dropna()) if cart is not None else set())
     ib_link = pd.read_parquet(CURATED / "link_cuaderno_infobras.parquet")
     ib = pd.read_parquet(STAGING / "infobras_obras.parquet")
     seace = pd.read_parquet(STAGING / "seace_contratos.parquet")
@@ -92,8 +159,8 @@ def load(release: Path = ARTIFACTS / "release") -> None:
         con = cua[["ruc_contratista", "contratista"]].dropna().drop_duplicates("ruc_contratista").rename(columns={"ruc_contratista": "ruc", "contratista": "nombre"})
         copy_df(conn, "contratista", con)
 
-        # inversiones: las enlazadas a obras de Arequipa + todas las de Arequipa
-        inv = mef[mef["cui"].isin(cuis) | (mef["departamento"] == "AREQUIPA")].copy()
+        # inversiones enlazadas a obras (cuaderno digital o cartera INFOBRAS)
+        inv = mef[mef["cui"].isin(cuis)].copy()
         inv["sector"] = np.select(
             [inv["funcion"].eq("SANEAMIENTO") | (inv["funcion"].eq("SALUD Y SANEAMIENTO") & inv["programa"].fillna("").str.contains("SANEAMIENTO")),
              inv["funcion"].eq("TRANSPORTE"), inv["funcion"].fillna("").str.startswith("EDUCACI"), inv["funcion"].isin(["SALUD", "SALUD Y SANEAMIENTO"]),
@@ -131,22 +198,16 @@ def load(release: Path = ARTIFACTS / "release") -> None:
             fecha_resolucion=_date(cua["f_resolucion_contrato"]), estado_observado=estado))
         copy_df(conn, "obra", obra)
 
-        # asientos de Arequipa (deduplicados)
-        asi = pd.read_parquet(CURATED / "asiento.parquet")
-        asi = asi[asi["cuaderno_id"].isin(ids)].drop_duplicates(["cuaderno_id", "nro_asiento", "fecha_hora", "descripcion"])
-        asi = asi.sort_values(["cuaderno_id", "fecha_hora", "nro_asiento"])
-        copy_df(conn, "asiento", pd.DataFrame(dict(
-            cuaderno_id=asi["cuaderno_id"], nro_asiento=asi["nro_asiento"], fecha=_date(asi["fecha"]), fecha_hora=asi["fecha_hora"],
-            rol=asi["rol"], tipo=asi["tipo"], tipo_std=asi["tipo_std"], titulo=asi["titulo"], descripcion=asi["descripcion"],
-            archivo_fuente=asi["src_file"])))
+        # asientos nacionales (deduplicados, por lotes)
+        copy_asientos(conn, ids)
 
-        # SIAF mensual de las CUI enlazadas y de Arequipa
+        # SIAF mensual de las CUI enlazadas
         siaf = pd.concat([pd.read_parquet(f, columns=["cui", "anio", "mes", "monto_devengado"]) for f in sorted((STAGING / "siaf").glob("*.parquet"))])
-        siaf = siaf[siaf["cui"].isin(set(inv["cui"])) & siaf["mes"].between(1, 12)].groupby(["cui", "anio", "mes"], as_index=False)["monto_devengado"].sum()
+        siaf = siaf[siaf["cui"].isin(set(inv["cui"])) & siaf["mes"].between(1, 12) & (siaf["anio"] >= 2017)].groupby(["cui", "anio", "mes"], as_index=False)["monto_devengado"].sum()
         copy_df(conn, "siaf_mensual", siaf.rename(columns={"monto_devengado": "devengado"}))
 
-        # INFOBRAS (foto) de Arequipa
-        iba = ib[(ib["departamento"] == "AREQUIPA") | ib["codigo_infobras"].isin(set(cua["codigo_infobras"].dropna()))].drop_duplicates("codigo_infobras")
+        # INFOBRAS (foto) nacional
+        iba = ib.drop_duplicates("codigo_infobras")
         copy_df(conn, "infobras_obra", pd.DataFrame(dict(
             codigo_infobras=iba["codigo_infobras"], cui=iba["codigo_unico_de_inversion"], nombre=iba["nombre_de_obra"], entidad=iba["entidad_publica"],
             estado_ejecucion=iba["estado_de_ejecucion"], modalidad=iba["modalidad_de_ejecucion_de_la_obra"],
@@ -162,14 +223,16 @@ def load(release: Path = ARTIFACTS / "release") -> None:
             fecha_consulta=_date(iba["fecha_consulta"]))))
 
         par = pd.read_parquet(STAGING / "contraloria_paralizadas.parquet")
-        par = par[par["departamento"] == "AREQUIPA"]
         copy_df(conn, "contraloria_paralizada", pd.DataFrame(dict(
             fecha_corte=_date(par["fecha_corte"]), codigo_infobras=par["codigo_infobras"], cui=par["cui"], descripcion_obra=par["descripcion_obra"],
             entidad=par["entidad"], provincia=par["provincia"], distrito=par["distrito"], avance_fisico=par["avance_fisico"],
             causal=par["causal_paralizacion"], sector=par["sector"])))
 
         ms = pd.read_parquet(STAGING / "mef_estado_situacional.parquet")
-        ms = ms[ms["cui"].isin(set(inv["cui"])) & ms["fecha_registro"].notna()]
+        cuis_seg = set(cua["cui"].dropna())
+        if cart is not None:
+            cuis_seg |= set(cart.loc[cart["estado_operativo"].isin(["ACTIVA", "CONSUMADO"]), "codigo_unico_de_inversion"].dropna())
+        ms = ms[ms["cui"].isin(cuis_seg) & ms["fecha_registro"].notna()]
         copy_df(conn, "mef_seguimiento", ms[["cui", "fecha_registro", "tipo_registro", "descripcion"]])
 
         # modelo, predicciones, explicaciones, evidencia
@@ -179,6 +242,7 @@ def load(release: Path = ARTIFACTS / "release") -> None:
             (card["nombre"], card["version"], card["objetivo"], card["horizonte_dias"], card["conjunto_features"], card["algoritmo"],
              card["entrenado_hasta"], card["umbral_alerta"], json.dumps({**card["metricas_test"], "umbral_alto": card["umbral_alto"], "umbral_vigilancia": card.get("umbral_vigilancia"),
                                                                           "operacion_backtest_arequipa": card.get("operacion_backtest_arequipa"),
+                                                                          "operacion_backtest_nacional": card.get("operacion_backtest_nacional"),
                                                                           "periodos": card["periodos_evaluacion"]}, default=str),
              json.dumps(card["features"]), card["artefacto"], card["sha256"])).fetchone()[0]
         P = pd.read_parquet(release / "predicciones.parquet")
@@ -200,6 +264,15 @@ def load(release: Path = ARTIFACTS / "release") -> None:
         ev["fecha"] = _date(ev["fecha"])
         ev["asiento_id"] = ev["asiento_id"].astype("Int64")
         copy_df(conn, "evidencia", ev[["prediccion_id", "feature", "fuente", "asiento_id", "fecha", "referencia", "extracto"]])
+        simp = release / "simulaciones.parquet"
+        if simp.exists():
+            sm = pd.read_parquet(simp).merge(pid, on=["cuaderno_id", "T"])
+            copy_df(conn, "simulacion", sm[["prediccion_id", "escenario", "descripcion", "score_base", "score_escenario", "alerta_escenario"]])
+        conn.execute("insert into sato.configuracion values ('modelo_cuaderno', %s)", (json.dumps(card, default=str),))
+
+        # cartera nacional INFOBRAS (modelos de inicio y seguimiento)
+        if cart is not None:
+            load_cartera(conn, cart, cartera, mef, cua)
 
         # resultados de investigacion
         g = ARTIFACTS / "experiments" / "grid_resultados.csv"

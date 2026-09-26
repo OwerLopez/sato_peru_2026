@@ -1,4 +1,4 @@
-# SATO-AQP: plataforma completa en local
+# SATO: plataforma completa en local
 #   cp .env.example .env   (editar secretos)
 #   docker compose up -d --build db api web
 #   docker compose --profile carga run --rm cargador   (carga/actualiza la BD desde data/ y artifacts/)
@@ -31,6 +31,13 @@ services:
       SATO_ENV: prod
       SATO_CORS_ORIGINS: ${SATO_CORS_ORIGINS:-http://localhost:8080}
       SATO_RATE_LIMIT: ${SATO_RATE_LIMIT:-120/minute}
+      SATO_BASE_URL: ${SATO_BASE_URL:-http://localhost:8080}
+      SATO_SMTP_HOST: ${SATO_SMTP_HOST:-}
+      SATO_SMTP_PORT: ${SATO_SMTP_PORT:-587}
+      SATO_SMTP_USER: ${SATO_SMTP_USER:-}
+      SATO_SMTP_PASSWORD: ${SATO_SMTP_PASSWORD:-}
+      SATO_SMTP_FROM: ${SATO_SMTP_FROM:-}
+      SATO_OUTBOX: /app/artifacts/outbox
     depends_on:
       db: { condition: service_healthy }
     restart: unless-stopped
@@ -55,6 +62,30 @@ services:
       - ./artifacts:/app/artifacts:ro
     depends_on:
       db: { condition: service_healthy }
+
+  # Sincronizacion mensual automatica con las fuentes oficiales y resumen semanal por correo.
+  #   docker compose --profile worker up -d worker
+  # Los embeddings de texto (GPU) no se recalculan aqui; ver sato/cron_runner.py.
+  worker:
+    profiles: ["worker"]
+    build: { context: ., dockerfile: docker/pipeline.Dockerfile }
+    command: ["sato.cron_runner"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sato}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sato}
+      SATO_SYNC_DIA: ${SATO_SYNC_DIA:-2}
+      SATO_BASE_URL: ${SATO_BASE_URL:-http://localhost:8080}
+      SATO_SMTP_HOST: ${SATO_SMTP_HOST:-}
+      SATO_SMTP_PORT: ${SATO_SMTP_PORT:-587}
+      SATO_SMTP_USER: ${SATO_SMTP_USER:-}
+      SATO_SMTP_PASSWORD: ${SATO_SMTP_PASSWORD:-}
+      SATO_SMTP_FROM: ${SATO_SMTP_FROM:-}
+      SATO_OUTBOX: /app/artifacts/outbox
+    volumes:
+      - ./data:/app/data
+      - ./artifacts:/app/artifacts
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped
 
 volumes:
   pgdata:

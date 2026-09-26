@@ -2,13 +2,15 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, fmtFecha, qs, type ObraResumen } from '../api'
-import { Cargando, ErrorMsg, ESTADOS, NivelBadge, Paginacion, PROVINCIAS, SECTORES } from '../components/ui'
+import { useAmbito } from '../ambito'
+import { Cargando, ErrorMsg, ESTADOS, NivelBadge, Paginacion, SECTORES } from '../components/ui'
 
 export default function Obras() {
-  const [f, setF] = useState({ q: '', provincia: '', sector: '', estado: '', nivel: '', orden: 'riesgo' })
+  const { departamento } = useAmbito()
+  const [f, setF] = useState({ q: '', sector: '', estado: '', nivel: '', orden: 'riesgo' })
   const [pagina, setPagina] = useState(1)
   const [busqueda, setBusqueda] = useState('')
-  const params = { ...f, q: busqueda, pagina, tamanio: 25 }
+  const params = { ...f, q: busqueda, departamento, pagina, tamanio: 25 }
   const r = useQuery({ queryKey: ['obras', params], queryFn: () => api<{ total: number; items: ObraResumen[] }>(`/obras${qs(params)}`) })
   const set = (k: string, v: string) => {
     setF({ ...f, [k]: v })
@@ -18,7 +20,7 @@ export default function Obras() {
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-bold text-marca-900">Obras</h1>
-        <p className="text-sm text-slate-500">Contratos de obra con cuaderno de obra digital (OECE) ubicados en Arequipa, integrados con Invierte.pe, SIAF, INFOBRAS y SEACE.</p>
+        <p className="text-sm text-slate-500">Contratos de obra con cuaderno de obra digital (OECE) en el ámbito seleccionado, integrados con Invierte.pe, SIAF, INFOBRAS y SEACE.</p>
       </div>
       <form
         className="tarjeta flex flex-wrap items-end gap-3 p-3"
@@ -34,7 +36,6 @@ export default function Obras() {
         </label>
         {(
           [
-            ['provincia', 'Provincia', PROVINCIAS],
             ['sector', 'Sector', SECTORES],
           ] as const
         ).map(([k, l, ops]) => (
@@ -91,7 +92,7 @@ export default function Obras() {
               <thead>
                 <tr>
                   <th>Obra</th>
-                  <th>Provincia</th>
+                  <th>Ubicación</th>
                   <th>Sector</th>
                   <th>Estado</th>
                   <th>Último riesgo</th>
@@ -113,7 +114,7 @@ export default function Obras() {
                     <td className="text-xs">
                       {o.provincia}
                       <br />
-                      <span className="text-slate-500">{o.distrito}</span>
+                      <span className="text-slate-500">{o.departamento}</span>
                     </td>
                     <td className="text-xs">{o.sector}</td>
                     <td className="text-xs">{ESTADOS[o.estado_observado] ?? o.estado_observado}</td>

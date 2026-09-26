@@ -21,6 +21,7 @@ LATEST = """
 
 @router.get("")
 def listar(
+    departamento: str | None = None,
     provincia: str | None = None,
     sector: str | None = None,
     estado: Literal["EN_EJECUCION", "CULMINADA", "RESUELTA", "INACTIVA"] | None = None,
@@ -32,16 +33,16 @@ def listar(
     tamanio: int = Query(25, ge=1, le=100),
 ):
     order = {"riesgo": "lp.score desc nulls last", "reciente": "o.ultimo_asiento desc nulls last", "nombre": "o.denominacion"}[orden]
-    where = """where (cast(:prov as text) is null or o.provincia = :prov)
+    where = """where (cast(:dep as text) is null or o.departamento = :dep) and (cast(:prov as text) is null or o.provincia = :prov)
       and (cast(:sector as text) is null or o.sector = :sector)
       and (cast(:estado as text) is null or o.estado_observado = :estado)
       and (cast(:nivel as text) is null or lp.nivel = :nivel)
       and (not :solo or lp.tipo = 'vigente')
       and (cast(:q as text) is null or o.denominacion ilike '%' || :q || '%' or o.cui = :q or e.nombre ilike '%' || :q || '%')"""
-    p = dict(prov=provincia, sector=sector, estado=estado, nivel=nivel, solo=solo_vigentes, q=q)
+    p = dict(dep=departamento, prov=provincia, sector=sector, estado=estado, nivel=nivel, solo=solo_vigentes, q=q)
     total = db.one(f"select count(*) n from obra o left join entidad e on e.ruc = o.entidad_ruc {LATEST} {where}", **p)["n"]
     items = db.rows(
-        f"""select o.cuaderno_id, o.denominacion, o.provincia, o.distrito, o.sector, o.cui, o.estado_observado,
+        f"""select o.cuaderno_id, o.denominacion, o.departamento, o.provincia, o.distrito, o.sector, o.cui, o.estado_observado,
                    o.latitud, o.longitud, o.primer_asiento, o.ultimo_asiento, o.n_asientos, o.fecha_atraso,
                    e.nombre entidad, lp.prediccion_id, lp.fecha_corte, lp.score, lp.nivel, lp.alerta, lp.percentil, lp.tipo tipo_prediccion
             from obra o left join entidad e on e.ruc = o.entidad_ruc {LATEST} {where}
@@ -52,13 +53,15 @@ def listar(
 
 
 @router.get("/mapa")
-def mapa():
-    """Obras con coordenadas y su ultimo nivel de riesgo (para el mapa)."""
+def mapa(departamento: str | None = None, solo_vigentes: bool = True):
+    """Obras con coordenadas y su ultimo nivel de riesgo (para el mapa). Por defecto solo obras activas evaluadas hoy."""
     return db.rows(
-        f"""select o.cuaderno_id, o.denominacion, o.provincia, o.sector, o.estado_observado, o.latitud, o.longitud,
+        f"""select o.cuaderno_id, o.denominacion, o.departamento, o.provincia, o.sector, o.estado_observado, o.latitud, o.longitud,
                    lp.score, lp.nivel, lp.alerta, lp.tipo tipo_prediccion
             from obra o {LATEST}
-            where o.latitud between -18.5 and -14 and o.longitud between -76 and -70"""
+            where o.latitud between -18.6 and 0.1 and o.longitud between -81.5 and -68.5
+              and (cast(:dep as text) is null or o.departamento = :dep) and (not :vig or lp.tipo = 'vigente')""",
+        dep=departamento, vig=solo_vigentes,
     )
 
 

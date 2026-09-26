@@ -17,6 +17,7 @@ router = APIRouter(tags=["alertas"])
 def alertas(
     fecha_corte: dt.date | None = None,
     nivel: Literal["ALTO", "MEDIO"] | None = None,
+    departamento: str | None = None,
     provincia: str | None = None,
     sector: str | None = None,
     incluir_vigilancia: bool = False,
@@ -36,9 +37,9 @@ def alertas(
            from prediccion p join modelo m on m.id = p.modelo_id and m.activo
            join obra o on o.cuaderno_id = p.cuaderno_id left join entidad e on e.ruc = o.entidad_ruc
            where p.fecha_corte = :corte and (p.alerta or (:vig and p.nivel = 'MEDIO')) and (cast(:nivel as text) is null or p.nivel = :nivel)
-             and (cast(:prov as text) is null or o.provincia = :prov) and (cast(:sector as text) is null or o.sector = :sector)
+             and (cast(:dep as text) is null or o.departamento = :dep) and (cast(:prov as text) is null or o.provincia = :prov) and (cast(:sector as text) is null or o.sector = :sector)
            order by p.score desc limit :lim""",
-        corte=corte, nivel=nivel, prov=provincia, sector=sector, vig=incluir_vigilancia or nivel == "MEDIO", lim=limite,
+        corte=corte, nivel=nivel, dep=departamento, prov=provincia, sector=sector, vig=incluir_vigilancia or nivel == "MEDIO", lim=limite,
     )
     return {"fecha_corte": corte, "total": len(items), "items": items}
 

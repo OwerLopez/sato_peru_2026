@@ -39,15 +39,55 @@ interface Modelo {
     umbral_alto: number
     umbral_vigilancia?: number
     periodos: Record<string, [string, string, number, number]>
-    operacion_backtest_arequipa?: {
-      filas_observables: number
-      prevalencia: number
-      alerta_alto: { tasa_marcadas: number; precision: number; recall: number }
-      vigilancia_o_alto: { tasa_marcadas: number; precision: number; recall: number }
-      [k: string]: unknown
-    }
+    operacion_backtest_arequipa?: Backtest
+    operacion_backtest_nacional?: Backtest
   }
 }
+interface Backtest {
+  filas_observables: number
+  prevalencia: number
+  alerta_alto: { tasa_marcadas: number; precision: number; recall: number }
+  vigilancia_o_alto: { tasa_marcadas: number; precision: number; recall: number }
+  [k: string]: unknown
+}
+
+function TablaBacktest({ titulo, b }: { titulo: string; b: Backtest }) {
+  const filas = [
+    ['Alerta (nivel alto)', b.alerta_alto],
+    ['Alerta o vigilancia (alto + medio)', b.vigilancia_o_alto],
+    ...(['top_5', 'top_10', 'top_20', 'top_30'] as const).map(
+      (k) => [`Revisar el ${k.split('_')[1]}% de mayor riesgo`, { ...(b[k] as { precision: number; recall: number }), tasa_marcadas: Number(k.split('_')[1]) / 100 }] as const,
+    ),
+  ] as const
+  return (
+    <div>
+      <div className="etiqueta mb-1">
+        {titulo}: {fmtNum(b.filas_observables)} obra-mes observables · prevalencia {f3(b.prevalencia)}
+      </div>
+      <table className="tabla w-full">
+        <thead>
+          <tr>
+            <th>Política</th>
+            <th className="text-right">Obras marcadas</th>
+            <th className="text-right">Precisión</th>
+            <th className="text-right">Recall</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map(([n, v]) => (
+            <tr key={n}>
+              <td>{n}</td>
+              <td className="text-right">{f3(v.tasa_marcadas)}</td>
+              <td className="text-right">{f3(v.precision)}</td>
+              <td className="text-right">{f3(v.recall)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 interface Comp {
   horizonte: number
   variante: string
@@ -139,35 +179,13 @@ export default function ModeloPage() {
       </div>
       {md.metricas.operacion_backtest_arequipa && (
         <Seccion
-          titulo="Desempeño operativo en Arequipa (backtest as-of)"
-          subtitulo={`Predicciones que la plataforma habría emitido cada mes con modelos reentrenados trimestralmente solo con datos anteriores; ${fmtNum(md.metricas.operacion_backtest_arequipa.filas_observables)} obra-mes con resultado ya observado (prevalencia ${f3(md.metricas.operacion_backtest_arequipa.prevalencia)}).`}
+          titulo="Desempeño operativo (backtest as-of)"
+          subtitulo="Predicciones que la plataforma habría emitido cada mes con modelos reentrenados trimestralmente solo con datos anteriores, evaluadas contra el resultado ya observado. La precisión debe compararse con la prevalencia (inspección al azar)."
         >
-          <table className="tabla w-full max-w-2xl">
-            <thead>
-              <tr>
-                <th>Política</th>
-                <th className="text-right">Obras marcadas</th>
-                <th className="text-right">Precisión</th>
-                <th className="text-right">Recall</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(
-                [
-                  ['Alerta (nivel alto)', md.metricas.operacion_backtest_arequipa.alerta_alto],
-                  ['Alerta o vigilancia (alto + medio)', md.metricas.operacion_backtest_arequipa.vigilancia_o_alto],
-                  ...(['top_5', 'top_10', 'top_20', 'top_30'] as const).map((k) => [`Revisar el ${k.split('_')[1]}% de mayor riesgo`, { ...(md.metricas.operacion_backtest_arequipa![k] as { precision: number; recall: number }), tasa_marcadas: Number(k.split('_')[1]) / 100 }] as const),
-                ] as const
-              ).map(([n, v]) => (
-                <tr key={n}>
-                  <td>{n}</td>
-                  <td className="text-right">{f3(v.tasa_marcadas)}</td>
-                  <td className="text-right">{f3(v.precision)}</td>
-                  <td className="text-right">{f3(v.recall)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <TablaBacktest titulo="Arequipa" b={md.metricas.operacion_backtest_arequipa} />
+            {md.metricas.operacion_backtest_nacional && <TablaBacktest titulo="Nacional" b={md.metricas.operacion_backtest_nacional} />}
+          </div>
         </Seccion>
       )}
       <Seccion titulo="Matriz de confusión en el test (Arequipa, umbral F2 de validación)">
@@ -242,7 +260,7 @@ export default function ModeloPage() {
       <Seccion
         titulo="Todos los experimentos (objetivo: atraso normativo)"
         accion={
-          <select className="entrada" value={scope} onChange={(ev) => setScope(ev.target.value)}>
+          <select className="entrada" aria-label="Ámbito del test" value={scope} onChange={(ev) => setScope(ev.target.value)}>
             <option value="arequipa">Test en Arequipa</option>
             <option value="nacional">Test nacional</option>
           </select>

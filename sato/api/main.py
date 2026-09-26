@@ -1,4 +1,4 @@
-"""API REST de SATO-AQP.
+"""API REST de SATO.
 
     uvicorn sato.api.main:app --host 0.0.0.0 --port 8000
 
@@ -25,7 +25,7 @@ from sqlalchemy import text
 
 from sato import __version__
 from sato.api.db import engine
-from sato.api.routes import alertas, auth, estadisticas, obras
+from sato.api.routes import alertas, auth, cartera, estadisticas, informe, obras, radar, sistema
 from sato.api.settings import get_settings
 
 log = logging.getLogger("sato.api")
@@ -35,7 +35,7 @@ settings = get_settings()
 limiter = Limiter(key_func=get_remote_address, default_limits=[settings.rate_limit])
 
 app = FastAPI(
-    title="SATO-AQP API",
+    title="SATO API",
     version=__version__,
     description="Deteccion temprana de riesgo de atraso significativo en obras publicas de Arequipa (datos abiertos OECE, MEF, Contraloria).",
     docs_url="/api/docs",
@@ -65,7 +65,7 @@ async def security_and_logging(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
-    if not request.url.path.startswith("/api/docs"):
+    if not request.url.path.startswith(("/api/docs", "/api/v1/suscripciones")):
         response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
     log.info("%s %s %s %.1fms rid=%s", request.method, request.url.path, response.status_code, ms, rid)
     return response
@@ -93,5 +93,5 @@ def ready():
         return JSONResponse(status_code=503, content={"status": "not_ready", "detail": type(e).__name__})
 
 
-for r in (obras.router, alertas.router, estadisticas.router, auth.router):
+for r in (radar.router, cartera.router, informe.router, sistema.router, obras.router, alertas.router, estadisticas.router, auth.router):
     app.include_router(r, prefix="/api/v1")

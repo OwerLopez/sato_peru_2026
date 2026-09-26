@@ -87,3 +87,10 @@ def fuentes():
 @router.get("/admin/auditoria")
 def auditoria(limite: int = Query(100, ge=1, le=1000), _u: dict = Depends(require_role("admin"))):
     return db.rows("select a.ts, a.accion, a.recurso, a.detalle, a.ip::text ip, u.email from auditoria a left join usuario u on u.id = a.usuario_id order by a.ts desc limit :l", l=limite)
+
+
+@router.get("/modelo/cartera")
+def modelo_cartera():
+    """Ficha de los modelos de cartera (inicio y seguimiento): umbrales, calibracion por nivel y metricas de test."""
+    r = db.one("select valor from configuracion where clave = 'modelo_cartera'")
+    return r["valor"] if r else None

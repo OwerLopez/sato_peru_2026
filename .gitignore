@@ -32,3 +32,20 @@ research/*.tsv
 docs/normativa/*.pdf
 docs/normativa/*.txt
 docs/normativa/*.html
+
+# Salvaguardas: ningun archivo pesado ni binario de datos/modelos en el repositorio (limite GitHub 100 MB)
+*.npy
+*.npz
+*.pt
+*.bin
+*.safetensors
+*.zip
+*.eml
+artifacts/outbox/
+artifacts/screenshots_tmp/
+.cache/
+.hf_cache/
+*.sqlite
+*.db
+credentials*.json
+secrets*/

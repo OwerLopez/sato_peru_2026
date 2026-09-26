@@ -64,11 +64,11 @@ def test_sin_registros_posteriores(feats, col):
 
 
 def test_siaf_rezago_un_mes(feats, panel):
-    """Recalcula el devengado acumulado de una muestra usando solo meses < mes(T)."""
+    """Recalcula el devengado acumulado de una muestra usando solo meses < mes(T) (configuracion evaluada: SIAF 2020+)."""
     cua = pd.read_parquet(CURATED / "cuaderno.parquet", columns=["cuaderno_id", "cui"])
     s = feats[feats["siaf_dev_acum"].notna()].sample(80, random_state=5)[["cuaderno_id", "T", "siaf_dev_acum"]].merge(cua, on="cuaderno_id")
     siaf = pd.concat([pd.read_parquet(f, columns=["cui", "anio", "mes", "monto_devengado"]) for f in sorted((STAGING / "siaf").glob("*.parquet"))])
-    siaf = siaf[siaf["mes"].between(1, 12) & siaf["cui"].isin(s["cui"])]
+    siaf = siaf[siaf["mes"].between(1, 12) & (siaf["anio"] >= 2020) & siaf["cui"].isin(s["cui"])]
     siaf["mes_ini"] = pd.to_datetime(dict(year=siaf["anio"], month=siaf["mes"], day=1))
     for r in s.itertuples():
         m = siaf[(siaf["cui"] == r.cui) & (siaf["mes_ini"] < r.T.replace(day=1))]["monto_devengado"].sum()

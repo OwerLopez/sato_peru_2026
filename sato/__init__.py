@@ -1,4 +1,4 @@
-"""SATO-AQP: Sistema de Alerta Temprana de Obras publicas - Arequipa.
+"""SATO: Sistema de Alerta Temprana de Obras Publicas del Peru.
 
 Pipeline de datos, modelos y API para la deteccion temprana de riesgo de
 retraso significativo en obras publicas, construido exclusivamente sobre

@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { api, fmtFecha, fmtMes, fmtNum, fmtSoles, qs, ROL, type Evidencia, type Factor, type Nivel } from '../api'
+import { api, fmtFecha, fmtMes, fmtNum, fmtSoles, mensajeCuaderno, qs, ROL, type Evidencia, type Factor, type Nivel } from '../api'
 import { useAuth } from '../auth'
 import { Cargando, ErrorMsg, ESTADOS, NivelBadge, Paginacion, Seccion } from '../components/ui'
 
@@ -88,6 +88,32 @@ export default function ObraDetalle() {
         </div>
       </div>
 
+      {o.tipo_prediccion === 'vigente' && o.score !== null && (
+        <div className={`flex flex-wrap items-center gap-4 rounded-xl p-4 text-white ${o.nivel === 'ALTO' ? 'bg-red-700' : o.nivel === 'MEDIO' ? 'bg-amber-600' : 'bg-green-700'}`}>
+          <div className="text-4xl font-bold">{(100 * o.score).toFixed(0)}%</div>
+          <div className="min-w-64 flex-1">
+            <div className="text-sm font-semibold">Predicción a 60 días · corte {fmtFecha(o.fecha_corte)}</div>
+            <p className="text-sm">{mensajeCuaderno(o.score, o.fecha_atraso)}</p>
+          </div>
+          <a href={`/api/v1/obras/${o.cuaderno_id}/informe-pdf`} className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-marca-900 hover:bg-slate-100">
+            Descargar informe técnico (PDF)
+          </a>
+        </div>
+      )}
+      {o.tipo_prediccion !== 'vigente' && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm">
+          <span>
+            Obra sin predicción vigente ({o.fecha_atraso ? `atraso formal registrado el ${fmtFecha(o.fecha_atraso)}` : 'culminada, resuelta o sin actividad reciente'}): se
+            muestra en modo histórico.
+          </span>
+          {o.score !== null && (
+            <a href={`/api/v1/obras/${o.cuaderno_id}/informe-pdf`} className="btn ml-auto">
+              Descargar informe técnico (PDF)
+            </a>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-5 lg:grid-cols-3">
         <Seccion titulo="Datos integrados de la obra">
           <div className="grid grid-cols-2 gap-3">
@@ -138,9 +164,9 @@ export default function ObraDetalle() {
                     <YAxis yAxisId="r" orientation="right" domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar yAxisId="a" dataKey="asientos" name="Asientos" fill="#cbd5e1" />
-                    <Bar yAxisId="a" dataKey="suspensiones" name="Suspensiones" fill="#94a3b8" />
-                    <Line yAxisId="r" dataKey="riesgo" name="Riesgo (%)" stroke="#b91c1c" strokeWidth={2} connectNulls />
+                    <Bar isAnimationActive={false} yAxisId="a" dataKey="asientos" name="Asientos" fill="#cbd5e1" />
+                    <Bar isAnimationActive={false} yAxisId="a" dataKey="suspensiones" name="Suspensiones" fill="#94a3b8" />
+                    <Line isAnimationActive={false} yAxisId="r" dataKey="riesgo" name="Riesgo (%)" stroke="#b91c1c" strokeWidth={2} connectNulls />
                     {modelo.data && <ReferenceLine yAxisId="r" y={100 * modelo.data.umbral_alerta} stroke="#d97706" strokeDasharray="4 4" label={{ value: 'umbral de alerta', fontSize: 10, fill: '#d97706' }} />}
                     {onset && <ReferenceLine yAxisId="r" x={onset} stroke="#b91c1c" label={{ value: 'atraso normativo', fontSize: 10, fill: '#b91c1c' }} />}
                   </ComposedChart>
@@ -203,13 +229,14 @@ function ExplicacionPanel({ data, loading, error, cuadernoId }: { data?: Explica
                   </div>
                   <span>{f.descripcion}</span>
                 </div>
-                <div className="ml-26 text-[11px] text-slate-400">
+                <div className="ml-26 text-[11px] text-slate-500">
                   {f.grupo} · SHAP {f.shap > 0 ? '+' : ''}
                   {f.shap.toFixed(3)}
                 </div>
               </li>
             ))}
           </ul>
+          <Simulador prediccionId={p.id} />
           <Revision cuadernoId={cuadernoId} fechaCorte={p.fecha_corte} />
         </Seccion>
       </div>
@@ -271,7 +298,7 @@ function Revision({ cuadernoId, fechaCorte }: { cuadernoId: string; fechaCorte: 
   if (!usuario)
     return (
       <p className="mt-4 text-xs text-slate-500">
-        <Link to="/login" className="text-marca-600 hover:underline">
+        <Link to="/login" className="text-marca-600 underline">
           Ingrese
         </Link>{' '}
         como analista para registrar la revisión de esta alerta.
@@ -281,7 +308,7 @@ function Revision({ cuadernoId, fechaCorte }: { cuadernoId: string; fechaCorte: 
     <div className="mt-4 border-t border-slate-100 pt-3">
       <div className="etiqueta mb-2">Revisión del analista</div>
       <div className="flex flex-wrap gap-2">
-        <select className="entrada" value={decision} onChange={(e) => setDecision(e.target.value)}>
+        <select className="entrada" aria-label="Decisión de la revisión" value={decision} onChange={(e) => setDecision(e.target.value)}>
           <option value="EN_SEGUIMIENTO">En seguimiento</option>
           <option value="CONFIRMADA">Confirmada</option>
           <option value="DESCARTADA">Descartada</option>
@@ -303,12 +330,71 @@ function Revision({ cuadernoId, fechaCorte }: { cuadernoId: string; fechaCorte: 
   )
 }
 
+function Simulador({ prediccionId }: { prediccionId: number }) {
+  const q = useQuery({
+    queryKey: ['sim', prediccionId],
+    queryFn: () => api<{ escenario: string; descripcion: string; score_base: number; score_escenario: number; alerta_escenario: boolean }[]>(`/predicciones/${prediccionId}/simulacion`),
+  })
+  if (!q.data || q.data.length === 0) return null
+  return (
+    <div className="mt-4 border-t border-slate-100 pt-3">
+      <div className="etiqueta mb-1">Simulador de intervención (sensibilidad del modelo)</div>
+      <p className="mb-2 text-xs text-slate-500">Probabilidad recalculada cambiando una sola señal. Indica de qué depende la estimación; no garantiza el efecto real de una acción.</p>
+      <ul className="space-y-2">
+        {q.data.map((s) => (
+          <li key={s.escenario} className="text-sm">
+            <div>
+              Escenario «{s.descripcion}»: el riesgo estimado pasaría de {(100 * s.score_base).toFixed(0)}% a{' '}
+              <b className={s.score_escenario < s.score_base ? 'text-bajo' : 'text-alto'}>{(100 * s.score_escenario).toFixed(0)}%</b>.
+            </div>
+            <div className="mt-1 flex h-2 overflow-hidden rounded bg-slate-100">
+              <div className="bg-slate-400" style={{ width: `${100 * Math.min(s.score_base, s.score_escenario)}%` }} />
+              <div className={s.score_escenario < s.score_base ? 'bg-green-300' : 'bg-red-300'} style={{ width: `${100 * Math.abs(s.score_base - s.score_escenario)}%` }} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+const CRITICOS: [RegExp, string][] = [
+  [/(falta de personal|ausencia del (residente|especialista|ingeniero)|personal insuficiente|no se encuentra (el )?(residente|especialista))/gi, 'bg-red-200'],
+  [/(maquinaria|equipo (inoperativo|malogrado|averiado)|falla mec[aá]nica)/gi, 'bg-orange-200'],
+  [/(incompatibilidad|deficiencias? (del|en el) expediente|error(es)? en (el )?expediente|vicios ocultos)/gi, 'bg-purple-200'],
+  [/(falta de pago|pago pendiente|adelanto|desabastec|falta de material)/gi, 'bg-yellow-200'],
+  [/(paraliz|atras|retras|demora|incumpl|penalidad)/gi, 'bg-rose-200'],
+  [/(lluvia|precipitaci)/gi, 'bg-sky-200'],
+]
+
+function Resaltado({ texto, activo }: { texto: string; activo: boolean }) {
+  if (!activo || !texto) return <>{texto}</>
+  const marcas: { i: number; f: number; c: string }[] = []
+  for (const [rx, c] of CRITICOS) for (const m of texto.matchAll(rx)) marcas.push({ i: m.index!, f: m.index! + m[0].length, c })
+  marcas.sort((a, b) => a.i - b.i)
+  const out: ReactNode[] = []
+  let pos = 0
+  marcas.forEach((m, k) => {
+    if (m.i < pos) return
+    out.push(texto.slice(pos, m.i))
+    out.push(
+      <mark key={k} className={`${m.c} rounded px-0.5`}>
+        {texto.slice(m.i, m.f)}
+      </mark>,
+    )
+    pos = m.f
+  })
+  out.push(texto.slice(pos))
+  return <>{out}</>
+}
+
 function Asientos({ id, eventos }: { id: string; eventos: Riesgo['eventos'] }) {
   const [pagina, setPagina] = useState(1)
   const [tipo, setTipo] = useState('')
   const [q, setQ] = useState('')
   const [buscar, setBuscar] = useState('')
   const [abierto, setAbierto] = useState<number | null>(null)
+  const [auditoria, setAuditoria] = useState(false)
   const r = useQuery({ queryKey: ['asientos', id, tipo, buscar, pagina], queryFn: () => api<{ total: number; items: Asiento[] }>(`/obras/${id}/asientos${qs({ tipo, q: buscar, pagina, tamanio: 15 })}`) })
   return (
     <div className="grid gap-5 lg:grid-cols-4">
@@ -323,7 +409,10 @@ function Asientos({ id, eventos }: { id: string; eventos: Riesgo['eventos'] }) {
         </ul>
       </Seccion>
       <div className="lg:col-span-3">
-        <Seccion titulo="Asientos del cuaderno de obra digital" subtitulo="Registros publicados por OECE (datos abiertos). Búsqueda de texto completo en español.">
+        <Seccion
+          titulo="Asientos del cuaderno de obra digital"
+          subtitulo="Registros publicados por OECE (datos abiertos). Búsqueda de texto completo en español. El modo auditoría resalta menciones de personal, maquinaria, expediente, pagos y materiales, atrasos e incumplimientos, y clima."
+        >
           <form
             className="mb-3 flex flex-wrap gap-2"
             onSubmit={(e) => {
@@ -332,8 +421,8 @@ function Asientos({ id, eventos }: { id: string; eventos: Riesgo['eventos'] }) {
               setPagina(1)
             }}
           >
-            <input className="entrada flex-1" placeholder="Buscar en los asientos (p.ej. lluvias, falta de pago, expediente)" value={q} maxLength={200} onChange={(e) => setQ(e.target.value)} />
-            <select
+            <input className="entrada flex-1" aria-label="Buscar en los asientos" placeholder="Buscar en los asientos (p.ej. lluvias, falta de pago, expediente)" value={q} maxLength={200} onChange={(e) => setQ(e.target.value)} />
+            <select aria-label="Tipo de asiento"
               className="entrada"
               value={tipo}
               onChange={(e) => {
@@ -351,6 +440,9 @@ function Asientos({ id, eventos }: { id: string; eventos: Riesgo['eventos'] }) {
             <button className="btn" type="submit">
               Buscar
             </button>
+            <label className="flex items-center gap-1 text-sm">
+              <input type="checkbox" checked={auditoria} onChange={(e) => setAuditoria(e.target.checked)} /> Modo auditoría
+            </label>
           </form>
           {r.isLoading ? (
             <Cargando />
@@ -367,7 +459,9 @@ function Asientos({ id, eventos }: { id: string; eventos: Riesgo['eventos'] }) {
                       </div>
                       <div className="text-sm font-medium">{a.titulo}</div>
                     </button>
-                    <div className={`mt-1 whitespace-pre-line text-xs text-slate-700 ${abierto === a.id ? '' : 'line-clamp-2'}`}>{a.descripcion}</div>
+                    <div className={`mt-1 whitespace-pre-line text-xs text-slate-700 ${abierto === a.id || auditoria ? '' : 'line-clamp-2'}`}>
+                      <Resaltado texto={a.descripcion} activo={auditoria} />
+                    </div>
                   </li>
                 ))}
               </ul>

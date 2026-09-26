@@ -106,3 +106,58 @@ def test_flujo_login_y_revision(client):
         db.execute("delete from revision_alerta where usuario_id = :u", u=uid)
         db.execute("delete from auditoria where usuario_id = :u", u=uid)
         db.execute("delete from usuario where id = :u", u=uid)
+
+
+def test_radar_solo_obras_activas(client):
+    r = client.get("/api/v1/radar/cuaderno", params={"limite": 20}).json()
+    assert r["horizonte_dias"] == 60 and r["items"]
+    assert all(0 <= x["score"] <= 1 and x["fecha_corte"] == r["fecha_corte"] for x in r["items"])
+    scores = [x["score"] for x in r["items"]]
+    assert scores == sorted(scores, reverse=True)
+    c = client.get("/api/v1/radar/cartera", params={"limite": 20}).json()["items"]
+    assert c and all(x["nivel"] in ("ALTO", "MEDIO", "BAJO") for x in c)
+
+
+def test_resumen_por_ambito(client):
+    nac = client.get("/api/v1/resumen").json()
+    aqp = client.get("/api/v1/resumen", params={"departamento": "AREQUIPA"}).json()
+    assert nac["cartera"]["activas"] >= aqp["cartera"]["activas"] > 0
+    assert nac["cuaderno"]["activas"] >= aqp["cuaderno"]["activas"]
+    assert nac["cuaderno"]["alto"] <= nac["cuaderno"]["activas"]
+
+
+def test_ambitos_y_comparador(client):
+    amb = client.get("/api/v1/ambitos").json()
+    assert any(a["departamento"] == "AREQUIPA" for a in amb) and len(amb) >= 20
+    for por in ("departamento", "sector"):
+        c = client.get("/api/v1/comparador", params={"por": por}).json()
+        assert c["cartera"] and all(0 <= (x["tasa_retraso_historica"] or 0) <= 1 for x in c["cartera"])
+    assert client.get("/api/v1/comparador", params={"por": "x"}).status_code == 422
+
+
+def test_cartera_listado_y_detalle(client):
+    j = client.get("/api/v1/cartera", params={"estado": "ACTIVA", "departamento": "AREQUIPA", "tamanio": 3}).json()
+    assert j["total"] > 0 and all(o["departamento"] == "AREQUIPA" and o["estado_operativo"] == "ACTIVA" for o in j["items"])
+    d = client.get(f"/api/v1/cartera/{j['items'][0]['codigo_infobras']}")
+    assert d.status_code == 200
+    assert client.get("/api/v1/cartera/000000000000").status_code == 404
+
+
+def test_informe_pdf_y_simulacion(client):
+    items = client.get("/api/v1/radar/cuaderno", params={"limite": 20}).json()["items"]
+    o = items[0]
+    r = client.get(f"/api/v1/obras/{o['cuaderno_id']}/informe-pdf")
+    assert r.status_code == 200 and r.headers["content-type"] == "application/pdf" and r.content[:5] == b"%PDF-"
+    # el simulador solo reporta escenarios aplicables (la senal existe y su valor cambia)
+    con = [(x, client.get(f"/api/v1/predicciones/{x['prediccion_id']}/simulacion").json()) for x in items]
+    con = [(x, s) for x, s in con if s]
+    assert con
+    for x, s in con:
+        assert all(0 <= e["score_escenario"] <= 1 and abs(e["score_base"] - x["score"]) < 1e-6 for e in s)
+
+
+def test_sincronizacion_y_suscripcion(client):
+    s = client.get("/api/v1/sistema/sincronizacion").json()
+    assert s["proxima_sincronizacion"] and s["corte"]
+    assert client.post("/api/v1/suscripciones", json={"email": "no-es-correo"}).status_code == 422
+    assert "invalido" in client.get("/api/v1/suscripciones/confirmar", params={"token": "x" * 30}).text
