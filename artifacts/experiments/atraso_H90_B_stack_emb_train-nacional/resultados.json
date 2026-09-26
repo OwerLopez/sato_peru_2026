@@ -1,25 +1,25 @@
 {
  "config": {
   "target": "atraso",
-  "H": 60,
-  "feature_set": "B_lex",
+  "H": 90,
+  "feature_set": "B_stack_emb",
   "train_scope": "nacional",
   "models": [
    "lgbm"
   ],
   "seed": 42,
   "n_boot": 500,
-  "extra_feature_files": [
-   "features_text_lexicon.parquet"
-  ],
+  "extra_feature_files": [],
   "exclude_prefixes": [],
-  "text_stack": [],
+  "text_stack": [
+   "text_window_emb.npy"
+  ],
   "tag": "",
   "test_start": "2025-12-31",
   "test_months": 0,
   "save_model": false
  },
- "n_features": 104,
+ "n_features": 87,
  "features": [
   "asi_n_total",
   "asi_n_30d",
@@ -107,107 +107,90 @@
   "asi_ritmo_30d_vs_90d",
   "siaf_dev_acum_sobre_viable",
   "siaf_dev_ytd_sobre_pia",
-  "txt_n_asientos_60d",
-  "txt_len_media_60d",
-  "txt_lx_atraso",
-  "txt_lx_proxy_80",
-  "txt_lx_paralizacion",
-  "txt_lx_clima",
-  "txt_lx_financiero",
-  "txt_lx_materiales",
-  "txt_lx_equipo",
-  "txt_lx_personal",
-  "txt_lx_expediente",
-  "txt_lx_terreno",
-  "txt_lx_adicionales",
-  "txt_lx_controversia",
-  "txt_lx_incumplimiento",
-  "txt_lx_calidad",
-  "txt_lx_suspension",
-  "txt_lx_progreso"
+  "txt_stack_emb"
  ],
  "periodos": {
   "train": [
    "2024-06-30",
-   "2025-05-31",
-   15529,
-   1031
+   "2025-03-31",
+   11903,
+   998
   ],
   "valid": [
-   "2025-08-31",
-   "2025-10-31",
-   6889,
-   388
+   "2025-07-31",
+   "2025-09-30",
+   6546,
+   516
   ],
   "test": [
    "2025-12-31",
-   "2026-06-30",
-   16756,
-   842
+   "2026-05-31",
+   14085,
+   969
   ]
  },
  "modelos": {
   "lgbm": {
    "params": {
-    "num_leaves": 15,
-    "min_child_samples": 20,
-    "n_estimators": 50
+    "num_leaves": 31,
+    "min_child_samples": 60,
+    "n_estimators": 68
    },
-   "valid_pr_auc": 0.12927841837203544,
-   "umbral_f2_valid": 0.06508636152168472,
+   "valid_pr_auc": 0.17511396638342328,
+   "umbral_f2_valid": 0.0811604659938339,
    "arequipa": {
-    "n": 693,
-    "positivos": 63,
-    "prevalencia": 0.09090909090909091,
-    "pr_auc": 0.2355481525264032,
-    "roc_auc": 0.7196775006298816,
-    "brier": 0.07875968535043493,
-    "umbral": 0.06508636152168472,
-    "alertas": 368,
-    "precision": 0.1331521739130435,
-    "recall": 0.7777777777777778,
-    "f1": 0.2273781902552204,
-    "f2": 0.3951612903225806,
-    "tp": 49,
-    "fp": 319,
-    "fn": 14,
-    "tn": 311,
-    "precision_top5": 0.37142857142857144,
-    "recall_top5": 0.20634920634920634,
-    "precision_top10": 0.3188405797101449,
-    "recall_top10": 0.3492063492063492,
-    "precision_top20": 0.2014388489208633,
-    "recall_top20": 0.4444444444444444,
-    "obras_con_onset_en_test": 42,
-    "obras_alertadas_antes_del_onset": 36,
-    "anticipacion_mediana_dias": 39.0
+    "n": 577,
+    "positivos": 73,
+    "prevalencia": 0.1265164644714038,
+    "pr_auc": 0.2424425910535823,
+    "roc_auc": 0.7224668406175255,
+    "brier": 0.10449429723661444,
+    "umbral": 0.0811604659938339,
+    "alertas": 325,
+    "precision": 0.19076923076923077,
+    "recall": 0.8493150684931506,
+    "f1": 0.31155778894472363,
+    "f2": 0.5024311183144247,
+    "tp": 62,
+    "fp": 263,
+    "fn": 11,
+    "tn": 241,
+    "precision_top5": 0.3103448275862069,
+    "recall_top5": 0.1232876712328767,
+    "precision_top10": 0.27586206896551724,
+    "recall_top10": 0.2191780821917808,
+    "precision_top20": 0.2782608695652174,
+    "recall_top20": 0.4383561643835616,
+    "obras_con_onset_en_test": 39,
+    "obras_alertadas_antes_del_onset": 37,
+    "anticipacion_mediana_dias": 56.0
    },
    "nacional": {
-    "n": 16756,
-    "positivos": 842,
-    "prevalencia": 0.050250656481260446,
-    "pr_auc": 0.1469610505784494,
-    "roc_auc": 0.7480143792480783,
-    "brier": 0.04570401531767021,
-    "umbral": 0.06508636152168472,
-    "alertas": 5075,
-    "precision": 0.10620689655172413,
-    "recall": 0.6401425178147269,
-    "f1": 0.18218691904681428,
-    "f2": 0.319199336728651,
-    "tp": 539,
-    "fp": 4536,
-    "fn": 303,
-    "tn": 11378,
-    "precision_top5": 0.19689737470167065,
-    "recall_top5": 0.19596199524940616,
-    "precision_top10": 0.17064439140811455,
-    "recall_top10": 0.33966745843230406,
-    "precision_top20": 0.12742464935840048,
-    "recall_top20": 0.5071258907363421,
-    "obras_con_onset_en_test": 534,
-    "obras_alertadas_antes_del_onset": 399,
-    "anticipacion_mediana_dias": 43.0
+    "n": 14085,
+    "positivos": 969,
+    "prevalencia": 0.06879659211927583,
+    "pr_auc": 0.18592530400709878,
+    "roc_auc": 0.7518540995313391,
+    "brier": 0.060381611169305155,
+    "umbral": 0.0811604659938339,
+    "alertas": 4364,
+    "precision": 0.14757103574702107,
+    "recall": 0.6646026831785345,
+    "f1": 0.24151509469341834,
+    "f2": 0.3907766990291262,
+    "tp": 644,
+    "fp": 3720,
+    "fn": 325,
+    "tn": 9396,
+    "precision_top5": 0.23863636363636365,
+    "recall_top5": 0.17337461300309598,
+    "precision_top10": 0.2109375,
+    "recall_top10": 0.3065015479876161,
+    "precision_top20": 0.17358892438764642,
+    "recall_top20": 0.5046439628482973,
+    "obras_con_onset_en_test": 508,
+    "obras_alertadas_antes_del_onset": 389,
+    "anticipacion_mediana_dias": 63.0
    }
   }
  },
@@ -215,33 +198,33 @@
   {
    "score": "s_lgbm",
    "metrica": "pr",
-   "media": 0.25168052244087086,
-   "ic_inf": 0.15348522146972565,
-   "ic_sup": 0.3801476197778978
+   "media": 0.2546374626771582,
+   "ic_inf": 0.1722873325092257,
+   "ic_sup": 0.37411688427303447
   },
   {
    "score": "s_lgbm",
    "metrica": "roc",
-   "media": 0.7198833476061763,
-   "ic_inf": 0.6343223245214368,
-   "ic_sup": 0.802868567548163
+   "media": 0.7215859994198245,
+   "ic_inf": 0.6386146237484922,
+   "ic_sup": 0.8017048056965695
   }
  ],
  "bootstrap_nacional": [
   {
    "score": "s_lgbm",
    "metrica": "pr",
-   "media": 0.14816973033300332,
-   "ic_inf": 0.12620104877126645,
-   "ic_sup": 0.17367778035021267
+   "media": 0.1883386986370689,
+   "ic_inf": 0.15998363855248782,
+   "ic_sup": 0.2200160103737764
   },
   {
    "score": "s_lgbm",
    "metrica": "roc",
-   "media": 0.7481691692112474,
-   "ic_inf": 0.7274871662062535,
-   "ic_sup": 0.7695378080282284
+   "media": 0.7524877797367316,
+   "ic_inf": 0.731405924003032,
+   "ic_sup": 0.7719858729309468
   }
  ],
- "segundos": 12.4
+ "segundos": 20.9
 }

@@ -1,0 +1,199 @@
+{
+ "config": {
+  "target": "atraso",
+  "H": 90,
+  "feature_set": "A_asientos",
+  "train_scope": "nacional",
+  "models": [
+   "lgbm"
+  ],
+  "seed": 42,
+  "n_boot": 500,
+  "extra_feature_files": [],
+  "exclude_prefixes": [
+   "est_",
+   "actor_",
+   "siaf_",
+   "mefseg_",
+   "ib_"
+  ],
+  "text_stack": [],
+  "tag": "",
+  "test_start": "2025-12-31",
+  "test_months": 0,
+  "save_model": false
+ },
+ "n_features": 52,
+ "features": [
+  "asi_n_total",
+  "asi_n_30d",
+  "asi_n_90d",
+  "asi_dias_activos_30d",
+  "asi_dias_desde_ultimo",
+  "asi_dias_desde_primero",
+  "asi_frac_supervision_90d",
+  "asi_cum_ampliacion_plazo",
+  "asi_cum_suspension_plazo",
+  "asi_cum_adicionales",
+  "asi_cum_mayores_metrados",
+  "asi_cum_consultas",
+  "asi_cum_respuestas_consultas",
+  "asi_cum_penalidades",
+  "asi_cum_ordenes",
+  "asi_cum_riesgos",
+  "asi_cum_constatacion_fisica",
+  "asi_cum_programa_cpm",
+  "asi_cum_calendario_valorizado",
+  "asi_cum_valorizaciones",
+  "asi_cum_otras_modificaciones",
+  "asi_cum_reducciones",
+  "asi_cum_personal_clave",
+  "asi_cum_expediente_tecnico",
+  "asi_cum_adelantos",
+  "asi_cum_otras_ocurrencias",
+  "asi_cum_inicio_plazo",
+  "asi_90d_ampliacion_plazo",
+  "asi_90d_suspension_plazo",
+  "asi_90d_adicionales",
+  "asi_90d_mayores_metrados",
+  "asi_90d_consultas",
+  "asi_90d_respuestas_consultas",
+  "asi_90d_penalidades",
+  "asi_90d_ordenes",
+  "asi_90d_riesgos",
+  "asi_90d_constatacion_fisica",
+  "asi_90d_programa_cpm",
+  "asi_90d_calendario_valorizado",
+  "asi_90d_valorizaciones",
+  "asi_90d_otras_modificaciones",
+  "asi_90d_reducciones",
+  "asi_90d_personal_clave",
+  "asi_90d_expediente_tecnico",
+  "asi_90d_adelantos",
+  "asi_90d_otras_ocurrencias",
+  "asi_90d_inicio_plazo",
+  "asi_dias_desde_inicio_plazo",
+  "tmp_mes",
+  "tmp_vigencia_ley32069",
+  "asi_consultas_pendientes",
+  "asi_ritmo_30d_vs_90d"
+ ],
+ "periodos": {
+  "train": [
+   "2024-06-30",
+   "2025-03-31",
+   11903,
+   998
+  ],
+  "valid": [
+   "2025-07-31",
+   "2025-09-30",
+   6546,
+   516
+  ],
+  "test": [
+   "2025-12-31",
+   "2026-05-31",
+   14085,
+   969
+  ]
+ },
+ "modelos": {
+  "lgbm": {
+   "params": {
+    "num_leaves": 15,
+    "min_child_samples": 20,
+    "n_estimators": 148
+   },
+   "valid_pr_auc": 0.1669431861278896,
+   "umbral_f2_valid": 0.07612424992062668,
+   "arequipa": {
+    "n": 577,
+    "positivos": 73,
+    "prevalencia": 0.1265164644714038,
+    "pr_auc": 0.24206351693557582,
+    "roc_auc": 0.6648727984344422,
+    "brier": 0.10673644112378189,
+    "umbral": 0.07612424992062668,
+    "alertas": 292,
+    "precision": 0.17465753424657535,
+    "recall": 0.6986301369863014,
+    "f1": 0.27945205479452057,
+    "f2": 0.4366438356164384,
+    "tp": 51,
+    "fp": 241,
+    "fn": 22,
+    "tn": 263,
+    "precision_top5": 0.3103448275862069,
+    "recall_top5": 0.1232876712328767,
+    "precision_top10": 0.25862068965517243,
+    "recall_top10": 0.2054794520547945,
+    "precision_top20": 0.25217391304347825,
+    "recall_top20": 0.3972602739726027,
+    "obras_con_onset_en_test": 39,
+    "obras_alertadas_antes_del_onset": 32,
+    "anticipacion_mediana_dias": 40.5
+   },
+   "nacional": {
+    "n": 14085,
+    "positivos": 969,
+    "prevalencia": 0.06879659211927583,
+    "pr_auc": 0.16279364000091026,
+    "roc_auc": 0.7066048101075393,
+    "brier": 0.06139104918616402,
+    "umbral": 0.07612424992062668,
+    "alertas": 5086,
+    "precision": 0.12249311836413684,
+    "recall": 0.6429308565531475,
+    "f1": 0.20578034682080926,
+    "f2": 0.34757866547645616,
+    "tp": 623,
+    "fp": 4463,
+    "fn": 346,
+    "tn": 8653,
+    "precision_top5": 0.22017045454545456,
+    "recall_top5": 0.15995872033023736,
+    "precision_top10": 0.18821022727272727,
+    "recall_top10": 0.27347781217750256,
+    "precision_top20": 0.1508697195598154,
+    "recall_top20": 0.43859649122807015,
+    "obras_con_onset_en_test": 508,
+    "obras_alertadas_antes_del_onset": 395,
+    "anticipacion_mediana_dias": 62.0
+   }
+  }
+ },
+ "bootstrap_arequipa": [
+  {
+   "score": "s_lgbm",
+   "metrica": "pr",
+   "media": 0.25288889360212485,
+   "ic_inf": 0.17575276359734504,
+   "ic_sup": 0.34175008744253194
+  },
+  {
+   "score": "s_lgbm",
+   "metrica": "roc",
+   "media": 0.6652562749965534,
+   "ic_inf": 0.5792933747310268,
+   "ic_sup": 0.7496529916878201
+  }
+ ],
+ "bootstrap_nacional": [
+  {
+   "score": "s_lgbm",
+   "metrica": "pr",
+   "media": 0.16515381884528735,
+   "ic_inf": 0.13927178486273323,
+   "ic_sup": 0.19194073547214593
+  },
+  {
+   "score": "s_lgbm",
+   "metrica": "roc",
+   "media": 0.7072192273314106,
+   "ic_inf": 0.68670007865592,
+   "ic_sup": 0.7280567690423629
+  }
+ ],
+ "segundos": 11.1
+}

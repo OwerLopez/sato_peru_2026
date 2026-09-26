@@ -1,0 +1,17 @@
+[project]
+name = "sato-aqp"
+version = "0.1.0"
+description = "Deteccion temprana de riesgo de atraso significativo en obras publicas de Arequipa con datos abiertos oficiales"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
+
+[tool.ruff]
+line-length = 150
+target-version = "py312"
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B008"]

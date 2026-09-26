@@ -1,8 +1,8 @@
 {
  "config": {
-  "target": "atraso",
+  "target": "disrupcion",
   "H": 60,
-  "feature_set": "B_lex",
+  "feature_set": "B_full_sinproxy",
   "train_scope": "nacional",
   "models": [
    "lgbm"
@@ -12,14 +12,19 @@
   "extra_feature_files": [
    "features_text_lexicon.parquet"
   ],
-  "exclude_prefixes": [],
-  "text_stack": [],
+  "exclude_prefixes": [
+   "txt_lx_proxy_80"
+  ],
+  "text_stack": [
+   "text_window_tfidf.npz",
+   "text_window_emb.npy"
+  ],
   "tag": "",
   "test_start": "2025-12-31",
   "test_months": 0,
   "save_model": false
  },
- "n_features": 104,
+ "n_features": 105,
  "features": [
   "asi_n_total",
   "asi_n_30d",
@@ -110,7 +115,6 @@
   "txt_n_asientos_60d",
   "txt_len_media_60d",
   "txt_lx_atraso",
-  "txt_lx_proxy_80",
   "txt_lx_paralizacion",
   "txt_lx_clima",
   "txt_lx_financiero",
@@ -124,90 +128,92 @@
   "txt_lx_incumplimiento",
   "txt_lx_calidad",
   "txt_lx_suspension",
-  "txt_lx_progreso"
+  "txt_lx_progreso",
+  "txt_stack_tfidf",
+  "txt_stack_emb"
  ],
  "periodos": {
   "train": [
    "2024-06-30",
    "2025-05-31",
-   15529,
-   1031
+   10109,
+   3075
   ],
   "valid": [
    "2025-08-31",
    "2025-10-31",
-   6889,
-   388
+   4343,
+   1248
   ],
   "test": [
    "2025-12-31",
    "2026-06-30",
-   16756,
-   842
+   8440,
+   2618
   ]
  },
  "modelos": {
   "lgbm": {
    "params": {
-    "num_leaves": 15,
-    "min_child_samples": 20,
-    "n_estimators": 50
+    "num_leaves": 31,
+    "min_child_samples": 60,
+    "n_estimators": 169
    },
-   "valid_pr_auc": 0.12927841837203544,
-   "umbral_f2_valid": 0.06508636152168472,
+   "valid_pr_auc": 0.4349076361360952,
+   "umbral_f2_valid": 0.2693701134786952,
    "arequipa": {
-    "n": 693,
-    "positivos": 63,
-    "prevalencia": 0.09090909090909091,
-    "pr_auc": 0.2355481525264032,
-    "roc_auc": 0.7196775006298816,
-    "brier": 0.07875968535043493,
-    "umbral": 0.06508636152168472,
-    "alertas": 368,
-    "precision": 0.1331521739130435,
-    "recall": 0.7777777777777778,
-    "f1": 0.2273781902552204,
-    "f2": 0.3951612903225806,
-    "tp": 49,
-    "fp": 319,
-    "fn": 14,
-    "tn": 311,
-    "precision_top5": 0.37142857142857144,
-    "recall_top5": 0.20634920634920634,
-    "precision_top10": 0.3188405797101449,
-    "recall_top10": 0.3492063492063492,
-    "precision_top20": 0.2014388489208633,
-    "recall_top20": 0.4444444444444444,
-    "obras_con_onset_en_test": 42,
-    "obras_alertadas_antes_del_onset": 36,
-    "anticipacion_mediana_dias": 39.0
+    "n": 394,
+    "positivos": 125,
+    "prevalencia": 0.31725888324873097,
+    "pr_auc": 0.525922103602697,
+    "roc_auc": 0.7156877323420074,
+    "brier": 0.1920935803767669,
+    "umbral": 0.2693701134786952,
+    "alertas": 217,
+    "precision": 0.4423963133640553,
+    "recall": 0.768,
+    "f1": 0.5614035087719298,
+    "f2": 0.6694560669456067,
+    "tp": 96,
+    "fp": 121,
+    "fn": 29,
+    "tn": 148,
+    "precision_top5": 0.55,
+    "recall_top5": 0.088,
+    "precision_top10": 0.6153846153846154,
+    "recall_top10": 0.192,
+    "precision_top20": 0.6075949367088608,
+    "recall_top20": 0.384,
+    "obras_con_onset_en_test": 96,
+    "obras_alertadas_antes_del_onset": 80,
+    "anticipacion_mediana_dias": 31.5
    },
    "nacional": {
-    "n": 16756,
-    "positivos": 842,
-    "prevalencia": 0.050250656481260446,
-    "pr_auc": 0.1469610505784494,
-    "roc_auc": 0.7480143792480783,
-    "brier": 0.04570401531767021,
-    "umbral": 0.06508636152168472,
-    "alertas": 5075,
-    "precision": 0.10620689655172413,
-    "recall": 0.6401425178147269,
-    "f1": 0.18218691904681428,
-    "f2": 0.319199336728651,
-    "tp": 539,
-    "fp": 4536,
-    "fn": 303,
-    "tn": 11378,
-    "precision_top5": 0.19689737470167065,
-    "recall_top5": 0.19596199524940616,
-    "precision_top10": 0.17064439140811455,
-    "recall_top10": 0.33966745843230406,
-    "precision_top20": 0.12742464935840048,
-    "recall_top20": 0.5071258907363421,
-    "obras_con_onset_en_test": 534,
-    "obras_alertadas_antes_del_onset": 399,
-    "anticipacion_mediana_dias": 43.0
+    "n": 8440,
+    "positivos": 2618,
+    "prevalencia": 0.31018957345971565,
+    "pr_auc": 0.5150970598702074,
+    "roc_auc": 0.7066644683544071,
+    "brier": 0.18951514321439247,
+    "umbral": 0.2693701134786952,
+    "alertas": 4542,
+    "precision": 0.424922941435491,
+    "recall": 0.7372039724980901,
+    "f1": 0.5391061452513967,
+    "f2": 0.6427334487811376,
+    "tp": 1930,
+    "fp": 2612,
+    "fn": 688,
+    "tn": 3210,
+    "precision_top5": 0.6706161137440758,
+    "recall_top5": 0.10809778456837281,
+    "precision_top10": 0.6184834123222749,
+    "recall_top10": 0.19938884644766997,
+    "precision_top20": 0.5622037914691943,
+    "recall_top20": 0.3624904507257448,
+    "obras_con_onset_en_test": 1816,
+    "obras_alertadas_antes_del_onset": 1443,
+    "anticipacion_mediana_dias": 34.0
    }
   }
  },
@@ -215,33 +221,33 @@
   {
    "score": "s_lgbm",
    "metrica": "pr",
-   "media": 0.25168052244087086,
-   "ic_inf": 0.15348522146972565,
-   "ic_sup": 0.3801476197778978
+   "media": 0.5345013472101685,
+   "ic_inf": 0.4194211791347437,
+   "ic_sup": 0.6458076161502396
   },
   {
    "score": "s_lgbm",
    "metrica": "roc",
-   "media": 0.7198833476061763,
-   "ic_inf": 0.6343223245214368,
-   "ic_sup": 0.802868567548163
+   "media": 0.7163724109465015,
+   "ic_inf": 0.6496076872592957,
+   "ic_sup": 0.7809429266775378
   }
  ],
  "bootstrap_nacional": [
   {
    "score": "s_lgbm",
    "metrica": "pr",
-   "media": 0.14816973033300332,
-   "ic_inf": 0.12620104877126645,
-   "ic_sup": 0.17367778035021267
+   "media": 0.515338394538005,
+   "ic_inf": 0.4879842891522302,
+   "ic_sup": 0.5402254400235601
   },
   {
    "score": "s_lgbm",
    "metrica": "roc",
-   "media": 0.7481691692112474,
-   "ic_inf": 0.7274871662062535,
-   "ic_sup": 0.7695378080282284
+   "media": 0.7067237198217998,
+   "ic_inf": 0.6913423026137914,
+   "ic_sup": 0.7217233140409909
   }
  ],
- "segundos": 12.4
+ "segundos": 57.2
 }

@@ -1,0 +1,317 @@
+"""Publicacion del modelo operativo: predicciones, explicaciones (TreeSHAP) y evidencia.
+
+Configuracion operativa PRE-REGISTRADA (no elegida mirando el test):
+  * objetivo  : atraso normativo (RLCE art. 203 / RLGCP art. 207)
+  * horizonte : H = 60 dias (dos ciclos de valorizacion mensual: margen para que la
+                entidad exija medidas antes del disparador formal)
+  * algoritmo : LightGBM, hiperparametros elegidos en VALID
+  * features  : conjunto configurable (por defecto el de mejor PR-AUC en VALID entre A y B_full)
+
+Salidas en artifacts/release/:
+  * modelo_produccion.joblib : entrenado con TODAS las filas observables (T <= D - H)
+  * predicciones.parquet     : Arequipa. `backtest` = score "as-of" de un modelo
+                               reentrenado trimestralmente solo con datos anteriores
+                               (T' <= origen - H); `vigente` = ultimo corte D con el
+                               modelo de produccion.
+  * explicaciones.parquet    : top-8 contribuciones TreeSHAP por prediccion
+  * evidencia.parquet        : registros reales que respaldan cada contribucion positiva
+  * modelo_card.json         : metadatos, umbrales, metricas de test temporal ciego
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import logging
+import re
+import unicodedata
+from pathlib import Path
+
+import joblib
+import lightgbm as lgb
+import numpy as np
+import pandas as pd
+from sklearn.metrics import f1_score
+
+from sato.config import ARTIFACTS, CURATED, FEATURES, STAGING
+from sato.features.text import LEXICON, WINDOW_DAYS, norm_text
+from sato.models.evaluate import threshold_for_fbeta
+from sato.models.experiment import CATEGORICAL, Config, asof_text_scores, load_dataset, make_model, splits
+from sato.models.grid import FEATURE_SETS
+from sato.serving.descriptions import describe, group_of
+
+log = logging.getLogger(__name__)
+OUT = ARTIFACTS / "release"
+TOP_K = 8
+
+
+def _load_all(cfg: Config) -> tuple[pd.DataFrame, list[str]]:
+    """Como load_dataset pero conservando filas aun no observables (para prediccion vigente)."""
+    import sato.models.experiment as E
+
+    panel = pd.read_parquet(FEATURES / "panel.parquet")
+    panel["_row"] = np.arange(len(panel))
+    feats = pd.read_parquet(FEATURES / "features_structured.parquet")
+    df = panel.merge(feats, on=["cuaderno_id", "T"], how="left")
+    for f in cfg.extra_feature_files:
+        df = df.merge(pd.read_parquet(FEATURES / f), on=["cuaderno_id", "T"], how="left")
+    ycol = f"y_{cfg.target}_{cfg.H}"
+    df = df[df[f"eligible_{cfg.target}"]].copy()
+    df["y"] = df[ycol].astype(int)  # -1 = no observable aun
+    df["onset"] = df[f"onset_{cfg.target}"]
+    _, cols = load_dataset(cfg)  # misma lista y reglas de columnas
+    cols = [c for c in cols if not c.startswith("txt_stack_")]
+    for c in cols:
+        if c.startswith(E.ZERO_FILL_PREFIX):
+            df[c] = df[c].fillna(0)
+        if df[c].dtype == bool:
+            df[c] = df[c].astype(float)
+    for c in CATEGORICAL:
+        if c in cols:
+            df[c] = df[c].fillna("NA").astype("category")
+    return df, cols
+
+
+def _params(cfg: Config) -> dict:
+    from sato.models.experiment import run_id
+
+    r = json.loads((ARTIFACTS / "experiments" / run_id(cfg) / "resultados.json").read_text(encoding="utf-8"))
+    return r["modelos"]["lgbm"]["params"], r
+
+
+def _fit(cols, X, y, params, seed=42):
+    m = make_model("lgbm", cols, seed, params)
+    m.fit(X, y)
+    return m
+
+
+def _shap(model, X: pd.DataFrame) -> np.ndarray:
+    return model.booster_.predict(X, pred_contrib=True)  # TreeSHAP exacto; ultima columna = valor base (log-odds)
+
+
+def build(feature_set: str = "B_full", H: int = 60, target: str = "atraso", out: Path = OUT) -> Path:
+    out.mkdir(parents=True, exist_ok=True)
+    kw = FEATURE_SETS[feature_set]
+    cfg = Config(target=target, H=H, feature_set=feature_set, models=("lgbm",), **kw)
+    params, grid_res = _params(cfg)
+    df, cols = _load_all(cfg)
+    D = df["data_end"].iloc[0]
+    obs = df["y"] >= 0
+    # Scores de texto apilados totalmente "as-of" (cada mes con un modelo entrenado solo con etiquetas ya conocidas)
+    for wf in cfg.text_stack:
+        name = "txt_stack_" + ("tfidf" if wf.endswith(".npz") else "emb")
+        tmp = df.copy()
+        tmp.loc[~obs, "y"] = 0  # nunca se usan para entrenar: asof usa T' <= m - H, siempre observables
+        df[name] = asof_text_scores(tmp, H, test_start=D + pd.Timedelta(days=3650), window_file=wf)
+        cols = cols + [name]
+
+    # Umbrales en VALID (misma particion que la grilla)
+    train, valid, trainval, test = splits(df[obs], H)
+    dfo = df[obs]
+    m_val = _fit(cols, dfo.loc[train, cols], dfo.loc[train, "y"], params)
+    s_val = m_val.predict_proba(dfo.loc[valid, cols])[:, 1]
+    y_val = dfo.loc[valid, "y"].to_numpy()
+    thr_alerta = threshold_for_fbeta(y_val, s_val, beta=2.0)
+    thr_alto = threshold_for_fbeta(y_val, s_val, beta=1.0)
+    thr_alto = max(thr_alto, thr_alerta)
+
+    # Modelo de produccion: todas las filas observables
+    prod = _fit(cols, dfo[cols], dfo["y"], params)
+    art = out / "modelo_produccion.joblib"
+    joblib.dump({"model": prod, "features": cols, "params": params, "H": H, "target": target, "feature_set": feature_set,
+                 "thr_alerta": thr_alerta, "thr_alto": thr_alto, "entrenado_hasta": str((D - pd.Timedelta(days=H)).date())}, art)
+    sha = hashlib.sha256(art.read_bytes()).hexdigest()
+
+    aqp = df["dep_code"] == "04"
+    preds, shaps = [], []
+    # Backtest as-of con reentrenamiento trimestral
+    origins = pd.date_range("2024-12-31", D, freq="QE")
+    for i, o in enumerate(origins):
+        nxt = origins[i + 1] if i + 1 < len(origins) else D + pd.Timedelta(days=1)
+        tr = obs & (df["T"] <= o - pd.Timedelta(days=H))
+        if df.loc[tr, "y"].sum() < 50:
+            continue
+        m = _fit(cols, df.loc[tr, cols], df.loc[tr, "y"], params)
+        sel = aqp & (df["T"] > o) & (df["T"] <= nxt) & (df["T"] < D)
+        if sel.sum() == 0:
+            continue
+        p = df.loc[sel, ["cuaderno_id", "T", "y"]].copy()
+        p["score"] = m.predict_proba(df.loc[sel, cols])[:, 1]
+        p["tipo"] = "backtest"
+        p["modelo_origen"] = str(o.date())
+        preds.append(p)
+        shaps.append((p.index, _shap(m, df.loc[sel, cols])))
+        log.info("backtest origen %s: entrenado con %s filas, %s predicciones AQP", o.date(), int(tr.sum()), int(sel.sum()))
+    sel = aqp & (df["T"] == D)
+    p = df.loc[sel, ["cuaderno_id", "T", "y"]].copy()
+    p["score"] = prod.predict_proba(df.loc[sel, cols])[:, 1]
+    p["tipo"] = "vigente"
+    p["modelo_origen"] = "produccion"
+    preds.append(p)
+    shaps.append((p.index, _shap(prod, df.loc[sel, cols])))
+    P = pd.concat(preds)
+    # Politica operativa (elegida en VALID): ALERTA = nivel ALTO (umbral que maximiza F1);
+    # MEDIO = "en vigilancia" (umbral que maximiza F2, orientado a recall); BAJO = resto.
+    P["alerta"] = P["score"] >= thr_alto
+    P["nivel"] = np.where(P["alerta"], "ALTO", np.where(P["score"] >= thr_alerta, "MEDIO", "BAJO"))
+    P["percentil"] = P.groupby("T")["score"].rank(pct=True)
+    P["y_observado"] = P["y"].where(P["y"] >= 0)
+    P = P.drop(columns="y")
+
+    # Explicaciones top-K
+    E = []
+    for idx, S in shaps:
+        vals = df.loc[idx, cols]
+        for j, ix in enumerate(idx):
+            contrib = S[j, :-1]
+            order = np.argsort(-np.abs(contrib))[:TOP_K]
+            for r, k in enumerate(order):
+                f = cols[k]
+                v = vals.iloc[j, k]
+                vnum = float(v) if isinstance(v, (int, float, np.floating, np.integer)) and not pd.isna(v) else None
+                E.append(dict(cuaderno_id=df.at[ix, "cuaderno_id"], T=df.at[ix, "T"], rango=r + 1, feature=f, grupo=group_of(f),
+                              valor=vnum, shap=float(contrib[k]), descripcion=describe(f, vnum if vnum is not None else (str(v) if not pd.isna(v) else None))))
+    E = pd.DataFrame(E)
+    P.to_parquet(out / "predicciones.parquet", index=False)
+    E.to_parquet(out / "explicaciones.parquet", index=False)
+    evidence(E, out)
+
+    o = P[P["y_observado"].notna()]
+    op = {"filas_observables": int(len(o)), "prevalencia": float((o["y_observado"] == 1).mean())}
+    for name, m in (("alerta_alto", o["nivel"] == "ALTO"), ("vigilancia_o_alto", o["nivel"] != "BAJO")):
+        tp = int(((m) & (o["y_observado"] == 1)).sum())
+        op[name] = {"tasa_marcadas": float(m.mean()), "precision": tp / max(1, int(m.sum())), "recall": tp / max(1, int((o["y_observado"] == 1).sum()))}
+    for k in (0.05, 0.10, 0.20, 0.30):
+        m = o["score"] >= o["score"].quantile(1 - k)
+        tp = int(((m) & (o["y_observado"] == 1)).sum())
+        op[f"top_{int(k * 100)}"] = {"precision": tp / max(1, int(m.sum())), "recall": tp / max(1, int((o["y_observado"] == 1).sum()))}
+    card = dict(
+        nombre="SATO-AQP alerta de atraso", version=f"{target}-H{H}-{feature_set}-{str(D.date())}", objetivo=target, horizonte_dias=H,
+        conjunto_features=feature_set, algoritmo="LightGBM (TreeSHAP)", entrenado_hasta=str((D - pd.Timedelta(days=H)).date()),
+        fecha_corte_datos=str(D.date()), umbral_alerta=thr_alto, umbral_vigilancia=thr_alerta, umbral_alto=thr_alto,
+        operacion_backtest_arequipa=op, params=params, features=cols,
+        metricas_test=grid_res["modelos"]["lgbm"], periodos_evaluacion=grid_res["periodos"], artefacto=str(art.name), sha256=sha,
+        filas_entrenamiento=int(obs.sum()), obras_entrenamiento=int(df.loc[obs, "cuaderno_id"].nunique()),
+    )
+    (out / "modelo_card.json").write_text(json.dumps(card, indent=1, default=str), encoding="utf-8")
+    log.info("release: %s predicciones AQP (%s vigentes, %s alertas vigentes)", len(P), int((P.tipo == "vigente").sum()),
+             int(((P.tipo == "vigente") & P.alerta).sum()))
+    return out
+
+
+# ---------------------------------------------------------------- evidencia
+def _tfidf_ranker():
+    """Modelo de texto de produccion para ORDENAR asientos como evidencia (no para predecir)."""
+    import scipy.sparse as sp
+    from sklearn.linear_model import LogisticRegression
+
+    vec = joblib.load(FEATURES / "text_lsa_model.joblib")["vectorizer"]
+    panel = pd.read_parquet(FEATURES / "panel.parquet")
+    Xw = sp.load_npz(FEATURES / "text_window_tfidf.npz").tocsr()
+    y = panel["y_atraso_60"].to_numpy()
+    ok = (y >= 0) & panel["eligible_atraso"].to_numpy()
+    clf = LogisticRegression(C=1.0, class_weight="balanced", max_iter=2000, solver="liblinear").fit(Xw[ok], y[ok])
+    return vec, clf
+
+
+def evidence(E: pd.DataFrame, out: Path) -> Path:
+    pos = E[E["shap"] > 0].sort_values(["cuaderno_id", "T", "rango"]).groupby(["cuaderno_id", "T"]).head(5)
+    asi = pd.read_parquet(CURATED / "asiento.parquet", columns=["cuaderno_id", "nro_asiento", "fecha", "tipo", "tipo_std", "titulo", "descripcion"])
+    asi = asi[asi["cuaderno_id"].isin(pos["cuaderno_id"].unique())].copy()
+    asi["fecha"] = pd.to_datetime(asi["fecha"])
+    asi["txt"] = (asi["titulo"].fillna("") + " . " + asi["descripcion"].fillna("")).map(norm_text)
+    by_c = {c: g for c, g in asi.groupby("cuaderno_id")}
+    siaf = pd.concat([pd.read_parquet(f, columns=["cui", "anio", "mes", "monto_devengado"]) for f in sorted((STAGING / "siaf").glob("*.parquet"))])
+    siaf = siaf[(siaf["mes"] >= 1)]
+    cua = pd.read_parquet(CURATED / "cuaderno.parquet").set_index("cuaderno_id")
+    mefseg = pd.read_parquet(STAGING / "mef_estado_situacional.parquet")
+    mefseg = mefseg[mefseg["cui"].isin(cua["cui"].dropna().unique())]
+    vec, clf = _tfidf_ranker()
+    coef = clf.coef_.ravel()
+    lex = {k: re.compile(v) for k, v in LEXICON.items()}
+    rows = []
+
+    def add(r, fuente, **kw):
+        rows.append(dict(cuaderno_id=r.cuaderno_id, T=r.T, feature=r.feature, fuente=fuente, **kw))
+
+    for r in pos.itertuples():
+        g = by_c.get(r.cuaderno_id)
+        T = pd.Timestamp(r.T)
+        f = r.feature
+        if g is not None:
+            m = re.match(r"asi_(cum|90d)_(.+)", f)
+            if m:
+                w = g[(g["fecha"] <= T) & (g["tipo_std"] == m.group(2).upper())]
+                if m.group(1) == "90d":
+                    w = w[w["fecha"] > T - pd.Timedelta(days=90)]
+                for a in w.sort_values("fecha", ascending=False).head(5).itertuples():
+                    add(r, "ASIENTO", nro_asiento=a.nro_asiento, fecha=a.fecha, referencia=a.tipo, extracto=_snip(a.titulo, a.descripcion))
+                continue
+            m = re.match(r"txt_lx_(.+)", f)
+            if m and m.group(1) in lex:
+                w = g[(g["fecha"] <= T) & (g["fecha"] > T - pd.Timedelta(days=WINDOW_DAYS))]
+                w = w[w["txt"].str.contains(lex[m.group(1)])]
+                for a in w.sort_values("fecha", ascending=False).head(4).itertuples():
+                    add(r, "ASIENTO", nro_asiento=a.nro_asiento, fecha=a.fecha, referencia=a.tipo,
+                        extracto=_snip_match(a.txt, lex[m.group(1)]))
+                continue
+            if f.startswith(("txt_stack", "txt_lsa", "txt_emb", "txt_n_", "txt_len", "ie_", "asi_")):
+                w = g[(g["fecha"] <= T) & (g["fecha"] > T - pd.Timedelta(days=WINDOW_DAYS))]
+                if len(w):
+                    sc = vec.transform(w["txt"]) @ coef
+                    w = w.assign(_s=np.asarray(sc).ravel()).sort_values("_s", ascending=False).head(3)
+                    for a in w.itertuples():
+                        add(r, "ASIENTO", nro_asiento=a.nro_asiento, fecha=a.fecha, referencia=a.tipo, extracto=_snip(a.titulo, a.descripcion))
+                continue
+        cui = cua.at[r.cuaderno_id, "cui"] if r.cuaderno_id in cua.index else None
+        if f.startswith("siaf_") and cui:
+            s = siaf[(siaf["cui"] == cui)].copy()
+            s["mes_ini"] = pd.to_datetime(dict(year=s["anio"], month=s["mes"], day=1))
+            s = s[s["mes_ini"] < T.replace(day=1)].sort_values("mes_ini", ascending=False).head(6)
+            for x in s.itertuples():
+                add(r, "SIAF", fecha=x.mes_ini, referencia=f"https://ofi5.mef.gob.pe/ssi/Ssi/Index?codigo={cui}&tipo=2",
+                    extracto=f"Devengado {x.anio}-{x.mes:02d}: S/ {x.monto_devengado:,.2f}")
+        elif f.startswith("mefseg_") and cui:
+            s = mefseg[(mefseg["cui"] == cui) & (mefseg["fecha_registro"] <= T) & (mefseg["fecha_registro"] > T - pd.Timedelta(days=180))]
+            for x in s.sort_values("fecha_registro", ascending=False).head(4).itertuples():
+                add(r, "MEF_SEGUIMIENTO", fecha=x.fecha_registro, referencia=x.tipo_registro, extracto=_s(x.descripcion)[:400])
+        elif f.startswith("actor_contratista") or f.startswith("actor_entidad"):
+            key = "ruc_contratista" if "contratista" in f else "ruc_entidad"
+            val = cua.at[r.cuaderno_id, key] if r.cuaderno_id in cua.index else None
+            if val:
+                prev = cua[(cua[key] == val) & (cua.index != r.cuaderno_id)].copy()
+                prev["onset"] = pd.concat([pd.to_datetime(prev[c]) for c in ("f_valorizacion_menor_80", "f_calendario_acelerado")], axis=1).min(axis=1)
+                prev = prev[prev["onset"] < T].sort_values("onset", ascending=False).head(4)
+                for cid, x in prev.iterrows():
+                    add(r, "HISTORIAL", fecha=x.onset, referencia=str(cid), extracto=f"{_s(x.denominacion)[:220]} ({_s(x.departamento)}) - atraso normativo el {x.onset.date()}")
+        elif f.startswith("ib_"):
+            add(r, "INFOBRAS", referencia="https://infobras.contraloria.gob.pe/InfobrasWeb/Mapa/Sumario?ObraId=", extracto=describe(f, r.valor))
+    ev = pd.DataFrame(rows)
+    dst = out / "evidencia.parquet"
+    ev.to_parquet(dst, index=False)
+    log.info("evidencia: %s registros", len(ev))
+    return dst
+
+
+def _s(v) -> str:
+    return v if isinstance(v, str) else ""
+
+
+def _snip(titulo, desc, n=420):
+    t = f"{_s(titulo)}: {_s(desc)}".strip(": ")
+    return t[:n] + ("..." if len(t) > n else "")
+
+
+def _snip_match(txt, rx, n=200):
+    m = rx.search(txt)
+    if not m:
+        return txt[: 2 * n]
+    a, b = max(0, m.start() - n), min(len(txt), m.end() + n)
+    return ("..." if a else "") + txt[a:b] + ("..." if b < len(txt) else "")
+
+
+if __name__ == "__main__":
+    import sys
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    build(feature_set=sys.argv[1] if len(sys.argv) > 1 else "B_full", H=int(sys.argv[2]) if len(sys.argv) > 2 else 60)

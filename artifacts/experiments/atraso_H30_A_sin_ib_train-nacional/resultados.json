@@ -1,19 +1,17 @@
 {
  "config": {
   "target": "atraso",
-  "H": 60,
-  "feature_set": "B_lex_sinproxy",
+  "H": 30,
+  "feature_set": "A_sin_ib",
   "train_scope": "nacional",
   "models": [
    "lgbm"
   ],
   "seed": 42,
   "n_boot": 500,
-  "extra_feature_files": [
-   "features_text_lexicon.parquet"
-  ],
+  "extra_feature_files": [],
   "exclude_prefixes": [
-   "txt_lx_proxy_80"
+   "ib_"
   ],
   "text_stack": [],
   "tag": "",
@@ -21,7 +19,7 @@
   "test_months": 0,
   "save_model": false
  },
- "n_features": 103,
+ "n_features": 82,
  "features": [
   "asi_n_total",
   "asi_n_30d",
@@ -89,10 +87,6 @@
   "est_log_monto_contratado",
   "est_plazo_vigencia_dias",
   "est_tiene_seace",
-  "ib_plazo_original_dias",
-  "ib_log_monto_contrato",
-  "ib_frac_plazo_transcurrido",
-  "ib_dias_para_fin_programado",
   "actor_contratista_obras_previas",
   "actor_contratista_atrasos_previos",
   "actor_entidad_obras_previas",
@@ -108,43 +102,26 @@
   "asi_consultas_pendientes",
   "asi_ritmo_30d_vs_90d",
   "siaf_dev_acum_sobre_viable",
-  "siaf_dev_ytd_sobre_pia",
-  "txt_n_asientos_60d",
-  "txt_len_media_60d",
-  "txt_lx_atraso",
-  "txt_lx_paralizacion",
-  "txt_lx_clima",
-  "txt_lx_financiero",
-  "txt_lx_materiales",
-  "txt_lx_equipo",
-  "txt_lx_personal",
-  "txt_lx_expediente",
-  "txt_lx_terreno",
-  "txt_lx_adicionales",
-  "txt_lx_controversia",
-  "txt_lx_incumplimiento",
-  "txt_lx_calidad",
-  "txt_lx_suspension",
-  "txt_lx_progreso"
+  "siaf_dev_ytd_sobre_pia"
  ],
  "periodos": {
   "train": [
    "2024-06-30",
-   "2025-05-31",
-   15529,
-   1031
+   "2025-07-31",
+   19742,
+   679
   ],
   "valid": [
-   "2025-08-31",
-   "2025-10-31",
-   6889,
-   388
+   "2025-09-30",
+   "2025-11-30",
+   7436,
+   212
   ],
   "test": [
    "2025-12-31",
-   "2026-06-30",
-   16756,
-   842
+   "2026-07-31",
+   19538,
+   510
   ]
  },
  "modelos": {
@@ -152,63 +129,63 @@
    "params": {
     "num_leaves": 15,
     "min_child_samples": 60,
-    "n_estimators": 92
+    "n_estimators": 50
    },
-   "valid_pr_auc": 0.12154045619324186,
-   "umbral_f2_valid": 0.06765558654379286,
+   "valid_pr_auc": 0.07293075089459528,
+   "umbral_f2_valid": 0.03491031878347066,
    "arequipa": {
-    "n": 693,
-    "positivos": 63,
-    "prevalencia": 0.09090909090909091,
-    "pr_auc": 0.2088425068309291,
-    "roc_auc": 0.7236583522297808,
-    "brier": 0.07830252563839404,
-    "umbral": 0.06765558654379286,
-    "alertas": 327,
-    "precision": 0.13761467889908258,
+    "n": 808,
+    "positivos": 42,
+    "prevalencia": 0.05198019801980198,
+    "pr_auc": 0.1073184995598506,
+    "roc_auc": 0.6731629988810145,
+    "brier": 0.04861134623714097,
+    "umbral": 0.03491031878347066,
+    "alertas": 351,
+    "precision": 0.08547008547008547,
     "recall": 0.7142857142857143,
-    "f1": 0.23076923076923078,
-    "f2": 0.38860103626943004,
-    "tp": 45,
-    "fp": 282,
-    "fn": 18,
-    "tn": 348,
-    "precision_top5": 0.2571428571428571,
-    "recall_top5": 0.14285714285714285,
-    "precision_top10": 0.30434782608695654,
-    "recall_top10": 0.3333333333333333,
-    "precision_top20": 0.20863309352517986,
-    "recall_top20": 0.4603174603174603,
-    "obras_con_onset_en_test": 42,
-    "obras_alertadas_antes_del_onset": 36,
-    "anticipacion_mediana_dias": 39.0
+    "f1": 0.15267175572519084,
+    "f2": 0.28901734104046245,
+    "tp": 30,
+    "fp": 321,
+    "fn": 12,
+    "tn": 445,
+    "precision_top5": 0.1,
+    "recall_top5": 0.09523809523809523,
+    "precision_top10": 0.13580246913580246,
+    "recall_top10": 0.2619047619047619,
+    "precision_top20": 0.11728395061728394,
+    "recall_top20": 0.4523809523809524,
+    "obras_con_onset_en_test": 43,
+    "obras_alertadas_antes_del_onset": 33,
+    "anticipacion_mediana_dias": 37.0
    },
    "nacional": {
-    "n": 16756,
-    "positivos": 842,
-    "prevalencia": 0.050250656481260446,
-    "pr_auc": 0.15325877613155267,
-    "roc_auc": 0.7590943094668284,
-    "brier": 0.04526863566776356,
-    "umbral": 0.06765558654379286,
-    "alertas": 4438,
-    "precision": 0.11784587652095539,
-    "recall": 0.6211401425178147,
-    "f1": 0.19810606060606062,
-    "f2": 0.33499871893415323,
-    "tp": 523,
-    "fp": 3915,
-    "fn": 319,
-    "tn": 11999,
-    "precision_top5": 0.20883054892601433,
-    "recall_top5": 0.20783847980997625,
-    "precision_top10": 0.17422434367541767,
-    "recall_top10": 0.34679334916864607,
-    "precision_top20": 0.13667561921814383,
-    "recall_top20": 0.5439429928741093,
-    "obras_con_onset_en_test": 534,
-    "obras_alertadas_antes_del_onset": 385,
-    "anticipacion_mediana_dias": 42.0
+    "n": 19538,
+    "positivos": 510,
+    "prevalencia": 0.02610297881052308,
+    "pr_auc": 0.07649303502323622,
+    "roc_auc": 0.74252432947112,
+    "brier": 0.024875245120453207,
+    "umbral": 0.03491031878347066,
+    "alertas": 5495,
+    "precision": 0.05950864422202002,
+    "recall": 0.6411764705882353,
+    "f1": 0.10890924229808494,
+    "f2": 0.21698739216987392,
+    "tp": 327,
+    "fp": 5168,
+    "fn": 183,
+    "tn": 13860,
+    "precision_top5": 0.10133060388945753,
+    "recall_top5": 0.19411764705882353,
+    "precision_top10": 0.08239508700102355,
+    "recall_top10": 0.3156862745098039,
+    "precision_top20": 0.0642272262026612,
+    "recall_top20": 0.492156862745098,
+    "obras_con_onset_en_test": 542,
+    "obras_alertadas_antes_del_onset": 388,
+    "anticipacion_mediana_dias": 39.0
    }
   }
  },
@@ -216,33 +193,33 @@
   {
    "score": "s_lgbm",
    "metrica": "pr",
-   "media": 0.2200172164600409,
-   "ic_inf": 0.14255668158131796,
-   "ic_sup": 0.3166712841011262
+   "media": 0.12046393311183758,
+   "ic_inf": 0.06967901366605066,
+   "ic_sup": 0.20350220377580475
   },
   {
    "score": "s_lgbm",
    "metrica": "roc",
-   "media": 0.7235153288169305,
-   "ic_inf": 0.6489197405165016,
-   "ic_sup": 0.7979532934937498
+   "media": 0.6734382063790276,
+   "ic_inf": 0.5872964555518005,
+   "ic_sup": 0.7570427528995409
   }
  ],
  "bootstrap_nacional": [
   {
    "score": "s_lgbm",
    "metrica": "pr",
-   "media": 0.15472128758137416,
-   "ic_inf": 0.13353293642148675,
-   "ic_sup": 0.17871388413183936
+   "media": 0.07770690099183983,
+   "ic_inf": 0.06451630012882287,
+   "ic_sup": 0.09217938073082237
   },
   {
    "score": "s_lgbm",
    "metrica": "roc",
-   "media": 0.7594961187646314,
-   "ic_inf": 0.7393425348071193,
-   "ic_sup": 0.7802853520647618
+   "media": 0.7428192415507329,
+   "ic_inf": 0.7213817397411562,
+   "ic_sup": 0.764604260620107
   }
  ],
- "segundos": 12.3
+ "segundos": 10.9
 }

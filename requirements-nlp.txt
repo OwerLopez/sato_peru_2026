@@ -1,0 +1,4 @@
+# Solo para recalcular embeddings (GPU opcional). Instalar torch segun la plataforma:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128   (CUDA)
+#   pip install torch                                                       (CPU)
+sentence-transformers==6.1.0

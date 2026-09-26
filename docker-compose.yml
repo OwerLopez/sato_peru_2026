@@ -1,0 +1,60 @@
+# SATO-AQP: plataforma completa en local
+#   cp .env.example .env   (editar secretos)
+#   docker compose up -d --build db api web
+#   docker compose --profile carga run --rm cargador   (carga/actualiza la BD desde data/ y artifacts/)
+# Abrir http://localhost:8080
+name: sato-aqp
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sato}
+      POSTGRES_USER: ${POSTGRES_USER:-sato}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?definir POSTGRES_PASSWORD en .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sato} -d ${POSTGRES_DB:-sato}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build: { context: ., dockerfile: docker/api.Dockerfile }
+    environment:
+      SATO_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-sato}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sato}
+      SATO_JWT_SECRET: ${SATO_JWT_SECRET:?definir SATO_JWT_SECRET en .env}
+      SATO_ENV: prod
+      SATO_CORS_ORIGINS: ${SATO_CORS_ORIGINS:-http://localhost:8080}
+      SATO_RATE_LIMIT: ${SATO_RATE_LIMIT:-120/minute}
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped
+
+  web:
+    build: { context: ., dockerfile: docker/web.Dockerfile }
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  cargador:
+    profiles: ["carga"]
+    build: { context: ., dockerfile: docker/pipeline.Dockerfile }
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sato}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sato}
+      SATO_ADMIN_EMAIL: ${SATO_ADMIN_EMAIL:-}
+      SATO_ADMIN_PASSWORD: ${SATO_ADMIN_PASSWORD:-}
+    volumes:
+      - ./data:/app/data:ro
+      - ./artifacts:/app/artifacts:ro
+    depends_on:
+      db: { condition: service_healthy }
+
+volumes:
+  pgdata:
