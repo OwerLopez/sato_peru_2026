@@ -1,136 +1,153 @@
 import { useQuery } from '@tanstack/react-query'
+import { Eye } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, fmtFecha, qs, type ObraResumen } from '../api'
+import { api, ESTADOS, fmtFecha, fmtNum, qs, SECTOR, titulo, useFiltros, type ObraResumen } from '../api'
 import { useAmbito } from '../ambito'
-import { Cargando, ErrorMsg, ESTADOS, NivelBadge, Paginacion, SECTORES } from '../components/ui'
+import { VistaPreviaCuaderno } from '../components/Factores'
+import { BarraFiltros, ChipsActivos, SelectFiltro } from '../components/Filtros'
+import { Cargando, EncabezadoPagina, ErrorMsg, InfoTip, NivelBadge, Paginacion, Panel, Segmentado, Vacio } from '../components/ui'
+import { NIVEL_TEXTO } from '../lib/nivel'
+import { useFiltrosUrl } from '../lib/filtrosUrl'
+
+const TAM = 25
+const DEF = { vista: 'vigentes', q: '', sector: '', estado: '', nivel: '', orden: 'riesgo' }
+const ORDEN: Record<string, string> = { riesgo: 'Mayor riesgo', reciente: 'Actividad reciente', nombre: 'Nombre' }
 
 export default function Obras() {
   const { departamento } = useAmbito()
-  const [f, setF] = useState({ q: '', sector: '', estado: '', nivel: '', orden: 'riesgo' })
-  const [pagina, setPagina] = useState(1)
-  const [busqueda, setBusqueda] = useState('')
-  const params = { ...f, q: busqueda, departamento, pagina, tamanio: 25 }
-  const r = useQuery({ queryKey: ['obras', params], queryFn: () => api<{ total: number; items: ObraResumen[] }>(`/obras${qs(params)}`) })
-  const set = (k: string, v: string) => {
-    setF({ ...f, [k]: v })
-    setPagina(1)
-  }
+  const { valores: f, pagina, set, limpiar, activos } = useFiltrosUrl(DEF)
+  const filtros = useFiltros()
+  const [sel, setSel] = useState<ObraResumen | null>(null)
+  const params = { q: f.q, sector: f.sector, estado: f.vista === 'vigentes' ? '' : f.estado, nivel: f.nivel, orden: f.orden, solo_vigentes: f.vista === 'vigentes', departamento, pagina, tamanio: TAM }
+  const r = useQuery({ queryKey: ['obras', params], queryFn: () => api<{ total: number; items: ObraResumen[] }>(`/obras${qs(params)}`), placeholderData: (p) => p })
+  const chips = activos
+    .filter((k) => k !== 'vista' && k !== 'orden')
+    .map((k) => ({
+      k,
+      l: k === 'q' ? `“${f.q}”` : k === 'nivel' ? `Riesgo ${NIVEL_TEXTO[f.nivel as 'ALTO'].toLowerCase()}` : k === 'sector' ? (SECTOR[f.sector] ?? f.sector) : (ESTADOS[f.estado] ?? f.estado),
+      quitar: () => set({ [k]: null }),
+    }))
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-marca-900">Obras</h1>
-        <p className="text-sm text-slate-500">Contratos de obra con cuaderno de obra digital (OECE) en el ámbito seleccionado, integrados con Invierte.pe, SIAF, INFOBRAS y SEACE.</p>
-      </div>
-      <form
-        className="tarjeta flex flex-wrap items-end gap-3 p-3"
-        onSubmit={(e) => {
-          e.preventDefault()
-          setBusqueda(f.q)
-          setPagina(1)
-        }}
-      >
-        <label className="min-w-64 flex-1 text-sm">
-          <div className="etiqueta mb-1">Buscar (nombre, entidad o CUI)</div>
-          <input className="entrada w-full" value={f.q} maxLength={120} onChange={(e) => setF({ ...f, q: e.target.value })} placeholder="p.ej. agua potable, 2345678" />
-        </label>
-        {(
-          [
-            ['sector', 'Sector', SECTORES],
-          ] as const
-        ).map(([k, l, ops]) => (
-          <label key={k} className="text-sm">
-            <div className="etiqueta mb-1">{l}</div>
-            <select className="entrada" value={f[k]} onChange={(e) => set(k, e.target.value)}>
-              <option value="">Todos</option>
-              {ops.map((o) => (
-                <option key={o}>{o}</option>
-              ))}
-            </select>
-          </label>
-        ))}
-        <label className="text-sm">
-          <div className="etiqueta mb-1">Estado</div>
-          <select className="entrada" value={f.estado} onChange={(e) => set('estado', e.target.value)}>
-            <option value="">Todos</option>
-            {Object.entries(ESTADOS).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm">
-          <div className="etiqueta mb-1">Nivel</div>
-          <select className="entrada" value={f.nivel} onChange={(e) => set('nivel', e.target.value)}>
-            <option value="">Todos</option>
-            <option>ALTO</option>
-            <option>MEDIO</option>
-            <option>BAJO</option>
-          </select>
-        </label>
-        <label className="text-sm">
-          <div className="etiqueta mb-1">Orden</div>
-          <select className="entrada" value={f.orden} onChange={(e) => set('orden', e.target.value)}>
-            <option value="riesgo">Mayor riesgo</option>
-            <option value="reciente">Actividad reciente</option>
-            <option value="nombre">Nombre</option>
-          </select>
-        </label>
-        <button className="btn-primario" type="submit">
-          Buscar
-        </button>
-      </form>
-      {r.isLoading ? (
-        <Cargando />
-      ) : r.error ? (
-        <ErrorMsg error={r.error} />
-      ) : (
-        <div className="tarjeta p-3">
-          <div className="overflow-x-auto">
-            <table className="tabla w-full">
-              <thead>
-                <tr>
-                  <th>Obra</th>
-                  <th>Ubicación</th>
-                  <th>Sector</th>
-                  <th>Estado</th>
-                  <th>Último riesgo</th>
-                  <th>Atraso normativo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {r.data!.items.map((o) => (
-                  <tr key={o.cuaderno_id}>
-                    <td className="max-w-lg">
-                      <Link to={`/obras/${o.cuaderno_id}`} className="font-medium text-marca-700 hover:underline">
-                        {o.denominacion.slice(0, 170)}
-                        {o.denominacion.length > 170 ? '…' : ''}
-                      </Link>
-                      <div className="text-xs text-slate-500">
-                        {o.entidad} {o.cui ? `· CUI ${o.cui}` : ''} · {o.n_asientos ?? 0} asientos
-                      </div>
-                    </td>
-                    <td className="text-xs">
-                      {o.provincia}
-                      <br />
-                      <span className="text-slate-500">{o.departamento}</span>
-                    </td>
-                    <td className="text-xs">{o.sector}</td>
-                    <td className="text-xs">{ESTADOS[o.estado_observado] ?? o.estado_observado}</td>
-                    <td className="whitespace-nowrap">
-                      <NivelBadge nivel={o.nivel} score={o.score} />
-                      <div className="text-xs text-slate-500">{o.fecha_corte ? `${o.tipo_prediccion === 'vigente' ? 'vigente' : 'histórico'} · ${fmtFecha(o.fecha_corte)}` : ''}</div>
-                    </td>
-                    <td className="whitespace-nowrap text-xs">{o.fecha_atraso ? <span className="font-medium text-alto">{fmtFecha(o.fecha_atraso)}</span> : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <EncabezadoPagina
+        titulo="Alertas del cuaderno de obra digital"
+        descripcion={
+          <>
+            Contratos de obra con cuaderno de obra digital (OECE), integrados con Invierte.pe, SIAF, INFOBRAS y SEACE. Para cada obra en ejecución se estima la probabilidad de
+            registrar un atraso formal <InfoTip termino="atraso_formal" className="align-[-2px]" /> en los próximos 60 días.
+          </>
+        }
+        acciones={
+          <Segmentado
+            etiqueta="Obras mostradas"
+            valor={f.vista}
+            onChange={(v) => set({ vista: v, estado: null })}
+            opciones={[
+              { v: 'vigentes', l: 'En ejecución' },
+              { v: 'todas', l: 'Todas (incluye históricas)' },
+            ]}
+          />
+        }
+      />
+      <section className="tarjeta overflow-hidden">
+        <BarraFiltros busqueda={f.q} onBuscar={(q) => set({ q })} placeholder="Buscar por nombre de la obra, entidad o CUI">
+          <SelectFiltro
+            etiqueta="Nivel de riesgo"
+            valor={f.nivel}
+            onChange={(v) => set({ nivel: v })}
+            opciones={(['ALTO', 'MEDIO', 'BAJO'] as const).map((n) => ({ v: n, l: NIVEL_TEXTO[n] }))}
+          />
+          <SelectFiltro etiqueta="Sector" valor={f.sector} onChange={(v) => set({ sector: v })} opciones={(filtros.data?.sectores ?? []).map((s) => ({ v: s, l: SECTOR[s] ?? titulo(s) }))} />
+          {f.vista === 'todas' && (
+            <SelectFiltro etiqueta="Estado" valor={f.estado} onChange={(v) => set({ estado: v })} opciones={Object.entries(ESTADOS).map(([v, l]) => ({ v, l }))} />
+          )}
+          <SelectFiltro etiqueta="Ordenar por" valor={f.orden} onChange={(v) => set({ orden: v })} todos={null} opciones={Object.entries(ORDEN).map(([v, l]) => ({ v, l }))} />
+        </BarraFiltros>
+        <ChipsActivos chips={chips} onLimpiar={limpiar} />
+        {r.isLoading ? (
+          <div className="p-4">
+            <Cargando filas={8} />
           </div>
-          <Paginacion pagina={pagina} total={r.data!.total} tamanio={25} onChange={setPagina} />
-        </div>
-      )}
+        ) : r.error ? (
+          <div className="p-4">
+            <ErrorMsg error={r.error} reintentar={() => r.refetch()} />
+          </div>
+        ) : r.data!.items.length === 0 ? (
+          <Vacio titulo="No hay obras con estos filtros" texto="Pruebe con otra búsqueda, otro nivel de riesgo o amplíe el ámbito geográfico." accion={<button className="btn" onClick={limpiar}>Quitar filtros</button>} />
+        ) : (
+          <>
+            <div className={`overflow-x-auto transition-opacity ${r.isFetching ? 'opacity-60' : ''}`}>
+              <table className="tabla min-w-[860px]">
+                <thead>
+                  <tr>
+                    <th>Obra</th>
+                    <th>Ubicación</th>
+                    <th>Sector</th>
+                    <th>
+                      <span className="inline-flex items-center gap-1">
+                        Riesgo estimado <InfoTip termino="probabilidad" />
+                      </span>
+                    </th>
+                    <th>{f.vista === 'vigentes' ? 'Último asiento' : 'Estado'}</th>
+                    <th className="w-10">
+                      <span className="sr-only">Acciones</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {r.data!.items.map((o) => (
+                    <tr key={o.cuaderno_id}>
+                      <td className="max-w-md">
+                        <Link to={`/obras/${o.cuaderno_id}`} className="line-clamp-2 font-medium text-slate-900 hover:text-marca-700 hover:underline">
+                          {o.denominacion}
+                        </Link>
+                        <div className="mt-0.5 truncate text-xs text-slate-500">
+                          {o.entidad ?? 'Entidad no identificada'}
+                          {o.cui ? ` · CUI ${o.cui}` : ''}
+                        </div>
+                      </td>
+                      <td className="text-[13px] whitespace-nowrap">
+                        {titulo(o.provincia)}
+                        <div className="text-xs text-slate-500">{titulo(o.departamento)}</div>
+                      </td>
+                      <td className="text-[13px]">{SECTOR[o.sector ?? ''] ?? titulo(o.sector)}</td>
+                      <td className="whitespace-nowrap">
+                        <NivelBadge nivel={o.nivel} score={o.score} compacto />
+                        <div className="mt-0.5 text-xs text-slate-500">
+                          {o.fecha_corte ? `${o.tipo_prediccion === 'vigente' ? 'Vigente' : 'Histórica'} · ${fmtFecha(o.fecha_corte)}` : ''}
+                        </div>
+                      </td>
+                      <td className="text-[13px] whitespace-nowrap">
+                        {f.vista === 'vigentes' ? (
+                          fmtFecha(o.ultimo_asiento)
+                        ) : (
+                          <>
+                            {ESTADOS[o.estado_observado] ?? o.estado_observado}
+                            {o.fecha_atraso && <div className="text-xs font-medium text-alto">Atraso formal: {fmtFecha(o.fecha_atraso)}</div>}
+                          </>
+                        )}
+                      </td>
+                      <td>
+                        {o.prediccion_id && (
+                          <button className="btn-fantasma btn-sm" onClick={() => setSel(o)} aria-label={`Vista previa de ${o.denominacion.slice(0, 60)}`} title="Vista previa">
+                            <Eye className="size-4" />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Paginacion pagina={pagina} total={r.data!.total} tamanio={TAM} onChange={(p) => set({ pagina: p })} />
+          </>
+        )}
+      </section>
+      <p className="text-xs text-slate-500">{r.data ? `${fmtNum(r.data.total)} obras encontradas.` : ''} La probabilidad se recalcula cada mes con la información registrada hasta el corte.</p>
+      <Panel abierto={!!sel} onClose={() => setSel(null)} titulo="Vista previa de la alerta" subtitulo="Predicción más reciente de la obra y sus principales factores">
+        {sel?.prediccion_id && <VistaPreviaCuaderno prediccionId={sel.prediccion_id} cuadernoId={sel.cuaderno_id} nombre={sel.denominacion} />}
+      </Panel>
     </div>
   )
 }

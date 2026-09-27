@@ -1,10 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Building2, CalendarDays, ExternalLink, FileText, Highlighter, MapPin, Tag } from 'lucide-react'
+import { Tabs } from 'radix-ui'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { api, fmtFecha, fmtMes, fmtNum, fmtSoles, mensajeCuaderno, qs, ROL, type Evidencia, type Factor, type Nivel } from '../api'
+import { api, ESTADOS, fmtFecha, fmtMes, fmtNum, fmtPct, fmtSoles, qs, ROL, SECTOR, titulo, useCalibracion, type Evidencia, type Explicacion, type Factor, type Nivel } from '../api'
 import { useAuth } from '../auth'
-import { Cargando, ErrorMsg, ESTADOS, NivelBadge, Paginacion, Seccion } from '../components/ui'
+import { ConfianzaNivel, ListaFactores, VecesPromedio } from '../components/Factores'
+import { Cargando, CargandoPagina, Dato, ErrorMsg, EscalaRiesgo, InfoTip, NivelBadge, Paginacion, Panel, Seccion, Vacio } from '../components/ui'
+import { COLOR_NIVEL, COLORES } from '../lib/colores'
+import { NIVEL_TEXTO } from '../lib/nivel'
 
 interface Detalle {
   obra: Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -15,13 +20,7 @@ interface Detalle {
 interface Riesgo {
   predicciones: { prediccion_id: number; fecha_corte: string; tipo: string; score: number; nivel: Nivel; alerta: boolean; y_observado: number | null }[]
   actividad_mensual: { mes: string; total: number; ampliaciones: number; suspensiones: number; adicionales: number; atraso_normativo: number }[]
-  siaf_mensual: { mes: string; devengado: number }[]
   eventos: { fecha: string; tipo: string; tipo_std: string; nro_asiento: number; titulo: string }[]
-}
-interface Explicacion {
-  prediccion: { id: number; fecha_corte: string; score: number; nivel: Nivel; tipo: string; horizonte_dias: number; umbral_alerta: number; modelo_version: string; y_observado: number | null }
-  factores: Factor[]
-  evidencia: Evidencia[]
 }
 interface Asiento {
   id: number
@@ -35,14 +34,33 @@ interface Asiento {
   archivo_fuente: string
 }
 
-const TIPOS = ['AMPLIACION_PLAZO', 'SUSPENSION_PLAZO', 'VALORIZACION_MENOR_80', 'CALENDARIO_ACELERADO', 'ADICIONALES', 'VALORIZACIONES', 'CONSULTAS', 'PENALIDADES', 'ORDENES', 'OTRAS_OCURRENCIAS']
+const TIPOS: Record<string, string> = {
+  AMPLIACION_PLAZO: 'Ampliación de plazo',
+  SUSPENSION_PLAZO: 'Suspensión del plazo',
+  VALORIZACION_MENOR_80: 'Valorización menor al 80 %',
+  CALENDARIO_ACELERADO: 'Calendario acelerado',
+  ADICIONALES: 'Adicionales de obra',
+  VALORIZACIONES: 'Valorizaciones',
+  CONSULTAS: 'Consultas',
+  PENALIDADES: 'Penalidades',
+  ORDENES: 'Órdenes',
+  OTRAS_OCURRENCIAS: 'Otras ocurrencias',
+}
+const HITOS_CRITICOS = ['VALORIZACION_MENOR_80', 'CALENDARIO_ACELERADO', 'RESOLUCION_CONTRATO']
+const FUENTE_EVIDENCIA: Record<string, string> = {
+  ASIENTO: 'Cuaderno de obra',
+  SIAF: 'Ejecución del gasto (SIAF)',
+  MEF_SEGUIMIENTO: 'Seguimiento Invierte.pe',
+  HISTORIAL: 'Historial de obras anteriores',
+  INFOBRAS: 'INFOBRAS',
+}
 
-function Dato({ l, v }: { l: string; v: React.ReactNode }) {
+function Meta({ icono, children }: { icono: ReactNode; children: ReactNode }) {
   return (
-    <div>
-      <div className="etiqueta">{l}</div>
-      <div className="text-sm">{v ?? '—'}</div>
-    </div>
+    <span className="inline-flex items-center gap-1.5 text-[13px] text-slate-600">
+      <span className="text-slate-400">{icono}</span>
+      {children}
+    </span>
   )
 }
 
@@ -50,283 +68,256 @@ export default function ObraDetalle() {
   const { id = '' } = useParams()
   const d = useQuery({ queryKey: ['obra', id], queryFn: () => api<Detalle>(`/obras/${id}`) })
   const r = useQuery({ queryKey: ['riesgo', id], queryFn: () => api<Riesgo>(`/obras/${id}/riesgo`) })
-  const modelo = useQuery({ queryKey: ['modelo'], queryFn: () => api<{ umbral_alerta: number; horizonte_dias: number; metricas: { umbral_alto?: number } }>('/modelo') })
+  const cal = useCalibracion()
   const [sel, setSel] = useState<number | null>(null)
+  const [tab, setTab] = useState('factores')
   const preds = r.data?.predicciones ?? []
   const pid = sel ?? preds.at(-1)?.prediccion_id ?? null
   const ex = useQuery({ queryKey: ['exp', pid], queryFn: () => api<Explicacion>(`/predicciones/${pid}`), enabled: pid !== null })
 
-  const serie = useMemo(() => {
-    const m = new Map<string, Record<string, number | string | null>>()
-    for (const a of r.data?.actividad_mensual ?? []) m.set(a.mes.slice(0, 7), { mes: a.mes.slice(0, 7), asientos: a.total, ampliaciones: a.ampliaciones, suspensiones: a.suspensiones })
-    for (const p of preds) {
-      const k = p.fecha_corte.slice(0, 7)
-      m.set(k, { ...(m.get(k) ?? { mes: k }), riesgo: Math.round(1000 * p.score) / 10 })
-    }
-    return [...m.values()].sort((a, b) => String(a.mes).localeCompare(String(b.mes)))
-  }, [r.data, preds])
-
-  if (d.isLoading) return <Cargando />
-  if (d.error) return <ErrorMsg error={d.error} />
+  if (d.isLoading) return <CargandoPagina />
+  if (d.error) return <ErrorMsg error={d.error} reintentar={() => d.refetch()} />
   const o = d.data!.obra
-  const onset = o.fecha_atraso ? String(o.fecha_atraso).slice(0, 7) : null
+  const vigente = o.tipo_prediccion === 'vigente' && o.score !== null
+  const suben = (ex.data?.factores ?? []).filter((f) => f.shap > 0)
   return (
     <div className="space-y-5">
       <div>
-        <Link to="/obras" className="text-sm text-marca-600 hover:underline">
-          ← Obras
+        <Link to="/obras" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-marca-700">
+          <ArrowLeft className="size-4" /> Alertas del cuaderno
         </Link>
-        <h1 className="mt-1 text-lg font-bold text-marca-900">{o.denominacion}</h1>
-        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-600">
-          <NivelBadge nivel={o.nivel} score={o.score} />
-          <span>{ESTADOS[o.estado_observado] ?? o.estado_observado}</span>
-          <span>
-            {o.provincia} · {o.distrito}
-          </span>
-          <span>{o.sector}</span>
-          {o.fecha_atraso && <span className="font-medium text-alto">Atraso normativo registrado el {fmtFecha(o.fecha_atraso)}</span>}
-        </div>
-      </div>
-
-      {o.tipo_prediccion === 'vigente' && o.score !== null && (
-        <div className={`flex flex-wrap items-center gap-4 rounded-xl p-4 text-white ${o.nivel === 'ALTO' ? 'bg-red-700' : o.nivel === 'MEDIO' ? 'bg-amber-600' : 'bg-green-700'}`}>
-          <div className="text-4xl font-bold">{(100 * o.score).toFixed(0)}%</div>
-          <div className="min-w-64 flex-1">
-            <div className="text-sm font-semibold">Predicción a 60 días · corte {fmtFecha(o.fecha_corte)}</div>
-            <p className="text-sm">{mensajeCuaderno(o.score, o.fecha_atraso)}</p>
-          </div>
-          <a href={`/api/v1/obras/${o.cuaderno_id}/informe-pdf`} className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-marca-900 hover:bg-slate-100">
-            Descargar informe técnico (PDF)
-          </a>
-        </div>
-      )}
-      {o.tipo_prediccion !== 'vigente' && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm">
-          <span>
-            Obra sin predicción vigente ({o.fecha_atraso ? `atraso formal registrado el ${fmtFecha(o.fecha_atraso)}` : 'culminada, resuelta o sin actividad reciente'}): se
-            muestra en modo histórico.
-          </span>
-          {o.score !== null && (
-            <a href={`/api/v1/obras/${o.cuaderno_id}/informe-pdf`} className="btn ml-auto">
-              Descargar informe técnico (PDF)
-            </a>
-          )}
-        </div>
-      )}
-
-      <div className="grid gap-5 lg:grid-cols-3">
-        <Seccion titulo="Datos integrados de la obra">
-          <div className="grid grid-cols-2 gap-3">
-            <Dato l="Entidad" v={o.entidad} />
-            <Dato l="Contratista" v={o.contratista} />
-            <Dato l="CUI (Invierte.pe)" v={o.cui ? `${o.cui} (${o.cui_metodo_enlace})` : 'no enlazado'} />
-            <Dato l="Función / nivel" v={o.funcion ? `${o.funcion} · ${o.nivel_gobierno}` : null} />
-            <Dato l="Monto viable" v={fmtSoles(o.monto_viable)} />
-            <Dato l="Monto del contrato" v={fmtSoles(o.monto_contrato)} />
-            <Dato l="Plazo original" v={o.plazo_original_dias ? `${o.plazo_original_dias} días` : null} />
-            <Dato l="Asientos" v={`${fmtNum(o.n_asientos)} (${fmtFecha(o.primer_asiento)} – ${fmtFecha(o.ultimo_asiento)})`} />
-          </div>
-          <div className="mt-4 space-y-1">
-            <div className="etiqueta">Fuentes oficiales</div>
-            {d.data!.enlaces.map((e) => (
-              <a key={e.url} href={e.url} target="_blank" rel="noopener noreferrer" className="block text-sm text-marca-600 hover:underline">
-                {e.fuente} ↗
+        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+          <h1 className="max-w-4xl text-lg leading-snug font-semibold text-slate-900 sm:text-xl">{o.denominacion}</h1>
+          <div className="flex flex-wrap gap-2">
+            {o.score !== null && (
+              <a href={`/api/v1/obras/${o.cuaderno_id}/informe-pdf`} className="btn-primario">
+                <FileText className="size-4" /> Informe técnico PDF
               </a>
-            ))}
-            {d.data!.contraloria_paralizada.length > 0 && (
-              <div className="mt-2 rounded-lg bg-red-50 p-2 text-xs text-red-800">
-                Figura en {d.data!.contraloria_paralizada.length} corte(s) del reporte de obras paralizadas de Contraloría (último:{' '}
-                {fmtFecha(d.data!.contraloria_paralizada.at(-1)!.fecha_corte)}, causal: {d.data!.contraloria_paralizada.at(-1)!.causal}).
-              </div>
-            )}
-            {d.data!.infobras && (
-              <div className="mt-2 text-xs text-slate-500">
-                INFOBRAS (foto al {fmtFecha(d.data!.infobras.fecha_consulta)}): {d.data!.infobras.estado_ejecucion}, avance real {fmtNum(d.data!.infobras.avance_fisico_real, 1)}% vs programado{' '}
-                {fmtNum(d.data!.infobras.avance_fisico_programado, 1)}%. Dato informativo: no se usa para predecir.
-              </div>
             )}
           </div>
-        </Seccion>
-        <div className="lg:col-span-2">
-          <Seccion
-            titulo="Evolución del riesgo estimado"
-            subtitulo={`Cada punto es la probabilidad de atraso normativo en los ${modelo.data?.horizonte_dias ?? 60} días siguientes, calculada solo con información disponible en esa fecha. Barras: asientos del mes.`}
-          >
-            {r.isLoading ? (
-              <Cargando />
-            ) : (
-              <div className="h-72">
-                <ResponsiveContainer>
-                  <ComposedChart data={serie} margin={{ left: -10, right: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
-                    <YAxis yAxisId="a" tick={{ fontSize: 11 }} />
-                    <YAxis yAxisId="r" orientation="right" domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar isAnimationActive={false} yAxisId="a" dataKey="asientos" name="Asientos" fill="#cbd5e1" />
-                    <Bar isAnimationActive={false} yAxisId="a" dataKey="suspensiones" name="Suspensiones" fill="#94a3b8" />
-                    <Line isAnimationActive={false} yAxisId="r" dataKey="riesgo" name="Riesgo (%)" stroke="#b91c1c" strokeWidth={2} connectNulls />
-                    {modelo.data && <ReferenceLine yAxisId="r" y={100 * modelo.data.umbral_alerta} stroke="#d97706" strokeDasharray="4 4" label={{ value: 'umbral de alerta', fontSize: 10, fill: '#d97706' }} />}
-                    {onset && <ReferenceLine yAxisId="r" x={onset} stroke="#b91c1c" label={{ value: 'atraso normativo', fontSize: 10, fill: '#b91c1c' }} />}
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-            {preds.length > 0 && (
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                <span className="etiqueta">Ver explicación del corte:</span>
-                {preds.map((p) => (
-                  <button
-                    key={p.prediccion_id}
-                    onClick={() => setSel(p.prediccion_id)}
-                    className={`rounded px-2 py-0.5 ring-1 ${p.prediccion_id === pid ? 'bg-marca-700 text-white ring-marca-700' : 'ring-slate-300 hover:bg-slate-100'}`}
-                  >
-                    {fmtMes(p.fecha_corte)}
-                    {p.alerta ? ' ●' : ''}
-                  </button>
-                ))}
-              </div>
-            )}
-          </Seccion>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
+          <Meta icono={<MapPin className="size-4" />}>
+            {[o.distrito, o.provincia, o.departamento].filter(Boolean).map(titulo).join(', ')}
+          </Meta>
+          <Meta icono={<Building2 className="size-4" />}>{o.entidad ?? 'Entidad no identificada'}</Meta>
+          <Meta icono={<Tag className="size-4" />}>{SECTOR[o.sector] ?? titulo(o.sector)}</Meta>
+          <Meta icono={<CalendarDays className="size-4" />}>{ESTADOS[o.estado_observado] ?? o.estado_observado}</Meta>
         </div>
       </div>
 
-      {pid && <ExplicacionPanel data={ex.data} loading={ex.isLoading} error={ex.error} cuadernoId={id} />}
-      <Asientos id={id} eventos={r.data?.eventos ?? []} />
+      {vigente ? (
+        <section className="tarjeta overflow-hidden">
+          <div className="grid gap-5 p-5 md:grid-cols-[1.1fr_0.8fr_1.4fr]">
+            <div>
+              <div className="flex items-center gap-1 text-[13px] font-medium text-slate-600">
+                Riesgo de atraso formal en los próximos 60 días <InfoTip termino="atraso_formal" />
+              </div>
+              <div className="mt-2 flex items-baseline gap-3">
+                <span className="text-3xl font-semibold tracking-tight" style={{ color: COLOR_NIVEL[o.nivel as Nivel] }}>
+                  {NIVEL_TEXTO[o.nivel as Nivel]}
+                </span>
+                <span className="num text-lg font-medium text-slate-700">{fmtPct(o.score)}</span>
+                <InfoTip termino="probabilidad" />
+              </div>
+              <div className="mt-1">
+                <VecesPromedio score={o.score} base={cal.data?.alerta_60d.tasa_base} />
+              </div>
+              <div className="mt-1 text-xs text-slate-500">Corte {fmtFecha(o.fecha_corte)}</div>
+            </div>
+            <div>
+              <div className="mb-2 text-[13px] font-medium text-slate-600">Posición entre las obras evaluadas</div>
+              <EscalaRiesgo percentil={o.percentil} nivel={o.nivel} />
+            </div>
+            <div>
+              <div className="mb-2 text-[13px] font-medium text-slate-600">Confiabilidad de este nivel</div>
+              <ConfianzaNivel nivel={o.nivel} />
+            </div>
+          </div>
+          <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-4">
+            <div className="text-[13px] font-medium text-slate-700">Principales factores que elevan el riesgo</div>
+            {ex.isLoading ? (
+              <Cargando filas={2} />
+            ) : suben.length ? (
+              <ul className="mt-1.5 grid gap-x-6 gap-y-1 text-sm text-slate-800 md:grid-cols-3">
+                {suben.slice(0, 3).map((f) => (
+                  <li key={f.feature} className="flex gap-2">
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-alto" aria-hidden />
+                    {f.descripcion}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 text-sm text-slate-500">Ningún factor eleva el riesgo por encima del promedio.</p>
+            )}
+            <button className="enlace mt-2 text-sm" onClick={() => setTab('factores')}>
+              Ver todos los factores y la evidencia
+            </button>
+          </div>
+        </section>
+      ) : (
+        <div className="tarjeta flex flex-wrap items-center gap-3 p-4 text-sm text-slate-700">
+          <CalendarDays className="size-5 text-slate-400" />
+          <span className="flex-1">
+            Esta obra no tiene una predicción vigente
+            {o.fecha_atraso ? `: ya registró el atraso formal el ${fmtFecha(o.fecha_atraso)}` : ' (culminada, con contrato resuelto o sin registros recientes)'}. Se muestra su historial para
+            auditar las estimaciones pasadas.
+          </span>
+        </div>
+      )}
+
+      <Tabs.Root value={tab} onValueChange={setTab}>
+        <Tabs.List className="pestanas" aria-label="Secciones de la ficha">
+          <Tabs.Trigger value="factores" className="pestana">
+            Factores y evidencia
+          </Tabs.Trigger>
+          <Tabs.Trigger value="evolucion" className="pestana">
+            Evolución del riesgo
+          </Tabs.Trigger>
+          <Tabs.Trigger value="asientos" className="pestana">
+            Cuaderno de obra
+          </Tabs.Trigger>
+          <Tabs.Trigger value="datos" className="pestana">
+            Datos de la obra
+          </Tabs.Trigger>
+          <Tabs.Trigger value="revision" className="pestana">
+            Revisión del analista
+          </Tabs.Trigger>
+        </Tabs.List>
+        <div className="pt-4">
+          <Tabs.Content value="factores">
+            <FactoresEvidencia ex={ex.data} loading={ex.isLoading} error={ex.error} preds={preds} pid={pid} setSel={setSel} />
+          </Tabs.Content>
+          <Tabs.Content value="evolucion">
+            <Evolucion r={r.data} loading={r.isLoading} fechaAtraso={o.fecha_atraso} />
+          </Tabs.Content>
+          <Tabs.Content value="asientos">
+            <Asientos id={id} />
+          </Tabs.Content>
+          <Tabs.Content value="datos">
+            <DatosObra d={d.data!} />
+          </Tabs.Content>
+          <Tabs.Content value="revision">
+            {ex.data ? <Revision cuadernoId={id} fechaCorte={ex.data.prediccion.fecha_corte} /> : <Vacio titulo="Sin predicción para revisar" />}
+          </Tabs.Content>
+        </div>
+      </Tabs.Root>
     </div>
   )
 }
 
-function ExplicacionPanel({ data, loading, error, cuadernoId }: { data?: Explicacion; loading: boolean; error: unknown; cuadernoId: string }) {
-  if (loading) return <Cargando texto="Calculando explicación…" />
+function FactoresEvidencia({ ex, loading, error, preds, pid, setSel }: { ex?: Explicacion; loading: boolean; error: unknown; preds: Riesgo['predicciones']; pid: number | null; setSel: (n: number) => void }) {
+  const [verFactor, setVerFactor] = useState<Factor | null>(null)
+  const [todo, setTodo] = useState(false)
+  const porFeature = useMemo(() => {
+    const m = new Map<string, Evidencia[]>()
+    ex?.evidencia.forEach((e) => m.set(e.feature, [...(m.get(e.feature) ?? []), e]))
+    return m
+  }, [ex])
+  if (loading) return <Cargando filas={6} />
   if (error) return <ErrorMsg error={error} />
-  if (!data) return null
-  const p = data.prediccion
-  const max = Math.max(...data.factores.map((f) => Math.abs(f.shap)), 0.001)
-  const porFeature = new Map<string, Evidencia[]>()
-  data.evidencia.forEach((e) => porFeature.set(e.feature, [...(porFeature.get(e.feature) ?? []), e]))
+  if (!ex) return <Vacio titulo="Sin predicciones para esta obra" texto="La obra no tiene historia suficiente en el cuaderno digital para ser evaluada." />
+  const p = ex.prediccion
+  const selector = (
+    <label className="flex items-center gap-2 text-sm">
+      <span className="text-slate-500">Corte</span>
+      <select className="entrada" value={pid ?? ''} onChange={(e) => setSel(Number(e.target.value))} aria-label="Corte de la predicción">
+        {[...preds].reverse().map((x) => (
+          <option key={x.prediccion_id} value={x.prediccion_id}>
+            {fmtMes(x.fecha_corte)} · riesgo {NIVEL_TEXTO[x.nivel].toLowerCase()} ({fmtPct(x.score)}){x.tipo === 'vigente' ? ' · vigente' : ''}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
   return (
     <div className="grid gap-5 lg:grid-cols-5">
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-3">
         <Seccion
-          titulo={`¿Por qué este nivel de riesgo? (corte ${fmtFecha(p.fecha_corte)})`}
-          subtitulo={`Contribuciones TreeSHAP (log-odds) del modelo ${p.modelo_version}. Rojo aumenta el riesgo, verde lo reduce.`}
+          titulo="¿Por qué este nivel de riesgo?"
+          ayuda="factor"
+          subtitulo="Datos reales de la obra que más movieron la estimación, ordenados por su peso. Indican asociación estadística, no causas comprobadas."
+          accion={selector}
         >
-          <div className="mb-3 flex items-center gap-2 text-sm">
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <NivelBadge nivel={p.nivel} score={p.score} />
-            <span className="text-xs text-slate-500">
-              {p.tipo === 'vigente' ? 'predicción vigente' : 'predicción histórica (as-of)'}
-              {p.y_observado !== null && ` · resultado observado: ${p.y_observado === 1 ? 'hubo atraso normativo en el horizonte' : 'no hubo atraso en el horizonte'}`}
-            </span>
+            <span>{p.tipo === 'vigente' ? 'Predicción vigente' : 'Predicción histórica (solo con datos de esa fecha)'}</span>
+            {p.y_observado !== null && (
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.y_observado ? 'bg-alto-suave text-alto' : 'bg-bajo-suave text-bajo'}`}>
+                Resultado: {p.y_observado ? 'sí hubo atraso formal en los 60 días' : 'no hubo atraso formal en los 60 días'}
+              </span>
+            )}
           </div>
-          <ul className="space-y-2">
-            {data.factores.map((f) => (
-              <li key={f.rango} className="text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="h-2.5 w-24 shrink-0 rounded bg-slate-100">
-                    <div className={`h-2.5 rounded ${f.shap > 0 ? 'bg-alto' : 'bg-bajo'}`} style={{ width: `${(100 * Math.abs(f.shap)) / max}%` }} />
-                  </div>
-                  <span>{f.descripcion}</span>
-                </div>
-                <div className="ml-26 text-[11px] text-slate-500">
-                  {f.grupo} · SHAP {f.shap > 0 ? '+' : ''}
-                  {f.shap.toFixed(3)}
-                </div>
-              </li>
-            ))}
-          </ul>
-          <Simulador prediccionId={p.id} />
-          <Revision cuadernoId={cuadernoId} fechaCorte={p.fecha_corte} />
+          <ListaFactores factores={ex.factores} alVerEvidencia={setVerFactor} conEvidencia={new Set(porFeature.keys())} />
         </Seccion>
       </div>
-      <div className="lg:col-span-3">
-        <Seccion titulo="Evidencia que respalda la alerta" subtitulo="Registros oficiales asociados a los factores que aumentan el riesgo (asientos del cuaderno de obra, SIAF, seguimiento F12B, historial).">
-          {data.evidencia.length === 0 ? (
+      <div className="space-y-5 lg:col-span-2">
+        <Seccion
+          titulo="Evidencia documental"
+          subtitulo="Registros oficiales asociados a los factores que elevan el riesgo."
+          accion={
+            ex.evidencia.length > 0 && (
+              <button className="btn btn-sm" onClick={() => setTodo(true)}>
+                Ver toda ({fmtNum(ex.evidencia.length)})
+              </button>
+            )
+          }
+        >
+          {ex.evidencia.length === 0 ? (
             <p className="text-sm text-slate-500">Esta predicción no tiene factores de aumento de riesgo con evidencia documental asociada.</p>
           ) : (
-            <div className="max-h-[560px] space-y-4 overflow-y-auto pr-1">
-              {data.factores
-                .filter((f) => f.shap > 0 && porFeature.has(f.feature!))
-                .map((f) => (
-                  <div key={f.feature}>
-                    <div className="mb-1 text-xs font-semibold text-slate-600">{f.descripcion}</div>
-                    <ul className="space-y-1.5">
-                      {porFeature.get(f.feature!)!.map((e, i) => (
-                        <li key={i} className="rounded-lg border border-slate-100 bg-slate-50 p-2 text-xs">
-                          <div className="mb-0.5 text-[11px] text-slate-500">
-                            {e.fuente === 'ASIENTO' ? `Asiento N° ${e.nro_asiento} · ${e.tipo} · ${ROL[e.rol ?? ''] ?? e.rol ?? ''}` : e.fuente} · {fmtFecha(e.fecha)}
-                            {e.archivo_fuente && ` · fuente: ${e.archivo_fuente}`}
-                            {e.referencia?.startsWith('http') && (
-                              <>
-                                {' · '}
-                                <a className="text-marca-600 hover:underline" href={e.referencia} target="_blank" rel="noopener noreferrer">
-                                  ver fuente ↗
-                                </a>
-                              </>
-                            )}
-                          </div>
-                          <div className="whitespace-pre-line text-slate-700">{e.extracto}</div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-            </div>
+            <ul className="space-y-2">
+              {[...new Map(ex.evidencia.map((e) => [e.fuente, 0])).keys()].map((fu) => (
+                <li key={fu} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                  <span>{FUENTE_EVIDENCIA[fu] ?? fu}</span>
+                  <span className="num text-slate-500">{fmtNum(ex.evidencia.filter((e) => e.fuente === fu).length)} registros</span>
+                </li>
+              ))}
+            </ul>
           )}
         </Seccion>
+        <Simulador prediccionId={p.id} />
       </div>
+      <Panel abierto={!!verFactor} onClose={() => setVerFactor(null)} titulo="Evidencia del factor" subtitulo={verFactor?.descripcion} ancho="max-w-2xl">
+        {verFactor && <ListaEvidencia items={porFeature.get(verFactor.feature!) ?? []} />}
+      </Panel>
+      <Panel abierto={todo} onClose={() => setTodo(false)} titulo="Evidencia que respalda la alerta" subtitulo={`Corte ${fmtFecha(p.fecha_corte)}`} ancho="max-w-2xl">
+        <div className="space-y-5">
+          {ex.factores
+            .filter((f) => f.shap > 0 && porFeature.has(f.feature!))
+            .map((f) => (
+              <div key={f.feature}>
+                <div className="mb-1.5 text-sm font-medium text-slate-800">{f.descripcion}</div>
+                <ListaEvidencia items={porFeature.get(f.feature!)!} />
+              </div>
+            ))}
+        </div>
+      </Panel>
     </div>
   )
 }
 
-function Revision({ cuadernoId, fechaCorte }: { cuadernoId: string; fechaCorte: string }) {
-  const { usuario } = useAuth()
-  const qc = useQueryClient()
-  const [decision, setDecision] = useState('EN_SEGUIMIENTO')
-  const [comentario, setComentario] = useState('')
-  const key = ['rev', cuadernoId, fechaCorte]
-  const q = useQuery({ queryKey: key, queryFn: () => api<{ id: number; decision: string; comentario: string; creado_en: string; usuario: string }[]>(`/alertas/${cuadernoId}/${fechaCorte}/revisiones`), enabled: !!usuario })
-  const m = useMutation({
-    mutationFn: () => api(`/alertas/${cuadernoId}/${fechaCorte}/revisiones`, { method: 'POST', body: JSON.stringify({ decision, comentario: comentario || null }) }),
-    onSuccess: () => {
-      setComentario('')
-      qc.invalidateQueries({ queryKey: key })
-      qc.invalidateQueries({ queryKey: ['alertas'] })
-    },
-  })
-  if (!usuario)
-    return (
-      <p className="mt-4 text-xs text-slate-500">
-        <Link to="/login" className="text-marca-600 underline">
-          Ingrese
-        </Link>{' '}
-        como analista para registrar la revisión de esta alerta.
-      </p>
-    )
+function ListaEvidencia({ items }: { items: Evidencia[] }) {
   return (
-    <div className="mt-4 border-t border-slate-100 pt-3">
-      <div className="etiqueta mb-2">Revisión del analista</div>
-      <div className="flex flex-wrap gap-2">
-        <select className="entrada" aria-label="Decisión de la revisión" value={decision} onChange={(e) => setDecision(e.target.value)}>
-          <option value="EN_SEGUIMIENTO">En seguimiento</option>
-          <option value="CONFIRMADA">Confirmada</option>
-          <option value="DESCARTADA">Descartada</option>
-        </select>
-        <input className="entrada flex-1" placeholder="Comentario (opcional)" maxLength={2000} value={comentario} onChange={(e) => setComentario(e.target.value)} />
-        <button className="btn-primario" disabled={m.isPending} onClick={() => m.mutate()}>
-          Registrar
-        </button>
-      </div>
-      {m.error && <p className="mt-1 text-xs text-red-700">{String((m.error as Error).message)}</p>}
-      <ul className="mt-2 space-y-1 text-xs text-slate-600">
-        {(q.data ?? []).map((x) => (
-          <li key={x.id}>
-            <b>{x.decision}</b> · {x.usuario} · {fmtFecha(x.creado_en)} {x.comentario ? `— ${x.comentario}` : ''}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="space-y-2">
+      {items.map((e, i) => (
+        <li key={i} className="rounded-lg border border-slate-200 p-3 text-sm">
+          <div className="mb-1 flex flex-wrap gap-x-2 text-xs text-slate-500">
+            <span className="font-medium text-slate-700">{e.fuente === 'ASIENTO' ? `Asiento N° ${e.nro_asiento}` : (FUENTE_EVIDENCIA[e.fuente] ?? e.fuente)}</span>
+            {e.tipo && <span>{e.tipo}</span>}
+            {e.rol && <span>{ROL[e.rol] ?? e.rol}</span>}
+            <span>{fmtFecha(e.fecha)}</span>
+            {e.referencia?.startsWith('http') && (
+              <a className="enlace inline-flex items-center gap-0.5" href={e.referencia} target="_blank" rel="noopener noreferrer">
+                fuente <ExternalLink className="size-3" />
+              </a>
+            )}
+          </div>
+          <div className="leading-relaxed whitespace-pre-line text-slate-700">{e.extracto}</div>
+          {e.archivo_fuente && <div className="mt-1 text-[11px] text-slate-400">Archivo oficial: {e.archivo_fuente}</div>}
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -337,34 +328,219 @@ function Simulador({ prediccionId }: { prediccionId: number }) {
   })
   if (!q.data || q.data.length === 0) return null
   return (
-    <div className="mt-4 border-t border-slate-100 pt-3">
-      <div className="etiqueta mb-1">Simulador de intervención (sensibilidad del modelo)</div>
-      <p className="mb-2 text-xs text-slate-500">Probabilidad recalculada cambiando una sola señal. Indica de qué depende la estimación; no garantiza el efecto real de una acción.</p>
-      <ul className="space-y-2">
-        {q.data.map((s) => (
-          <li key={s.escenario} className="text-sm">
-            <div>
-              Escenario «{s.descripcion}»: el riesgo estimado pasaría de {(100 * s.score_base).toFixed(0)}% a{' '}
-              <b className={s.score_escenario < s.score_base ? 'text-bajo' : 'text-alto'}>{(100 * s.score_escenario).toFixed(0)}%</b>.
-            </div>
-            <div className="mt-1 flex h-2 overflow-hidden rounded bg-slate-100">
-              <div className="bg-slate-400" style={{ width: `${100 * Math.min(s.score_base, s.score_escenario)}%` }} />
-              <div className={s.score_escenario < s.score_base ? 'bg-green-300' : 'bg-red-300'} style={{ width: `${100 * Math.abs(s.score_base - s.score_escenario)}%` }} />
-            </div>
-          </li>
-        ))}
+    <Seccion titulo="¿Qué cambiaría la estimación?" subtitulo="El modelo recalcula el riesgo cambiando una sola señal. Muestra de qué depende la estimación; no garantiza el efecto real de una acción.">
+      <ul className="space-y-3">
+        {q.data.map((s) => {
+          const baja = s.score_escenario < s.score_base
+          return (
+            <li key={s.escenario} className="text-sm">
+              <div className="text-slate-700">{s.descripcion}</div>
+              <div className="mt-1 flex items-center gap-2">
+                <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                  <div className="absolute inset-y-0 left-0 rounded-full bg-slate-300" style={{ width: `${100 * s.score_base}%` }} />
+                  <div className={`absolute inset-y-0 left-0 rounded-full ${baja ? 'bg-bajo' : 'bg-alto'}`} style={{ width: `${100 * s.score_escenario}%`, opacity: 0.8 }} />
+                </div>
+                <span className="num w-28 shrink-0 text-right text-xs text-slate-600">
+                  {fmtPct(s.score_base)} → <b className={baja ? 'text-bajo' : 'text-alto'}>{fmtPct(s.score_escenario)}</b>
+                </span>
+              </div>
+            </li>
+          )
+        })}
       </ul>
+    </Seccion>
+  )
+}
+
+function Evolucion({ r, loading, fechaAtraso }: { r?: Riesgo; loading: boolean; fechaAtraso: string | null }) {
+  const cal = useCalibracion()
+  const modelo = useQuery({ queryKey: ['modelo'], queryFn: () => api<{ umbral_alerta: number }>('/modelo') })
+  const serie = useMemo(() => {
+    const m = new Map<string, Record<string, number | string | null>>()
+    for (const a of r?.actividad_mensual ?? []) m.set(a.mes.slice(0, 7), { mes: a.mes.slice(0, 7), asientos: a.total, suspensiones: a.suspensiones, ampliaciones: a.ampliaciones })
+    for (const p of r?.predicciones ?? []) {
+      const k = p.fecha_corte.slice(0, 7)
+      m.set(k, { ...(m.get(k) ?? { mes: k }), riesgo: Math.round(1000 * p.score) / 10 })
+    }
+    return [...m.values()].sort((a, b) => String(a.mes).localeCompare(String(b.mes)))
+  }, [r])
+  if (loading) return <Cargando filas={6} />
+  const onset = fechaAtraso ? String(fechaAtraso).slice(0, 7) : null
+  return (
+    <div className="grid gap-5 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <Seccion titulo="Riesgo estimado mes a mes" subtitulo="Línea: probabilidad de atraso formal en los 60 días siguientes, calculada cada mes solo con la información disponible en esa fecha. Barras: asientos registrados.">
+          <div className="h-80">
+            <ResponsiveContainer>
+              <ComposedChart data={serie} margin={{ left: -12, right: 4, top: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLORES.rejilla} />
+                <XAxis dataKey="mes" tick={{ fontSize: 11 }} tickFormatter={(m) => fmtMes(m + '-01')} minTickGap={12} />
+                <YAxis yAxisId="a" tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="r" orientation="right" domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+                <Tooltip labelFormatter={(m) => fmtMes(m + '-01')} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Bar isAnimationActive={false} yAxisId="a" dataKey="asientos" name="Asientos del mes" fill={COLORES.grisClaro} radius={[2, 2, 0, 0]} />
+                <Bar isAnimationActive={false} yAxisId="a" dataKey="suspensiones" name="Suspensiones" fill={COLORES.gris} radius={[2, 2, 0, 0]} />
+                <Line isAnimationActive={false} yAxisId="r" dataKey="riesgo" name="Riesgo estimado (%)" stroke={COLOR_NIVEL.ALTO} strokeWidth={2} dot={{ r: 2.5 }} connectNulls />
+                {modelo.data && <ReferenceLine yAxisId="r" y={100 * modelo.data.umbral_alerta} stroke={COLOR_NIVEL.MEDIO} strokeDasharray="4 4" label={{ value: 'umbral de riesgo alto', fontSize: 10, fill: COLOR_NIVEL.MEDIO, position: 'insideTopLeft' }} />}
+                {onset && <ReferenceLine yAxisId="r" x={onset} stroke={COLOR_NIVEL.ALTO} label={{ value: 'atraso formal', fontSize: 10, fill: COLOR_NIVEL.ALTO, position: 'insideTopRight' }} />}
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+          {cal.data && <p className="mt-2 text-xs text-slate-500">Referencia: la tasa promedio de atraso formal a 60 días es {fmtPct(cal.data.alerta_60d.tasa_base)}.</p>}
+        </Seccion>
+      </div>
+      <Seccion titulo="Hitos del cuaderno">
+        {(r?.eventos ?? []).length === 0 ? (
+          <p className="text-sm text-slate-500">Sin hitos registrados.</p>
+        ) : (
+          <ol className="relative space-y-3 border-l border-slate-200 pl-4">
+            {r!.eventos.map((e, i) => (
+              <li key={i} className="text-sm">
+                <span className={`absolute -left-[5px] mt-1.5 size-2.5 rounded-full ring-2 ring-white ${HITOS_CRITICOS.includes(e.tipo_std) ? 'bg-alto' : 'bg-slate-300'}`} />
+                <div className="text-xs text-slate-500">
+                  {fmtFecha(e.fecha)} · asiento N° {e.nro_asiento}
+                </div>
+                <div className={HITOS_CRITICOS.includes(e.tipo_std) ? 'font-medium text-alto' : 'text-slate-700'}>{e.tipo}</div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </Seccion>
     </div>
   )
 }
 
+function DatosObra({ d }: { d: Detalle }) {
+  const o = d.obra
+  return (
+    <div className="grid gap-5 lg:grid-cols-3">
+      <Seccion titulo="Datos integrados de la obra" className="lg:col-span-2">
+        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Dato l="Entidad contratante" v={o.entidad} />
+          <Dato l="Contratista" v={o.contratista} />
+          <Dato l="Código Único de Inversión" ayuda="cui" v={o.cui ? `${o.cui}${o.cui_metodo_enlace === 'fuzzy_tfidf' ? ' (identificado por similitud del nombre)' : ''}` : 'No enlazado'} />
+          <Dato l="Función y nivel de gobierno" v={o.funcion ? `${titulo(o.funcion)} · ${o.nivel_gobierno ?? '—'}` : null} />
+          <Dato l="Monto aprobado de la inversión" v={fmtSoles(o.monto_viable)} />
+          <Dato l="Monto del contrato" v={fmtSoles(o.monto_contrato)} />
+          <Dato l="Plazo original" v={o.plazo_original_dias ? `${fmtNum(o.plazo_original_dias)} días` : null} />
+          <Dato l="Asientos registrados" ayuda="cuaderno" v={`${fmtNum(o.n_asientos)} (${fmtFecha(o.primer_asiento)} – ${fmtFecha(o.ultimo_asiento)})`} />
+          <Dato l="Estado observado" v={ESTADOS[o.estado_observado] ?? o.estado_observado} />
+        </dl>
+        {d.infobras && (
+          <div className="mt-5 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+            <b className="text-slate-700">INFOBRAS</b> (registro al {fmtFecha(d.infobras.fecha_consulta)}): {d.infobras.estado_ejecucion}; avance físico real {fmtNum(d.infobras.avance_fisico_real, 1)} % frente a{' '}
+            {fmtNum(d.infobras.avance_fisico_programado, 1)} % programado. Es un dato informativo: no se usa para predecir porque INFOBRAS solo publica la situación actual.
+          </div>
+        )}
+        {d.contraloria_paralizada.length > 0 && (
+          <div className="mt-3 rounded-lg border border-red-200 bg-alto-suave p-3 text-sm text-red-900">
+            Figura en {d.contraloria_paralizada.length} {d.contraloria_paralizada.length === 1 ? 'reporte' : 'reportes'} de obras paralizadas de la Contraloría (último:{' '}
+            {fmtFecha(d.contraloria_paralizada.at(-1)!.fecha_corte)}; causa registrada: {d.contraloria_paralizada.at(-1)!.causal}).
+          </div>
+        )}
+      </Seccion>
+      <Seccion titulo="Fuentes oficiales" subtitulo="Consulte los registros originales en los portales del Estado.">
+        {d.enlaces.length === 0 ? (
+          <p className="text-sm text-slate-500">La obra no tiene enlaces a otras fuentes.</p>
+        ) : (
+          <ul className="space-y-2">
+            {d.enlaces.map((e) => (
+              <li key={e.url}>
+                <a href={e.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:border-marca-200 hover:bg-marca-50">
+                  {e.fuente}
+                  <ExternalLink className="size-4 text-slate-400" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Seccion>
+    </div>
+  )
+}
+
+function Revision({ cuadernoId, fechaCorte }: { cuadernoId: string; fechaCorte: string }) {
+  const { usuario } = useAuth()
+  const qc = useQueryClient()
+  const [decision, setDecision] = useState('EN_SEGUIMIENTO')
+  const [comentario, setComentario] = useState('')
+  const key = ['rev', cuadernoId, fechaCorte]
+  const q = useQuery({
+    queryKey: key,
+    queryFn: () => api<{ id: number; decision: string; comentario: string; creado_en: string; usuario: string }[]>(`/alertas/${cuadernoId}/${fechaCorte}/revisiones`),
+    enabled: !!usuario,
+  })
+  const m = useMutation({
+    mutationFn: () => api(`/alertas/${cuadernoId}/${fechaCorte}/revisiones`, { method: 'POST', body: JSON.stringify({ decision, comentario: comentario || null }) }),
+    onSuccess: () => {
+      setComentario('')
+      qc.invalidateQueries({ queryKey: key })
+    },
+  })
+  const DEC: Record<string, string> = { EN_SEGUIMIENTO: 'En seguimiento', CONFIRMADA: 'Confirmada en campo', DESCARTADA: 'Descartada' }
+  if (!usuario)
+    return (
+      <div className="tarjeta">
+        <Vacio
+          titulo="Ingrese como analista para registrar una revisión"
+          texto="La consulta es pública; registrar si una alerta fue confirmada o descartada requiere una cuenta de analista y queda en el registro de auditoría."
+          accion={
+            <Link to="/login" className="btn-primario">
+              Ingresar
+            </Link>
+          }
+        />
+      </div>
+    )
+  return (
+    <Seccion titulo={`Revisión de la alerta del ${fmtFecha(fechaCorte)}`} subtitulo="Cada registro queda en la bitácora de auditoría con su autor y fecha.">
+      <form
+        className="flex flex-wrap items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault()
+          m.mutate()
+        }}
+      >
+        <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
+          Decisión
+          <select className="entrada" value={decision} onChange={(e) => setDecision(e.target.value)}>
+            {Object.entries(DEC).map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex min-w-60 flex-1 flex-col gap-1 text-xs font-medium text-slate-500">
+          Comentario (opcional)
+          <input className="entrada" maxLength={2000} value={comentario} onChange={(e) => setComentario(e.target.value)} />
+        </label>
+        <button className="btn-primario" disabled={m.isPending}>
+          {m.isPending ? 'Registrando…' : 'Registrar revisión'}
+        </button>
+      </form>
+      {m.error && <p className="mt-2 text-sm text-red-700">{(m.error as Error).message}</p>}
+      {m.isSuccess && <p className="mt-2 text-sm text-bajo">Revisión registrada.</p>}
+      <ul className="mt-4 divide-y divide-slate-100 text-sm">
+        {(q.data ?? []).map((x) => (
+          <li key={x.id} className="py-2">
+            <b>{DEC[x.decision] ?? x.decision}</b> · {x.usuario} · {fmtFecha(x.creado_en)}
+            {x.comentario && <div className="text-slate-600">{x.comentario}</div>}
+          </li>
+        ))}
+      </ul>
+    </Seccion>
+  )
+}
+
 const CRITICOS: [RegExp, string][] = [
-  [/(falta de personal|ausencia del (residente|especialista|ingeniero)|personal insuficiente|no se encuentra (el )?(residente|especialista))/gi, 'bg-red-200'],
-  [/(maquinaria|equipo (inoperativo|malogrado|averiado)|falla mec[aá]nica)/gi, 'bg-orange-200'],
-  [/(incompatibilidad|deficiencias? (del|en el) expediente|error(es)? en (el )?expediente|vicios ocultos)/gi, 'bg-purple-200'],
-  [/(falta de pago|pago pendiente|adelanto|desabastec|falta de material)/gi, 'bg-yellow-200'],
-  [/(paraliz|atras|retras|demora|incumpl|penalidad)/gi, 'bg-rose-200'],
-  [/(lluvia|precipitaci)/gi, 'bg-sky-200'],
+  [/(falta de personal|ausencia del (residente|especialista|ingeniero)|personal insuficiente|no se encuentra (el )?(residente|especialista))/gi, 'bg-red-100'],
+  [/(maquinaria|equipo (inoperativo|malogrado|averiado)|falla mec[aá]nica)/gi, 'bg-orange-100'],
+  [/(incompatibilidad|deficiencias? (del|en el) expediente|error(es)? en (el )?expediente|vicios ocultos)/gi, 'bg-purple-100'],
+  [/(falta de pago|pago pendiente|adelanto|desabastec|falta de material)/gi, 'bg-yellow-100'],
+  [/(paraliz|atras|retras|demora|incumpl|penalidad)/gi, 'bg-rose-100'],
+  [/(lluvia|precipitaci)/gi, 'bg-sky-100'],
 ]
 
 function Resaltado({ texto, activo }: { texto: string; activo: boolean }) {
@@ -378,7 +554,7 @@ function Resaltado({ texto, activo }: { texto: string; activo: boolean }) {
     if (m.i < pos) return
     out.push(texto.slice(pos, m.i))
     out.push(
-      <mark key={k} className={`${m.c} rounded px-0.5`}>
+      <mark key={k} className={`${m.c} rounded px-0.5 text-inherit`}>
         {texto.slice(m.i, m.f)}
       </mark>,
     )
@@ -388,88 +564,87 @@ function Resaltado({ texto, activo }: { texto: string; activo: boolean }) {
   return <>{out}</>
 }
 
-function Asientos({ id, eventos }: { id: string; eventos: Riesgo['eventos'] }) {
+function Asientos({ id }: { id: string }) {
   const [pagina, setPagina] = useState(1)
   const [tipo, setTipo] = useState('')
   const [q, setQ] = useState('')
   const [buscar, setBuscar] = useState('')
   const [abierto, setAbierto] = useState<number | null>(null)
-  const [auditoria, setAuditoria] = useState(false)
-  const r = useQuery({ queryKey: ['asientos', id, tipo, buscar, pagina], queryFn: () => api<{ total: number; items: Asiento[] }>(`/obras/${id}/asientos${qs({ tipo, q: buscar, pagina, tamanio: 15 })}`) })
+  const [resaltar, setResaltar] = useState(false)
+  const r = useQuery({
+    queryKey: ['asientos', id, tipo, buscar, pagina],
+    queryFn: () => api<{ total: number; items: Asiento[] }>(`/obras/${id}/asientos${qs({ tipo, q: buscar, pagina, tamanio: 15 })}`),
+    placeholderData: (p) => p,
+  })
   return (
-    <div className="grid gap-5 lg:grid-cols-4">
-      <Seccion titulo="Hitos del cuaderno">
-        <ul className="space-y-1.5 text-xs">
-          {eventos.length === 0 && <li className="text-slate-500">Sin hitos registrados.</li>}
-          {eventos.map((e, i) => (
-            <li key={i} className={['VALORIZACION_MENOR_80', 'CALENDARIO_ACELERADO', 'RESOLUCION_CONTRATO'].includes(e.tipo_std) ? 'font-medium text-alto' : ''}>
-              {fmtFecha(e.fecha)} · {e.tipo} (N° {e.nro_asiento})
-            </li>
-          ))}
-        </ul>
-      </Seccion>
-      <div className="lg:col-span-3">
-        <Seccion
-          titulo="Asientos del cuaderno de obra digital"
-          subtitulo="Registros publicados por OECE (datos abiertos). Búsqueda de texto completo en español. El modo auditoría resalta menciones de personal, maquinaria, expediente, pagos y materiales, atrasos e incumplimientos, y clima."
+    <section className="tarjeta overflow-hidden">
+      <form
+        className="flex flex-wrap items-end gap-2 border-b border-slate-100 p-3"
+        onSubmit={(e) => {
+          e.preventDefault()
+          setBuscar(q)
+          setPagina(1)
+        }}
+      >
+        <input className="entrada min-w-56 flex-1" aria-label="Buscar en los asientos" placeholder="Buscar en el texto (p. ej.: lluvias, falta de pago, expediente)" value={q} maxLength={200} onChange={(e) => setQ(e.target.value)} />
+        <select
+          aria-label="Tipo de asiento"
+          className="entrada"
+          value={tipo}
+          onChange={(e) => {
+            setTipo(e.target.value)
+            setPagina(1)
+          }}
         >
-          <form
-            className="mb-3 flex flex-wrap gap-2"
-            onSubmit={(e) => {
-              e.preventDefault()
-              setBuscar(q)
-              setPagina(1)
-            }}
-          >
-            <input className="entrada flex-1" aria-label="Buscar en los asientos" placeholder="Buscar en los asientos (p.ej. lluvias, falta de pago, expediente)" value={q} maxLength={200} onChange={(e) => setQ(e.target.value)} />
-            <select aria-label="Tipo de asiento"
-              className="entrada"
-              value={tipo}
-              onChange={(e) => {
-                setTipo(e.target.value)
-                setPagina(1)
-              }}
-            >
-              <option value="">Todos los tipos</option>
-              {TIPOS.map((t) => (
-                <option key={t} value={t}>
-                  {t.replace(/_/g, ' ').toLowerCase()}
-                </option>
-              ))}
-            </select>
-            <button className="btn" type="submit">
-              Buscar
-            </button>
-            <label className="flex items-center gap-1 text-sm">
-              <input type="checkbox" checked={auditoria} onChange={(e) => setAuditoria(e.target.checked)} /> Modo auditoría
-            </label>
-          </form>
-          {r.isLoading ? (
-            <Cargando />
-          ) : r.error ? (
-            <ErrorMsg error={r.error} />
-          ) : (
-            <>
-              <ul className="space-y-2">
-                {r.data!.items.map((a) => (
-                  <li key={a.id} className="rounded-lg border border-slate-100 p-2">
-                    <button className="w-full text-left" onClick={() => setAbierto(abierto === a.id ? null : a.id)}>
-                      <div className="text-[11px] text-slate-500">
-                        {fmtFecha(a.fecha)} · N° {a.nro_asiento} · {a.tipo} · {ROL[a.rol] ?? a.rol}
-                      </div>
-                      <div className="text-sm font-medium">{a.titulo}</div>
-                    </button>
-                    <div className={`mt-1 whitespace-pre-line text-xs text-slate-700 ${abierto === a.id || auditoria ? '' : 'line-clamp-2'}`}>
-                      <Resaltado texto={a.descripcion} activo={auditoria} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <Paginacion pagina={pagina} total={r.data!.total} tamanio={15} onChange={setPagina} />
-            </>
-          )}
-        </Seccion>
-      </div>
-    </div>
+          <option value="">Todos los tipos</option>
+          {Object.entries(TIPOS).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
+        </select>
+        <button className="btn" type="submit">
+          Buscar
+        </button>
+        <label className="ml-auto inline-flex items-center gap-2 text-sm text-slate-600">
+          <input type="checkbox" checked={resaltar} onChange={(e) => setResaltar(e.target.checked)} className="accent-marca-600" />
+          <Highlighter className="size-4" /> Resaltar palabras clave
+          <InfoTip texto="Marca menciones de personal, maquinaria, expediente técnico, pagos y materiales, atrasos e incumplimientos, y lluvias. Es una búsqueda por palabras, no una predicción." />
+        </label>
+      </form>
+      {r.isLoading ? (
+        <div className="p-4">
+          <Cargando filas={6} />
+        </div>
+      ) : r.error ? (
+        <div className="p-4">
+          <ErrorMsg error={r.error} />
+        </div>
+      ) : r.data!.items.length === 0 ? (
+        <Vacio titulo="No hay asientos con esos criterios" />
+      ) : (
+        <>
+          <ul className={`divide-y divide-slate-100 ${r.isFetching ? 'opacity-60' : ''}`}>
+            {r.data!.items.map((a) => (
+              <li key={a.id} className="px-4 py-3">
+                <button className="w-full text-left" onClick={() => setAbierto(abierto === a.id ? null : a.id)} aria-expanded={abierto === a.id}>
+                  <div className="flex flex-wrap gap-x-2 text-xs text-slate-500">
+                    <span className="num">{fmtFecha(a.fecha)}</span>
+                    <span>N° {a.nro_asiento}</span>
+                    <span>{a.tipo}</span>
+                    <span>{ROL[a.rol] ?? a.rol}</span>
+                  </div>
+                  <div className="mt-0.5 text-sm font-medium text-slate-900">{a.titulo}</div>
+                </button>
+                <div className={`mt-1 text-[13px] leading-relaxed whitespace-pre-line text-slate-700 ${abierto === a.id || resaltar ? '' : 'line-clamp-2'}`}>
+                  <Resaltado texto={a.descripcion} activo={resaltar} />
+                </div>
+              </li>
+            ))}
+          </ul>
+          <Paginacion pagina={pagina} total={r.data!.total} tamanio={15} onChange={setPagina} />
+        </>
+      )}
+    </section>
   )
 }

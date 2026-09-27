@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, fmtFecha, fmtMillones, fmtPct, qs, type Nivel } from '../api'
+import { api, ESTADO_OP, fmtFecha, fmtMillones, fmtNum, fmtPct, qs, titulo, useFiltros, type Nivel } from '../api'
 import { useAmbito } from '../ambito'
-import { Cargando, ErrorMsg, NivelBadge, Paginacion } from '../components/ui'
+import { BarraFiltros, ChipsActivos, SelectFiltro } from '../components/Filtros'
+import { Cargando, EncabezadoPagina, ErrorMsg, InfoTip, NivelBadge, Paginacion, Vacio } from '../components/ui'
+import { NIVEL_TEXTO } from '../lib/nivel'
+import { useFiltrosUrl } from '../lib/filtrosUrl'
 
 interface Item {
   codigo_infobras: string
@@ -25,166 +27,120 @@ interface Item {
   nivel: Nivel | null
 }
 
-export const ESTADO_OP: Record<string, string> = {
-  ACTIVA: 'Activa (en ejecución)',
-  CONSUMADO: 'Retraso significativo ya consumado',
-  FINALIZADA: 'Finalizada',
-  DESACTUALIZADA: 'Sin registros recientes',
-  OTRO: 'Otro',
+const TAM = 25
+const DEF = { estado: 'ACTIVA', q: '', tipo_obra: '', modalidad: '', nivel: '', orden: 'riesgo' }
+const ORDEN: Record<string, string> = { riesgo: 'Mayor riesgo', monto: 'Mayor monto', reciente: 'Inicio más reciente' }
+
+function Resultado({ o }: { o: Item }) {
+  if (o.retraso_significativo === null) return <span className="text-slate-500">Aún no determinable</span>
+  if (o.retraso_significativo)
+    return <span className="font-medium text-alto">Con retraso significativo{o.sobreplazo !== null ? ` (+${fmtPct(o.sobreplazo)} del plazo)` : ''}</span>
+  return <span className="text-bajo">Sin retraso significativo</span>
 }
-const TIPOS = ['Transportes Y Comunicaciones', 'Educación/Cultura', 'Vivienda Construcción Y Saneamiento', 'Otras Infraestructuras', 'Agricultura', 'Salud', 'Energía Y Minas', 'Orden Público/Defensa Y Seguridad']
-const MODALIDADES = ['Contrata', 'Administración directa', 'Por núcleo ejecutor', 'Obras por impuestos']
 
 export default function Cartera() {
   const { departamento } = useAmbito()
-  const [f, setF] = useState({ estado: 'ACTIVA', tipo_obra: '', modalidad: '', nivel: '', orden: 'riesgo', q: '' })
-  const [buscar, setBuscar] = useState('')
-  const [pagina, setPagina] = useState(1)
-  const params = { ...f, q: buscar, departamento, pagina, tamanio: 25 }
-  const r = useQuery({ queryKey: ['cartera', params], queryFn: () => api<{ total: number; items: Item[] }>(`/cartera${qs(params)}`) })
-  const set = (k: string, v: string) => {
-    setF({ ...f, [k]: v })
-    setPagina(1)
-  }
+  const { valores: f, pagina, set, limpiar, activos } = useFiltrosUrl(DEF)
+  const filtros = useFiltros()
+  const params = { ...f, departamento, pagina, tamanio: TAM }
+  const r = useQuery({ queryKey: ['cartera', params], queryFn: () => api<{ total: number; items: Item[] }>(`/cartera${qs(params)}`), placeholderData: (p) => p })
+  const activa = f.estado === 'ACTIVA'
+  const chips = activos
+    .filter((k) => k !== 'orden' && k !== 'estado')
+    .map((k) => ({ k, l: k === 'q' ? `“${f.q}”` : k === 'nivel' ? `Riesgo ${NIVEL_TEXTO[f.nivel as 'ALTO'].toLowerCase()}` : f[k as keyof typeof f], quitar: () => set({ [k]: null }) }))
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-marca-900">Cartera nacional de obras (INFOBRAS)</h1>
-        <p className="text-sm text-slate-600">
-          Todas las modalidades (contrata, administración directa, núcleo ejecutor…) y sectores. Riesgo de terminar con <b>retraso significativo</b> (fin real posterior
-          al fin programado original más 30% del plazo), estimado al inicio de la obra y actualizado mensualmente con la ejecución financiera del SIAF.
-        </p>
-      </div>
-      <form
-        className="tarjeta flex flex-wrap items-end gap-3 p-3"
-        onSubmit={(e) => {
-          e.preventDefault()
-          setBuscar(f.q)
-          setPagina(1)
-        }}
-      >
-        <label className="min-w-60 flex-1 text-sm">
-          <div className="etiqueta mb-1">Buscar (obra, entidad, CUI o código INFOBRAS)</div>
-          <input className="entrada w-full" value={f.q} maxLength={120} onChange={(e) => setF({ ...f, q: e.target.value })} />
-        </label>
-        <label className="text-sm">
-          <div className="etiqueta mb-1">Estado</div>
-          <select className="entrada" value={f.estado} onChange={(e) => set('estado', e.target.value)}>
-            {Object.entries(ESTADO_OP)
-              .filter(([k]) => k !== 'OTRO')
-              .map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            <option value="">Todos</option>
-          </select>
-        </label>
-        <label className="text-sm">
-          <div className="etiqueta mb-1">Tipo de obra</div>
-          <select className="entrada max-w-56" value={f.tipo_obra} onChange={(e) => set('tipo_obra', e.target.value)}>
-            <option value="">Todos</option>
-            {TIPOS.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm">
-          <div className="etiqueta mb-1">Modalidad</div>
-          <select className="entrada" value={f.modalidad} onChange={(e) => set('modalidad', e.target.value)}>
-            <option value="">Todas</option>
-            {MODALIDADES.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm">
-          <div className="etiqueta mb-1">Nivel</div>
-          <select className="entrada" value={f.nivel} onChange={(e) => set('nivel', e.target.value)}>
-            <option value="">Todos</option>
-            <option>ALTO</option>
-            <option>MEDIO</option>
-            <option>BAJO</option>
-          </select>
-        </label>
-        <label className="text-sm">
-          <div className="etiqueta mb-1">Orden</div>
-          <select className="entrada" value={f.orden} onChange={(e) => set('orden', e.target.value)}>
-            <option value="riesgo">Mayor riesgo</option>
-            <option value="monto">Mayor monto</option>
-            <option value="reciente">Inicio más reciente</option>
-          </select>
-        </label>
-        <button className="btn-primario">Buscar</button>
-      </form>
-      {r.isLoading ? (
-        <Cargando />
-      ) : r.error ? (
-        <ErrorMsg error={r.error} />
-      ) : (
-        <div className="tarjeta p-3">
-          <div className="overflow-x-auto">
-            <table className="tabla w-full">
-              <thead>
-                <tr>
-                  <th>Obra</th>
-                  <th>Ubicación</th>
-                  <th>Tipo / modalidad</th>
-                  <th className="text-right">Costo</th>
-                  <th>Plazo</th>
-                  <th>Riesgo</th>
-                  <th>Resultado observado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {r.data!.items.map((o) => (
-                  <tr key={o.codigo_infobras}>
-                    <td className="max-w-md">
-                      <Link to={`/cartera/${o.codigo_infobras}`} className="font-medium text-marca-700 hover:underline">
-                        {o.nombre.slice(0, 150)}
-                        {o.nombre.length > 150 ? '…' : ''}
-                      </Link>
-                      <div className="text-xs text-slate-500">
-                        {o.entidad} · {ESTADO_OP[o.estado_operativo] ?? o.estado_operativo}
-                      </div>
-                    </td>
-                    <td className="text-xs">
-                      {o.provincia}
-                      <br />
-                      <span className="text-slate-500">{o.departamento}</span>
-                    </td>
-                    <td className="text-xs">
-                      {o.tipo_obra}
-                      <br />
-                      <span className="text-slate-500">{o.modalidad}</span>
-                    </td>
-                    <td className="whitespace-nowrap text-right text-xs">{fmtMillones(o.costo)}</td>
-                    <td className="whitespace-nowrap text-xs">
-                      {fmtFecha(o.fecha_inicio)}
-                      <br />
-                      <span className="text-slate-500">fin prog. {fmtFecha(o.fin_programado)}</span>
-                    </td>
-                    <td className="whitespace-nowrap">
-                      <NivelBadge nivel={o.nivel} score={o.score} />
-                      <div className="text-[11px] text-slate-500">{o.modelo === 'seguimiento' ? 'seguimiento SIAF' : o.modelo ? 'al inicio' : ''}</div>
-                    </td>
-                    <td className="text-xs">
-                      {o.retraso_significativo === null ? (
-                        <span className="text-slate-500">aún no determinable</span>
-                      ) : o.retraso_significativo ? (
-                        <span className="font-medium text-alto">con retraso significativo{o.sobreplazo !== null ? ` (+${fmtPct(o.sobreplazo)} del plazo)` : ''}</span>
-                      ) : (
-                        <span className="text-bajo">sin retraso significativo</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <EncabezadoPagina
+        titulo="Cartera nacional de obras"
+        descripcion={
+          <>
+            Obras públicas registradas en INFOBRAS <InfoTip termino="cartera" className="align-[-2px]" /> de todas las modalidades y sectores. Para cada obra en ejecución se estima la
+            probabilidad de terminar con retraso significativo <InfoTip termino="retraso_significativo" className="align-[-2px]" />, al inicio y luego cada mes con la ejecución del gasto
+            (SIAF).
+          </>
+        }
+      />
+      <section className="tarjeta overflow-hidden">
+        <BarraFiltros busqueda={f.q} onBuscar={(q) => set({ q })} placeholder="Buscar por obra, entidad, CUI o código INFOBRAS">
+          <SelectFiltro etiqueta="Situación" valor={f.estado} onChange={(v) => set({ estado: v })} todos="Todas" opciones={Object.entries(ESTADO_OP).filter(([k]) => k !== 'OTRO').map(([v, l]) => ({ v, l }))} />
+          <SelectFiltro etiqueta="Nivel de riesgo" valor={f.nivel} onChange={(v) => set({ nivel: v })} opciones={(['ALTO', 'MEDIO', 'BAJO'] as const).map((n) => ({ v: n, l: NIVEL_TEXTO[n] }))} />
+          <SelectFiltro etiqueta="Tipo de obra" valor={f.tipo_obra} onChange={(v) => set({ tipo_obra: v })} opciones={(filtros.data?.tipos_obra ?? []).map((t) => ({ v: t, l: t }))} />
+          <SelectFiltro etiqueta="Modalidad" valor={f.modalidad} onChange={(v) => set({ modalidad: v })} todos="Todas" opciones={(filtros.data?.modalidades ?? []).map((t) => ({ v: t, l: t }))} />
+          <SelectFiltro etiqueta="Ordenar por" valor={f.orden} onChange={(v) => set({ orden: v })} todos={null} opciones={Object.entries(ORDEN).map(([v, l]) => ({ v, l }))} />
+        </BarraFiltros>
+        <ChipsActivos chips={chips} onLimpiar={limpiar} />
+        {r.isLoading ? (
+          <div className="p-4">
+            <Cargando filas={8} />
           </div>
-          <Paginacion pagina={pagina} total={r.data!.total} tamanio={25} onChange={setPagina} />
-        </div>
-      )}
+        ) : r.error ? (
+          <div className="p-4">
+            <ErrorMsg error={r.error} reintentar={() => r.refetch()} />
+          </div>
+        ) : r.data!.items.length === 0 ? (
+          <Vacio titulo="No hay obras con estos filtros" texto="Pruebe con otra búsqueda o amplíe el ámbito geográfico." accion={<button className="btn" onClick={limpiar}>Quitar filtros</button>} />
+        ) : (
+          <>
+            <div className={`overflow-x-auto transition-opacity ${r.isFetching ? 'opacity-60' : ''}`}>
+              <table className="tabla min-w-[920px]">
+                <thead>
+                  <tr>
+                    <th>Obra</th>
+                    <th>Ubicación</th>
+                    <th>
+                      <span className="inline-flex items-center gap-1">
+                        Riesgo estimado <InfoTip termino="probabilidad" />
+                      </span>
+                    </th>
+                    <th>Tipo y modalidad</th>
+                    <th className="text-right">Costo</th>
+                    <th>Plazo</th>
+                    {!activa && <th>Resultado observado</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {r.data!.items.map((o) => (
+                    <tr key={o.codigo_infobras}>
+                      <td className="max-w-md">
+                        <Link to={`/cartera/${o.codigo_infobras}`} className="line-clamp-2 font-medium text-slate-900 hover:text-marca-700 hover:underline">
+                          {o.nombre}
+                        </Link>
+                        <div className="mt-0.5 truncate text-xs text-slate-500">
+                          {o.entidad} · {ESTADO_OP[o.estado_operativo] ?? o.estado_operativo}
+                        </div>
+                      </td>
+                      <td className="text-[13px] whitespace-nowrap">
+                        {titulo(o.provincia)}
+                        <div className="text-xs text-slate-500">{titulo(o.departamento)}</div>
+                      </td>
+                      <td className="whitespace-nowrap">
+                        <NivelBadge nivel={o.nivel} score={o.score} compacto />
+                        <div className="mt-0.5 text-xs text-slate-500">{o.modelo === 'seguimiento' ? 'Con seguimiento del gasto' : o.modelo ? 'Estimado al inicio' : ''}</div>
+                      </td>
+                      <td className="text-[13px]">
+                        {o.tipo_obra}
+                        <div className="text-xs text-slate-500">{o.modalidad}</div>
+                      </td>
+                      <td className="num text-right text-[13px] whitespace-nowrap">{fmtMillones(o.costo)}</td>
+                      <td className="text-[13px] whitespace-nowrap">
+                        Inicio {fmtFecha(o.fecha_inicio)}
+                        <div className="text-xs text-slate-500">Fin programado {fmtFecha(o.fin_programado)}</div>
+                      </td>
+                      {!activa && (
+                        <td className="text-[13px]">
+                          <Resultado o={o} />
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Paginacion pagina={pagina} total={r.data!.total} tamanio={TAM} onChange={(p) => set({ pagina: p })} />
+          </>
+        )}
+      </section>
+      <p className="text-xs text-slate-500">{r.data ? `${fmtNum(r.data.total)} obras encontradas.` : ''} Las obras en ejecución sin registros en los últimos 12 meses no se evalúan porque su situación real es desconocida.</p>
     </div>
   )
 }
