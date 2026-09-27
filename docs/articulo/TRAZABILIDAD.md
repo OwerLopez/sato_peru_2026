@@ -29,6 +29,7 @@ métrica no existe.
 | Semillas: 0,138 ± 0,002 vs 0,162 ± 0,004; 0,742 ± 0,003 vs 0,772 ± 0,003 | `artifacts/experiments/estabilidad_semillas.csv` |
 | Representaciones de texto (0,147; 0,152; 0,148; 0,141; 0,158) | `docs/MASTER_TECHNICAL_RESEARCH_PLAN.md` §15; `artifacts/experiments/grid_resultados.csv` |
 | Importancia por grupo (46,0 %, 28,5 %, 7,1 %) | `docs/research/importancia_grupos.csv` |
+| Desempeño por sector (ROC-AUC 0,752 a 0,803 en alerta; 0,720 a 0,783 en seguimiento) | `artifacts/experiments/desempeno_por_sector.json` (`python -m sato.models.por_sector`) |
 | Backtest (Tabla 8) | `artifacts/release/modelo_card.json` (`operacion_backtest_nacional`, `operacion_backtest_arequipa`) |
 | Arequipa: 36 de 42 obras anticipadas, mediana 40,5 días | API `/api/v1/modelo` → `metricas.arequipa` |
 | Partición: entrenamiento 2024-06-30 a 2025-05-31; validación 2025-08-31 a 2025-10-31; prueba 2025-12-31 a 2026-06-30 | API `/api/v1/modelo` → `metricas.periodos` |

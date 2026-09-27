@@ -1,0 +1,436 @@
+{
+ "descripcion": "Desempeno en la prueba temporal por sector (sin reentrenar); IC 95 % del ROC-AUC por bootstrap de obras.",
+ "minimo_por_clase": 30,
+ "alerta_60d": {
+  "modelo": "B_full LightGBM",
+  "global": {
+   "filas": 16756,
+   "obras": 5158,
+   "positivos": 842,
+   "prevalencia": 0.050250656481260446,
+   "roc_auc": 0.774234924237969,
+   "pr_auc": 0.15755460481502295,
+   "precision_top10": 0.17899761336515513,
+   "lift_top10": 3.5620950232144173,
+   "roc_ic95": [
+    0.756208813134813,
+    0.7898000350626726
+   ]
+  },
+  "sectores": [
+   {
+    "sector": "SIN_CUI",
+    "filas": 1243,
+    "obras": 387,
+    "positivos": 65,
+    "prevalencia": 0.05229283990345937,
+    "roc_auc": 0.822110487135954,
+    "pr_auc": 0.2063484903214655,
+    "precision_top10": 0.22580645161290322,
+    "lift_top10": 4.318114143920596,
+    "roc_ic95": [
+     0.7596085731903577,
+     0.881654937448885
+    ]
+   },
+   {
+    "sector": "SALUD",
+    "filas": 671,
+    "obras": 177,
+    "positivos": 37,
+    "prevalencia": 0.05514157973174367,
+    "roc_auc": 0.8027112285787366,
+    "pr_auc": 0.18716914400226892,
+    "precision_top10": 0.19402985074626866,
+    "lift_top10": 3.5187575635336827,
+    "roc_ic95": [
+     0.7287623365580709,
+     0.8697150853529289
+    ]
+   },
+   {
+    "sector": "AGROPECUARIA",
+    "filas": 1151,
+    "obras": 333,
+    "positivos": 33,
+    "prevalencia": 0.028670721112076455,
+    "roc_auc": 0.7824578522252941,
+    "pr_auc": 0.11783480681995927,
+    "precision_top10": 0.10434782608695652,
+    "lift_top10": 3.6395256916996046,
+    "roc_ic95": [
+     0.6963695183320009,
+     0.8625603173764583
+    ]
+   },
+   {
+    "sector": "OTROS",
+    "filas": 4610,
+    "obras": 1539,
+    "positivos": 247,
+    "prevalencia": 0.05357917570498916,
+    "roc_auc": 0.7726864013822528,
+    "pr_auc": 0.15621150926984587,
+    "precision_top10": 0.15835140997830802,
+    "lift_top10": 2.955465587044534,
+    "roc_ic95": [
+     0.7373734014273403,
+     0.8034872976563604
+    ]
+   },
+   {
+    "sector": "SANEAMIENTO",
+    "filas": 2126,
+    "obras": 618,
+    "positivos": 84,
+    "prevalencia": 0.03951081843838194,
+    "roc_auc": 0.767087589198265,
+    "pr_auc": 0.09825616038133496,
+    "precision_top10": 0.11737089201877934,
+    "lift_top10": 2.970601386094344,
+    "roc_ic95": [
+     0.7088536498993548,
+     0.8171968987331921
+    ]
+   },
+   {
+    "sector": "TRANSPORTE",
+    "filas": 4392,
+    "obras": 1335,
+    "positivos": 238,
+    "prevalencia": 0.05418943533697632,
+    "roc_auc": 0.7648899713953949,
+    "pr_auc": 0.19729402924811834,
+    "precision_top10": 0.20273348519362186,
+    "lift_top10": 3.741199441052047,
+    "roc_ic95": [
+     0.7309084484752759,
+     0.8030569743501212
+    ]
+   },
+   {
+    "sector": "EDUCACION",
+    "filas": 2563,
+    "obras": 769,
+    "positivos": 138,
+    "prevalencia": 0.053843152555598905,
+    "roc_auc": 0.7519617510832213,
+    "pr_auc": 0.1747028076823977,
+    "precision_top10": 0.19921875,
+    "lift_top10": 3.699983016304348,
+    "roc_ic95": [
+     0.702104785879237,
+     0.7980094219257856
+    ]
+   }
+  ]
+ },
+ "cartera_inicio": {
+  "modelo": "LightGBM al inicio (y_30)",
+  "global": {
+   "filas": 26025,
+   "obras": 26025,
+   "positivos": 13643,
+   "prevalencia": 0.5242267050912585,
+   "roc_auc": 0.7330259587025747,
+   "pr_auc": 0.7588026289079625,
+   "precision_top10": 0.8662567255956957,
+   "lift_top10": 1.6524467700379666,
+   "roc_ic95": [
+    0.7270838910760956,
+    0.7396404558421901
+   ]
+  },
+  "sectores": [
+   {
+    "sector": "Salud",
+    "filas": 589,
+    "obras": 589,
+    "positivos": 350,
+    "prevalencia": 0.5942275042444821,
+    "roc_auc": 0.7874536760310817,
+    "pr_auc": 0.853934914024383,
+    "precision_top10": 0.9661016949152542,
+    "lift_top10": 1.625811138014528,
+    "roc_ic95": [
+     0.7503557538892734,
+     0.8226667157488302
+    ]
+   },
+   {
+    "sector": "Orden Público/Defensa Y Seguridad",
+    "filas": 472,
+    "obras": 472,
+    "positivos": 254,
+    "prevalencia": 0.538135593220339,
+    "roc_auc": 0.7635086325218521,
+    "pr_auc": 0.8136992789318465,
+    "precision_top10": 0.9361702127659575,
+    "lift_top10": 1.7396548835650862,
+    "roc_ic95": [
+     0.7155279953226307,
+     0.8095932711141836
+    ]
+   },
+   {
+    "sector": "Agricultura",
+    "filas": 2367,
+    "obras": 2367,
+    "positivos": 1298,
+    "prevalencia": 0.5483734685255598,
+    "roc_auc": 0.760014687631976,
+    "pr_auc": 0.8035636866917658,
+    "precision_top10": 0.9282700421940928,
+    "lift_top10": 1.6927697918901523,
+    "roc_ic95": [
+     0.7426877701187465,
+     0.7788422918840786
+    ]
+   },
+   {
+    "sector": "Educación/Cultura",
+    "filas": 5848,
+    "obras": 5848,
+    "positivos": 3154,
+    "prevalencia": 0.5393296853625171,
+    "roc_auc": 0.7526565057557626,
+    "pr_auc": 0.7920580689551715,
+    "precision_top10": 0.9247863247863248,
+    "lift_top10": 1.7146957600984234,
+    "roc_ic95": [
+     0.7397326060024999,
+     0.7663448168686234
+    ]
+   },
+   {
+    "sector": "Otras Infraestructuras",
+    "filas": 3665,
+    "obras": 3665,
+    "positivos": 1837,
+    "prevalencia": 0.5012278308321965,
+    "roc_auc": 0.7393269458695501,
+    "pr_auc": 0.7582037284148601,
+    "precision_top10": 0.9344262295081968,
+    "lift_top10": 1.8642744317624067,
+    "roc_ic95": [
+     0.725350146043951,
+     0.7529703030074892
+    ]
+   },
+   {
+    "sector": "Transportes Y Comunicaciones",
+    "filas": 6935,
+    "obras": 6935,
+    "positivos": 3470,
+    "prevalencia": 0.5003604902667628,
+    "roc_auc": 0.7314942342319865,
+    "pr_auc": 0.7513676615208313,
+    "precision_top10": 0.909221902017291,
+    "lift_top10": 1.8171336860201481,
+    "roc_ic95": [
+     0.7211997076838376,
+     0.742615131275213
+    ]
+   },
+   {
+    "sector": "Vivienda Construcción Y Saneamiento",
+    "filas": 5198,
+    "obras": 5198,
+    "positivos": 2717,
+    "prevalencia": 0.5227010388611004,
+    "roc_auc": 0.6957700014404653,
+    "pr_auc": 0.699730083349986,
+    "precision_top10": 0.7,
+    "lift_top10": 1.3391976444608023,
+    "roc_ic95": [
+     0.682992628279078,
+     0.7098108590093359
+    ]
+   },
+   {
+    "sector": "Protección/Readaptación Social",
+    "filas": 312,
+    "obras": 312,
+    "positivos": 167,
+    "prevalencia": 0.5352564102564102,
+    "roc_auc": 0.6847408631013834,
+    "pr_auc": 0.7300116467127578,
+    "precision_top10": 0.8387096774193549,
+    "lift_top10": 1.5669306548193935,
+    "roc_ic95": [
+     0.6216462568688195,
+     0.7423359758946414
+    ]
+   },
+   {
+    "sector": "Energía Y Minas",
+    "filas": 614,
+    "obras": 614,
+    "positivos": 385,
+    "prevalencia": 0.6270358306188925,
+    "roc_auc": 0.6322576986332444,
+    "pr_auc": 0.7421891479118711,
+    "precision_top10": 0.8360655737704918,
+    "lift_top10": 1.3333617202469663,
+    "roc_ic95": [
+     0.5894669794238389,
+     0.6742575034118417
+    ]
+   }
+  ]
+ },
+ "cartera_seguimiento": {
+  "modelo": "LightGBM de seguimiento SIAF (y_30)",
+  "global": {
+   "filas": 25063,
+   "obras": 13161,
+   "positivos": 16270,
+   "prevalencia": 0.6491641064517416,
+   "roc_auc": 0.7530273843996849,
+   "pr_auc": 0.8545792007834461,
+   "precision_top10": 0.9672785315243416,
+   "lift_top10": 1.4900369905098079,
+   "roc_ic95": [
+    0.7457812646019777,
+    0.7607100215349409
+   ]
+  },
+  "sectores": [
+   {
+    "sector": "Agricultura",
+    "filas": 2176,
+    "obras": 1124,
+    "positivos": 1500,
+    "prevalencia": 0.6893382352941176,
+    "roc_auc": 0.7827421104536489,
+    "pr_auc": 0.8898546369911844,
+    "precision_top10": 0.9908256880733946,
+    "lift_top10": 1.4373577981651378,
+    "roc_ic95": [
+     0.7537932354666413,
+     0.8097601019641011
+    ]
+   },
+   {
+    "sector": "Salud",
+    "filas": 507,
+    "obras": 267,
+    "positivos": 344,
+    "prevalencia": 0.6785009861932939,
+    "roc_auc": 0.7753245826794122,
+    "pr_auc": 0.883638433111182,
+    "precision_top10": 0.9607843137254902,
+    "lift_top10": 1.4160396716826265,
+    "roc_ic95": [
+     0.7252609652822393,
+     0.827926310681364
+    ]
+   },
+   {
+    "sector": "Vivienda Construcción Y Saneamiento",
+    "filas": 4530,
+    "obras": 2378,
+    "positivos": 2992,
+    "prevalencia": 0.6604856512141281,
+    "roc_auc": 0.7641565196831775,
+    "pr_auc": 0.8641994944638025,
+    "precision_top10": 0.9668874172185431,
+    "lift_top10": 1.463903743315508,
+    "roc_ic95": [
+     0.7438223394341856,
+     0.7834675318962928
+    ]
+   },
+   {
+    "sector": "Protección/Readaptación Social",
+    "filas": 245,
+    "obras": 128,
+    "positivos": 168,
+    "prevalencia": 0.6857142857142857,
+    "roc_auc": 0.7614409400123686,
+    "pr_auc": 0.8798309760236406,
+    "precision_top10": 0.9583333333333334,
+    "lift_top10": 1.3975694444444444,
+    "roc_ic95": [
+     0.6791798908199643,
+     0.8314792977934995
+    ]
+   },
+   {
+    "sector": "Educación/Cultura",
+    "filas": 6015,
+    "obras": 3094,
+    "positivos": 3903,
+    "prevalencia": 0.6488778054862843,
+    "roc_auc": 0.7530413182555765,
+    "pr_auc": 0.8578558058269758,
+    "precision_top10": 0.96843853820598,
+    "lift_top10": 1.4924821438147502,
+    "roc_ic95": [
+     0.7353000865848107,
+     0.7697991189482847
+    ]
+   },
+   {
+    "sector": "Transportes Y Comunicaciones",
+    "filas": 6576,
+    "obras": 3503,
+    "positivos": 4205,
+    "prevalencia": 0.6394464720194647,
+    "roc_auc": 0.7500716395245562,
+    "pr_auc": 0.845957188682277,
+    "precision_top10": 0.9620060790273556,
+    "lift_top10": 1.504435666036597,
+    "roc_ic95": [
+     0.7334192690865259,
+     0.7665649682925877
+    ]
+   },
+   {
+    "sector": "Orden Público/Defensa Y Seguridad",
+    "filas": 474,
+    "obras": 237,
+    "positivos": 309,
+    "prevalencia": 0.6518987341772152,
+    "roc_auc": 0.7482004511130724,
+    "pr_auc": 0.8578888590422689,
+    "precision_top10": 0.9787234042553191,
+    "lift_top10": 1.5013426977897129,
+    "roc_ic95": [
+     0.684555934711547,
+     0.8108643419414839
+    ]
+   },
+   {
+    "sector": "Otras Infraestructuras",
+    "filas": 3927,
+    "obras": 2139,
+    "positivos": 2425,
+    "prevalencia": 0.617519735166794,
+    "roc_auc": 0.7260640795091082,
+    "pr_auc": 0.819727013770566,
+    "precision_top10": 0.9592875318066157,
+    "lift_top10": 1.553452427795703,
+    "roc_ic95": [
+     0.7072044474060325,
+     0.749518352095492
+    ]
+   },
+   {
+    "sector": "Energía Y Minas",
+    "filas": 587,
+    "obras": 273,
+    "positivos": 407,
+    "prevalencia": 0.6933560477001703,
+    "roc_auc": 0.7201610701610702,
+    "pr_auc": 0.8624265611698425,
+    "precision_top10": 0.9661016949152542,
+    "lift_top10": 1.3933702577770375,
+    "roc_ic95": [
+     0.6590006537813735,
+     0.7759274628152016
+    ]
+   }
+  ]
+ }
+}

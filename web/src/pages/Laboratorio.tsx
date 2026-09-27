@@ -165,8 +165,104 @@ function Historicas() {
   )
 }
 
+
+interface FilaSector {
+  sector: string
+  filas: number
+  obras: number
+  positivos: number
+  prevalencia: number
+  roc_auc: number
+  pr_auc: number
+  lift_top10: number
+  roc_ic95: [number, number]
+}
+interface BloqueSector {
+  modelo: string
+  global: Omit<FilaSector, 'sector'>
+  sectores: FilaSector[]
+}
+const NOMBRE_SECTOR: Record<string, string> = { SIN_CUI: 'Sin inversión enlazada', OTROS: 'Otros sectores' }
+
+function TablaSectores({ titulo, texto, b }: { titulo: string; texto: string; b: BloqueSector }) {
+  const max = Math.max(...b.sectores.map((x) => x.roc_auc), b.global.roc_auc)
+  return (
+    <Seccion titulo={titulo} subtitulo={texto}>
+      <div className="overflow-x-auto">
+        <table className="tabla w-full">
+          <thead>
+            <tr>
+              <th>Sector / tipo de obra</th>
+              <th className="text-right">Observaciones</th>
+              <th className="text-right">Con evento</th>
+              <th className="text-right">Prevalencia</th>
+              <th>ROC-AUC (IC 95 %)</th>
+              <th className="text-right">PR-AUC</th>
+              <th className="text-right">Concentración en el 10 % de mayor riesgo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[{ sector: 'TODOS (global)', ...b.global }, ...b.sectores].map((x) => (
+              <tr key={x.sector} className={x.sector.startsWith('TODOS') ? 'font-semibold' : ''}>
+                <td>{NOMBRE_SECTOR[x.sector] ?? x.sector}</td>
+                <td className="text-right">{fmtNum(x.filas)}</td>
+                <td className="text-right">{fmtNum(x.positivos)}</td>
+                <td className="text-right">{fmtPct(x.prevalencia)}</td>
+                <td>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-28 rounded bg-slate-100">
+                      <div className="h-2 rounded bg-marca-600" style={{ width: `${(100 * (x.roc_auc - 0.5)) / (max - 0.5)}%` }} />
+                    </div>
+                    <span>
+                      {f3(x.roc_auc)} <span className="text-xs text-slate-500">[{f3(x.roc_ic95[0])}; {f3(x.roc_ic95[1])}]</span>
+                    </span>
+                  </div>
+                </td>
+                <td className="text-right">{f3(x.pr_auc)}</td>
+                <td className="text-right">{x.lift_top10.toFixed(1)} veces la prevalencia</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Seccion>
+  )
+}
+
+function Sectores() {
+  const q = useQuery({ queryKey: ['sectores'], queryFn: () => api<Record<string, BloqueSector> | null>('/investigacion/sectores') })
+  if (q.isLoading) return <Cargando />
+  if (q.error) return <ErrorMsg error={q.error} />
+  if (!q.data) return <ErrorMsg error="Evaluación por sector no disponible (ejecutar python -m sato.models.por_sector)." />
+  const d = q.data
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-slate-600">
+        ¿En qué sectores funciona la predicción? Cada modelo se evaluó, sin reentrenar, sobre su periodo de prueba temporal separando las obras por sector. Se
+        muestran los grupos con al menos 30 obras con y sin evento. La concentración indica cuántas veces más casos hay entre el 10 % de obras que el modelo
+        ordena primero que en una selección al azar.
+      </p>
+      <TablaSectores
+        titulo="Alerta a 60 días (cuaderno de obra digital)"
+        texto="Atraso normativo (regla del 80 %) en los 60 días siguientes; prueba de diciembre de 2025 a junio de 2026."
+        b={d.alerta_60d}
+      />
+      <TablaSectores
+        titulo="Cartera INFOBRAS: seguimiento mensual con SIAF"
+        texto="Retraso significativo al término (más de 30 % del plazo); cortes mensuales de 2024 y 2025, todas las modalidades."
+        b={d.cartera_seguimiento}
+      />
+      <TablaSectores
+        titulo="Cartera INFOBRAS: estimación al inicio de la obra"
+        texto="Retraso significativo al término; obras iniciadas entre enero de 2022 y junio de 2024."
+        b={d.cartera_inicio}
+      />
+    </div>
+  )
+}
+
 export default function Laboratorio() {
-  const [tab, setTab] = useState<'cuaderno' | 'cartera' | 'historicas'>('cuaderno')
+  const [tab, setTab] = useState<'cuaderno' | 'cartera' | 'sectores' | 'historicas'>('cuaderno')
   return (
     <div className="space-y-4">
       <div>
@@ -183,11 +279,14 @@ export default function Laboratorio() {
         <button className={tab === 'cartera' ? 'btn-primario' : 'btn'} onClick={() => setTab('cartera')}>
           Modelos de la cartera INFOBRAS
         </button>
+        <button className={tab === 'sectores' ? 'btn-primario' : 'btn'} onClick={() => setTab('sectores')}>
+          Desempeño por sector
+        </button>
         <button className={tab === 'historicas' ? 'btn-primario' : 'btn'} onClick={() => setTab('historicas')}>
           Obras históricas: estimado vs. real
         </button>
       </div>
-      {tab === 'cuaderno' ? <ModeloPage /> : tab === 'cartera' ? <ModelosCartera /> : <Historicas />}
+      {tab === 'cuaderno' ? <ModeloPage /> : tab === 'cartera' ? <ModelosCartera /> : tab === 'sectores' ? <Sectores /> : <Historicas />}
     </div>
   )
 }

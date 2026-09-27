@@ -120,6 +120,9 @@ def load():
 
     load_db.load()
     load_db.ensure_admin()
+    from sato.models import por_sector
+
+    por_sector.build()
 
 
 STEPS = dict(ingest=ingest, staging=staging, integration=integration, features=features, embeddings=embeddings,

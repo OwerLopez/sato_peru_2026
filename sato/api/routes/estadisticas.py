@@ -94,3 +94,10 @@ def modelo_cartera():
     """Ficha de los modelos de cartera (inicio y seguimiento): umbrales, calibracion por nivel y metricas de test."""
     r = db.one("select valor from configuracion where clave = 'modelo_cartera'")
     return r["valor"] if r else None
+
+
+@router.get("/investigacion/sectores")
+def desempeno_sectores():
+    """Desempeno de cada modelo por sector o tipo de obra en su prueba temporal (IC 95 % por bootstrap de obras)."""
+    r = db.one("select valor from configuracion where clave = 'desempeno_sectores'")
+    return r["valor"] if r else None
