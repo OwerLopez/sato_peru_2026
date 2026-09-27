@@ -131,7 +131,9 @@ def seguimiento(params: dict, d_obras: pd.DataFrame) -> tuple[pd.DataFrame, list
         p["score"] = m.predict_proba(d.loc[sel, feats])[:, 1]
         p["modelo_origen"] = str(cut.date())
         preds.append(p)
-        last = sel & (d["T"] == OBS_END) & d["codigo_infobras"].isin(act["codigo_infobras"])
+        # ultimo corte disponible de cada obra activa (el SIAF llega con un mes de rezago, por lo que puede ser anterior a OBS_END)
+        es_act = sel & d["codigo_infobras"].isin(act["codigo_infobras"])
+        last = es_act & (d["T"] == d["T"].where(es_act).groupby(d["codigo_infobras"]).transform("max"))
         if last.sum():
             expl += _explain(m, d.loc[last, feats], d.loc[last, ["codigo_infobras", "T"]], "seguimiento")
         log.info("seguimiento: anio %s, entrenado con %s filas, %s puntuadas", Y, int(fit.sum()), int(sel.sum()))
