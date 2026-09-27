@@ -1,73 +1,76 @@
 {
  "k6_1": {
-  "p50_ms": 10.1,
-  "p95_ms": 37.2,
-  "p90_ms": 33.6,
-  "max_ms": 114.2,
-  "media_ms": 15.6,
-  "rps": 63.9,
-  "solicitudes": 3841,
+  "p50_ms": 8.7,
+  "p95_ms": 45.4,
+  "p90_ms": 37.1,
+  "max_ms": 140.3,
+  "media_ms": 17.7,
+  "rps": 56.2,
+  "solicitudes": 3385,
   "error_pct": 0
  },
  "k6_20": {
-  "p50_ms": 60.6,
-  "p95_ms": 190.9,
-  "p90_ms": 149.9,
-  "max_ms": 412.1,
-  "media_ms": 76.2,
-  "rps": 261.4,
-  "solicitudes": 15769,
+  "p50_ms": 56.7,
+  "p95_ms": 167.8,
+  "p90_ms": 139.1,
+  "max_ms": 310.9,
+  "media_ms": 74.8,
+  "rps": 266.4,
+  "solicitudes": 16089,
   "error_pct": 0
  },
  "k6_50": {
-  "p50_ms": 165.8,
-  "p95_ms": 414.3,
-  "p90_ms": 343.5,
-  "max_ms": 1125.6,
-  "media_ms": 195.4,
-  "rps": 254.5,
-  "solicitudes": 15451,
+  "p50_ms": 166.5,
+  "p95_ms": 420.1,
+  "p90_ms": 344.4,
+  "max_ms": 1218.4,
+  "media_ms": 194.4,
+  "rps": 255.7,
+  "solicitudes": 15561,
   "error_pct": 0
  },
  "seguridad": {
-  "aprobados": 10,
-  "total": 10,
-  "fecha": "2026-09-26 10:33"
+  "aprobados": 13,
+  "total": 13,
+  "fecha": "2026-09-27 11:12"
  },
  "lighthouse": {
-  "radar": {
-   "performance": 88,
+  "panorama": {
+   "performance": 93,
    "accessibility": 100,
    "best-practices": 100,
-   "lcp_s": 1.56
+   "seo": 100,
+   "lcp_s": 1.67
   },
   "ficha": {
-   "performance": 100,
+   "performance": 99,
    "accessibility": 100,
    "best-practices": 100,
-   "lcp_s": 0.63
+   "seo": 100,
+   "lcp_s": 0.79
   },
   "cartera": {
-   "performance": 95,
+   "performance": 99,
    "accessibility": 100,
    "best-practices": 100,
-   "lcp_s": 0.61
+   "seo": 100,
+   "lcp_s": 0.55
   }
  },
  "pytest": {
-  "aprobadas": 43,
+  "aprobadas": 56,
   "fallidas": 0
  },
- "carga_bd_segundos": 557,
+ "carga_bd_segundos": 634,
  "bd_tablas": 28,
  "bd_filas": {
   "asiento": 2424134,
-  "auditoria": 13,
-  "cartera_explicacion": 258792,
+  "auditoria": 27,
+  "cartera_explicacion": 281022,
   "cartera_obra": 139159,
   "cartera_riesgo": 224155,
   "comparacion_ab": 156,
-  "configuracion": 2,
+  "configuracion": 4,
   "contraloria_paralizada": 30369,
   "contratista": 7136,
   "corte_datos": 1,
@@ -90,8 +93,8 @@
   "suscripcion": 0,
   "usuario": 1
  },
- "bd_tamano_mb": 6662,
- "api_endpoints": 32,
- "frontend_rutas": 14,
- "frontend_js_kb": 906
+ "bd_tamano_mb": 6439,
+ "api_endpoints": 36,
+ "frontend_rutas": 15,
+ "frontend_js_kb": 1066
 }

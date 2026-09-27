@@ -24,17 +24,23 @@ export function setup() {
 const DEPS = ['', 'AREQUIPA', 'LIMA', 'CUSCO', 'PIURA']
 
 export default function (data) {
+  // Flujo real de la interfaz: panorama -> lista de alertas -> ficha de una obra (8 endpoints de consulta)
   const dep = DEPS[Math.floor(Math.random() * DEPS.length)]
   const q = dep ? `?departamento=${dep}` : ''
+  const y = q ? '&' : '?'
   const i = Math.floor(Math.random() * data.ids.length)
-  group('radar', () => {
+  group('panorama', () => {
     check(http.get(`${BASE}/api/v1/resumen${q}`, { tags: { ep: 'resumen' } }), { ok: (r) => r.status === 200 })
-    check(http.get(`${BASE}/api/v1/radar/cuaderno${q}${q ? '&' : '?'}limite=100`, { tags: { ep: 'radar_cuaderno' } }), { ok: (r) => r.status === 200 })
-    check(http.get(`${BASE}/api/v1/radar/cartera${q}${q ? '&' : '?'}limite=100`, { tags: { ep: 'radar_cartera' } }), { ok: (r) => r.status === 200 })
+    check(http.get(`${BASE}/api/v1/radar/cuaderno${q}${y}nivel=ALTO&limite=8`, { tags: { ep: 'radar_cuaderno' } }), { ok: (r) => r.status === 200 })
+    check(http.get(`${BASE}/api/v1/modelo/calibracion`, { tags: { ep: 'calibracion' } }), { ok: (r) => r.status === 200 })
+  })
+  group('lista', () => {
+    check(http.get(`${BASE}/api/v1/obras${q}${y}solo_vigentes=true&nivel=ALTO&tamanio=25`, { tags: { ep: 'obras' } }), { ok: (r) => r.status === 200 })
   })
   group('ficha', () => {
     check(http.get(`${BASE}/api/v1/obras/${data.ids[i]}`, { tags: { ep: 'obra' } }), { ok: (r) => r.status === 200 })
+    check(http.get(`${BASE}/api/v1/obras/${data.ids[i]}/riesgo`, { tags: { ep: 'riesgo' } }), { ok: (r) => r.status === 200 })
     check(http.get(`${BASE}/api/v1/predicciones/${data.preds[i]}`, { tags: { ep: 'explicacion' } }), { ok: (r) => r.status === 200 })
-    check(http.get(`${BASE}/api/v1/obras/${data.ids[i]}/asientos?q=paralizacion&tamanio=20`, { tags: { ep: 'busqueda_texto' } }), { ok: (r) => r.status === 200 })
+    check(http.get(`${BASE}/api/v1/obras/${data.ids[i]}/asientos?q=paralizacion&tamanio=15`, { tags: { ep: 'busqueda_texto' } }), { ok: (r) => r.status === 200 })
   })
 }

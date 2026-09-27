@@ -1,8 +1,8 @@
 {
  "base": "http://localhost:8080",
- "fecha": "2026-09-26 10:33",
- "aprobados": 10,
- "total": 10,
+ "fecha": "2026-09-27 11:12",
+ "aprobados": 13,
+ "total": 13,
  "casos": [
   {
    "categoria": "A05 Configuracion de seguridad",
@@ -68,10 +68,31 @@
    "aprobado": true
   },
   {
+   "categoria": "A03 Inyeccion",
+   "caso": "Comodines SQL en la busqueda se tratan como texto",
+   "esperado": "menos resultados que el total",
+   "observado": "busqueda '%': 0 de 17100 obras",
+   "aprobado": true
+  },
+  {
+   "categoria": "A05 Configuracion de seguridad",
+   "caso": "Cabeceras de seguridad en recursos estaticos",
+   "esperado": "nosniff y X-Frame-Options",
+   "observado": "/assets/index-Dd3W2Aq9.js -> 200; faltan: []",
+   "aprobado": true
+  },
+  {
    "categoria": "A04 Diseno inseguro",
    "caso": "Limitacion de tasa por IP",
    "esperado": "429 al exceder el limite",
-   "observado": "primer 429 tras 52 solicitudes en 1.1 s",
+   "observado": "primer 429 tras 55 solicitudes en 1.3 s",
+   "aprobado": true
+  },
+  {
+   "categoria": "A07 Autenticacion",
+   "caso": "Limite de intentos de ingreso (fuerza bruta)",
+   "esperado": "429 antes de 20 intentos",
+   "observado": "primer 429 tras 5 intentos de ingreso fallidos",
    "aprobado": true
   }
  ]

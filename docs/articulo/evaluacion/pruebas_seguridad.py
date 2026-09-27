@@ -92,6 +92,30 @@ def limite_tasa():
     return f"primer 429 tras {len(codigos)} solicitudes en {time.time() - t0:.1f} s", 429 in codigos
 
 
+def comodines():
+    total = c.get("/api/v1/obras?tamanio=1").json()["total"]
+    r = c.get("/api/v1/obras", params={"q": "%", "tamanio": 1}).json()["total"]
+    return f"busqueda '%': {r} de {total} obras", r < total
+
+
+def cabeceras_estaticos():
+    import re
+
+    js = re.search(r'/assets/[^"]+\.js', c.get("/").text)
+    r = c.get(js.group(0))
+    req = ["x-content-type-options", "x-frame-options"]
+    return f"{js.group(0)} -> {r.status_code}; faltan: {[h for h in req if h not in r.headers]}", r.status_code == 200 and all(h in r.headers for h in req)
+
+
+def fuerza_bruta():
+    codigos = []
+    for i in range(20):
+        codigos.append(c.post("/api/v1/auth/login", json={"email": f"prueba{i}@example.com", "password": "x" * 12}).status_code)
+        if codigos[-1] == 429:
+            break
+    return f"primer 429 tras {len(codigos)} intentos de ingreso fallidos", 429 in codigos
+
+
 def metodos():
     r = c.delete("/api/v1/obras")
     return f"DELETE /obras -> {r.status_code}", r.status_code in (404, 405)
@@ -106,7 +130,10 @@ caso("A07 Autenticacion", "Credenciales invalidas", "400/401", login_invalido)
 caso("A04 Diseno inseguro", "Validacion de entrada (tamano, UUID, enumeraciones, longitud, correo)", "422", validacion)
 caso("A05 Configuracion de seguridad", "Errores sin trazas internas", "404 sin traceback", errores_sin_traza)
 caso("A05 Configuracion de seguridad", "Metodos HTTP no expuestos", "404/405", metodos)
+caso("A03 Inyeccion", "Comodines SQL en la busqueda se tratan como texto", "menos resultados que el total", comodines)
+caso("A05 Configuracion de seguridad", "Cabeceras de seguridad en recursos estaticos", "nosniff y X-Frame-Options", cabeceras_estaticos)
 caso("A04 Diseno inseguro", "Limitacion de tasa por IP", "429 al exceder el limite", limite_tasa)
+caso("A07 Autenticacion", "Limite de intentos de ingreso (fuerza bruta)", "429 antes de 20 intentos", fuerza_bruta)
 
 OUT.write_text(json.dumps({"base": BASE, "fecha": time.strftime("%Y-%m-%d %H:%M"), "aprobados": sum(x["aprobado"] for x in casos),
                            "total": len(casos), "casos": casos}, ensure_ascii=False, indent=1), encoding="utf-8")

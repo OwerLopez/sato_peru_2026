@@ -17,8 +17,8 @@ Tesis de Ingeniería de Sistemas — Universidad Nacional de San Agustín de Are
 | Propuesta | Un sistema de alerta temprana que ordena la cartera **activa** por riesgo a futuro, con explicación por obra y evidencia trazable a la fuente oficial. |
 | Datos | Exclusivamente datos abiertos oficiales: OECE (cuaderno de obra digital, valorizaciones, SEACE/CONOSCE), MEF (Invierte.pe, Formato 12-B, SIAF), Contraloría (INFOBRAS, reportes de obras paralizadas). Sin datos sintéticos. |
 | Modelos | (1) Alerta a 60 días de la causal del 80 % (contratos con cuaderno de obra digital); (2) riesgo de retraso significativo al término, al inicio y en seguimiento mensual (toda la cartera INFOBRAS, cualquier modalidad). |
-| Validación | Particiones temporales con purga, conjunto de prueba ciego posterior al entrenamiento, evaluación *rolling-origin*, bootstrap por obra, estabilidad por semilla y calibración por nivel de riesgo. |
-| Explicabilidad | TreeSHAP por predicción, traducido a lenguaje del dominio y enlazado a los registros que lo sustentan. |
+| Validación | Particiones temporales con purga, conjunto de prueba ciego posterior al entrenamiento, evaluación *rolling-origin*, bootstrap por obra, estabilidad por semilla y calibración por decil y por nivel de riesgo. |
+| Explicabilidad | TreeSHAP por predicción, traducido a frases en lenguaje claro a partir del valor real de cada variable, con la confiabilidad observada del nivel de riesgo y enlazado a los registros que lo sustentan. |
 | Alcance | Nacional (25 departamentos) con selector de ámbito; Arequipa como caso de estudio principal. |
 | Producto | API REST (FastAPI), interfaz web (React), informe técnico en PDF por obra, suscripción a resumen semanal por correo, sincronización mensual automática. |
 
@@ -33,6 +33,11 @@ Resultados principales (corte de datos 25-09-2026; detalle y cifras completas en
 * **Riesgo de retraso significativo al término (cartera INFOBRAS nacional):** ROC-AUC 0,733 al inicio de la obra y 0,753 con
   el seguimiento mensual de la ejecución SIAF (prueba 2024-2025, 25 063 observaciones de 13 161 obras). En prueba, el nivel
   ALTO del modelo de seguimiento agrupa obras con 91,6 % de retraso observado frente a 44,4 % en el nivel BAJO.
+* **Calibración:** en el backtest *as-of* (39 038 obra-mes) la probabilidad media estimada coincide con la tasa observada en los
+  diez deciles (20,0 % frente a 17,7 % en el decil superior); los niveles alto, medio y bajo tuvieron 17,6 %, 8,5 % y 3,1 % de
+  eventos frente a 5,6 % en promedio.
+* **Calidad de datos:** 29 chequeos automáticos tras cada carga (14 sin hallazgos, 5 hallazgos documentados, 10 descriptivos),
+  publicados en la pantalla «Datos y fuentes».
 * La señal es real pero moderada: el sistema sirve para **priorizar la supervisión**, no para determinar responsabilidades.
 
 ## 2. Problema nacional
@@ -80,8 +85,11 @@ del 30 % del plazo original (análisis de sensibilidad con 10 %, 50 % y 100 %).
   explicaciones, evidencia, simulaciones, cartera nacional, suscripciones, sincronizaciones y auditoría.
 * **API**: FastAPI con validación de entrada, límites de tasa, cabeceras de seguridad (CSP, X-Frame-Options), JWT para
   acciones de revisión y registro de auditoría. Documentación OpenAPI en `/api/docs`.
-* **Frontend**: React 19 + TypeScript + Vite + Tailwind; radar de obras activas, mapa, ficha por obra con explicación,
-  simulador de sensibilidad y modo auditoría de asientos, comparador regional, laboratorio de validación histórica.
+* **Frontend**: React 19 + TypeScript + Vite + Tailwind, Radix UI (diálogos, pestañas y ayudas accesibles), Lucide, Recharts y
+  Leaflet. Información por niveles: panorama ejecutivo, alertas del cuaderno y cartera nacional con filtros en la URL y
+  paginación, fichas de obra con resumen del riesgo y pestañas (factores y evidencia, evolución, asientos, datos, revisión),
+  búsqueda global, comparador, validación del modelo en lenguaje sencillo, datos y fuentes con auditoría de calidad, y guía
+  con glosario. Accesibilidad Lighthouse 100 en las páginas evaluadas.
 * **Despliegue**: Docker Compose (db, api, web, cargador, worker) y superposición de producción con Caddy (HTTPS automático)
   en [`deploy/`](deploy/). Guía en [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
@@ -128,8 +136,11 @@ del 30 % del plazo original (análisis de sensibilidad con 10 %, 50 % y 100 %).
 
 ### 5.5 Explicabilidad
 
-* **TreeSHAP** (Lundberg et al., 2020) por predicción; cada factor se describe en lenguaje del dominio y se vincula con la
-  evidencia que lo sustenta (asientos citados, meses SIAF, registros F12-B, historial del contratista).
+* **TreeSHAP** (Lundberg et al., 2020) por predicción; cada factor se describe en lenguaje claro a partir de su valor real
+  (`sato/serving/lenguaje.py`, sin nombres internos ni jerga) y se vincula con la evidencia que lo sustenta (asientos citados,
+  meses SIAF, registros F12-B, historial del contratista). El detalle técnico (variable y contribución) se muestra bajo demanda.
+* **Confiabilidad del nivel**: cada estimación muestra la tasa de eventos observada para su nivel en el backtest
+  (`/api/v1/modelo/calibracion`), para que la probabilidad no se lea como certeza.
 * **Simulador de sensibilidad**: recalcula la probabilidad cambiando una sola señal (por ejemplo, consultas pendientes en
   cero). Muestra de qué depende la estimación; no es una estimación causal del efecto de una intervención.
 

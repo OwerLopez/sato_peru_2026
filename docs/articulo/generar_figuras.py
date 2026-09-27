@@ -15,6 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch  # noqa: E402
+from matplotlib.ticker import FuncFormatter  # noqa: E402
 from sklearn.metrics import average_precision_score, precision_recall_curve, roc_auc_score, roc_curve  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,6 +30,11 @@ AZUL, NARANJA, GRIS = "#1f4e79", "#c55a11", "#7f7f7f"
 def dec(v: float, n: int = 3) -> str:
     """Numero con coma decimal (convencion del articulo en espanol)."""
     return f"{v:.{n}f}".replace(".", ",")
+
+
+def miles(n: int) -> str:
+    """Entero con espacio como separador de miles (convencion del articulo)."""
+    return f"{n:,}".replace(",", " ")
 
 
 def comas(fig, x: bool = False):
@@ -58,9 +64,9 @@ def fig_arquitectura():
     caja(1, 4, 20, 42, "Fuentes oficiales", "OECE: cuaderno de obra\ndigital (asientos,\nvalorizaciones),\nSEACE/CONOSCE\n\nMEF: Invierte.pe,\nFormato 12-B, SIAF\n\nContraloría: INFOBRAS,\nobras paralizadas", "#e8eef7")
     caja(26, 4, 22, 42, "Pipeline de datos", "ingest (SHA-256)\nstaging (Parquet)\nintegración: resolución\nde entidades (CUI, RUC)\nfeatures as-of obra-mes\nNLP: léxico, TF-IDF,\nSentence-BERT\n(DuckDB, Python)", "#eef5ea")
     caja(53, 26, 21, 20, "Modelado", "LightGBM A vs B\nvalidación temporal,\nrolling-origin, bootstrap\nTreeSHAP + evidencia", "#fdf1e6")
-    caja(53, 4, 21, 18, "Persistencia", "PostgreSQL 16\n(texto completo en\nespañol, pg_trgm)\nauditoría", "#f3eef8")
+    caja(53, 4, 21, 18, "Persistencia", "PostgreSQL 16\n(texto completo en\nespañol), auditoría\nde calidad de datos", "#f3eef8")
     caja(79, 26, 20, 20, "Servicio", "API REST FastAPI\nJWT, CSP, límites\nde tasa, informe PDF,\nsuscripciones", "#e8eef7")
-    caja(79, 4, 20, 18, "Interfaz", "React + TypeScript\nradar, mapa, ficha,\nsimulador, auditoría\n(nginx, Docker)", "#eef5ea")
+    caja(79, 4, 20, 18, "Interfaz", "React + TypeScript\npanorama, ficha,\nfactores en lenguaje\nclaro (nginx, Docker)", "#eef5ea")
     flecha(21.5, 25, 25.5, 25)
     flecha(48.5, 36, 52.5, 36)
     flecha(48.5, 13, 52.5, 13)
@@ -139,7 +145,7 @@ def fig_calibracion():
         bars = ax.bar(niv, v, color=["#70ad47", "#ffc000", "#c00000"])
         ax.axhline(100 * u["tasa_base_test"], ls="--", color="#404040", lw=0.8, label=f"Tasa base = {dec(100 * u['tasa_base_test'], 1)} %")
         for b, val, n in zip(bars, v, f, strict=True):
-            ax.text(b.get_x() + b.get_width() / 2, val + 1.5, f"{val:.1f} %\n(n = {n:,})".replace(",", " "), ha="center", fontsize=7.3)
+            ax.text(b.get_x() + b.get_width() / 2, val + 1.5, f"{dec(val, 1)} %\n(n = {miles(n)})", ha="center", fontsize=7.3)
         ax.set(title=tit, ylim=(0, 110), xlabel=f"Nivel de riesgo (test desde {u['periodo_test_desde']})")
         ax.legend(frameon=False, loc="upper left")
     axs[0].set_ylabel("Obras con retraso significativo observado (%)")
@@ -175,6 +181,38 @@ def fig_sensibilidad():
     plt.close(fig)
 
 
+def fig_calibracion_alerta():
+    """Confiabilidad de las probabilidades del modelo de alerta en el backtest as-of (predicciones ya contrastadas)."""
+    p = pd.read_parquet(ART / "release" / "predicciones.parquet")
+    b = p[(p["tipo"] == "backtest") & p["y_observado"].notna()].copy()
+    b["decil"] = pd.qcut(b["score"].rank(method="first"), 10, labels=False) + 1
+    d = b.groupby("decil").agg(prob=("score", "mean"), obs=("y_observado", "mean"), n=("score", "size"))
+    niv = b.groupby("nivel").agg(obs=("y_observado", "mean"), n=("score", "size")).reindex(["BAJO", "MEDIO", "ALTO"])
+    base = b["y_observado"].mean()
+    fig, axs = plt.subplots(1, 2, figsize=(7.0, 2.8))
+    ax = axs[0]
+    lim = 100 * max(d["prob"].max(), d["obs"].max()) * 1.1
+    ax.plot([0, lim], [0, lim], ls=":", color=GRIS, lw=0.8, label="Calibración perfecta")
+    ax.plot(100 * d["prob"], 100 * d["obs"], marker="o", ms=3.5, color=AZUL, lw=1.2, label="Deciles de riesgo")
+    ax.set(xlim=(0, lim), ylim=(0, lim), xlabel="Probabilidad estimada media (%)", ylabel="Atraso formal observado (%)",
+           title="(a) Probabilidad estimada frente a observada")
+    ax.legend(frameon=False, loc="upper left")
+    ax = axs[1]
+    bars = ax.bar(niv.index, 100 * niv["obs"], color=["#70ad47", "#ffc000", "#c00000"])
+    ax.axhline(100 * base, ls="--", color="#404040", lw=0.8, label=f"Promedio = {dec(100 * base, 1)} %")
+    for bar, val, n in zip(bars, 100 * niv["obs"], niv["n"], strict=True):
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 0.4, f"{dec(val, 1)} %\n(n = {miles(n)})", ha="center", fontsize=7.3)
+    ax.set(ylim=(0, 100 * niv["obs"].max() * 1.35), xlabel="Nivel de riesgo", ylabel="Atraso formal observado (%)", title="(b) Resultado real por nivel")
+    ax.set_xticks(range(3), ["Bajo", "Medio", "Alto"])
+    ax.legend(frameon=False, loc="upper left")
+    fig.tight_layout()
+    comas(fig)
+    axs[0].xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}".replace(".", ",")))
+    fig.savefig(OUT / "fig11_calibracion_alerta.png")
+    plt.close(fig)
+    print("calibracion alerta:", len(b), "obs; base", round(base, 4), "; deciles", d.round(4).to_dict("list"), "; niveles", niv.round(4).to_dict("list"))
+
+
 if __name__ == "__main__":
     fig_arquitectura()
     print("roc/pr", fig_roc_pr())
@@ -182,4 +220,5 @@ if __name__ == "__main__":
     fig_importancia()
     fig_calibracion()
     fig_sensibilidad()
+    fig_calibracion_alerta()
     print(sorted(p.name for p in OUT.glob("*.png")))

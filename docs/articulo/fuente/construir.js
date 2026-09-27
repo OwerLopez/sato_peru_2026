@@ -145,7 +145,7 @@ function tabla(b) {
   const num = b.numericas || []
   const filas = [
     new TableRow({ tableHeader: true, cantSplit: true, children: b.cab.map((c, i) => celda(c, { w: ws[i], head: true, size, keepNext: true, align: AlignmentType.CENTER })) }),
-    ...b.filas.map((f, r) => new TableRow({ cantSplit: true, children: f.map((c, i) => celda(c, { w: ws[i], alt: r % 2 === 1, size, keepNext: (b.filas.length <= 6 && r < b.filas.length - 1) || (!!b.nota && r === b.filas.length - 1), align: num.includes(i) ? AlignmentType.CENTER : AlignmentType.LEFT })) })),
+    ...b.filas.map((f, r) => new TableRow({ cantSplit: true, children: f.map((c, i) => celda(c, { w: ws[i], alt: r % 2 === 1, size, keepNext: (b.filas.length <= 8 && r < b.filas.length - 1) || (!!b.nota && r === b.filas.length - 1), align: num.includes(i) ? AlignmentType.CENTER : AlignmentType.LEFT })) })),
   ]
   const borde = { style: BorderStyle.SINGLE, size: 4, color: '8EAADB' }
   const out = [

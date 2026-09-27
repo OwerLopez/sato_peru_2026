@@ -107,3 +107,20 @@ es reproducible con los scripts de `research/` y los módulos de `sato/` (ver `d
 * **Motivo:** el entrenamiento ya era nacional; restringir la interfaz a Arequipa ocultaba 97 % de las obras evaluadas.
 * **Adoptada:** carga nacional en la base de datos; Arequipa se conserva como caso de estudio y en todas las métricas separadas.
 
+
+## D15. Explicaciones en lenguaje claro y confiabilidad observada en lugar de puntajes técnicos
+
+* **Motivo:** los factores se mostraban como descripciones técnicas («Riesgo inferido del vocabulario... (modelo TF-IDF)»,
+  «código INEI: 04», «Días para el fin programado: -45») y la probabilidad sola invitaba a leerla como certeza.
+* **Adoptada:** `sato/serving/lenguaje.py` traduce cada variable y su valor real a una frase; la interfaz acompaña cada
+  estimación con su nivel, las veces que supera la tasa promedio, su posición relativa en el corte y la tasa de eventos
+  observada para ese nivel en el backtest (`/modelo/calibracion`). El valor SHAP queda disponible bajo demanda.
+* **Evidencia:** las probabilidades del modelo de alerta están calibradas (deciles 1,5 % → 1,1 % y 20,0 % → 17,7 %), por lo
+  que mostrar la tasa observada no distorsiona la estimación.
+
+## D16. Auditoría de calidad de datos automática y sin corrección silenciosa
+
+* **Motivo:** los hallazgos de calidad estaban dispersos en reportes por fuente y no eran visibles para el usuario.
+* **Adoptada:** `sato/serving/calidad.py` ejecuta 29 chequeos sobre la base después de cada carga y los publica en
+  «Datos y fuentes». Los hallazgos se informan tal como están en las fuentes; no se imputan ni se ocultan.
+* **Resultado:** detectó un defecto real (1 800 obras activas sin explicación del riesgo de seguimiento), corregido con prueba de regresión.

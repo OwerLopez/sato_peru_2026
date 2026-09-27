@@ -31,6 +31,7 @@ métrica no existe.
 | Importancia por grupo (46,0 %, 28,5 %, 7,1 %) | `docs/research/importancia_grupos.csv` |
 | Desempeño por sector (ROC-AUC 0,752 a 0,803 en alerta; 0,720 a 0,783 en seguimiento) | `artifacts/experiments/desempeno_por_sector.json` (`python -m sato.models.por_sector`) |
 | Backtest (Tabla 8) | `artifacts/release/modelo_card.json` (`operacion_backtest_nacional`, `operacion_backtest_arequipa`) |
+| Calibración (Fig. 8): 39 038 obra-mes; deciles 1,5 % → 1,1 % y 20,0 % → 17,7 %; niveles 17,6 / 8,5 / 3,1 %; promedio 5,6 % | `artifacts/release/predicciones.parquet` (tipo `backtest`); `docs/articulo/generar_figuras.py` (`fig_calibracion_alerta`, imprime los valores); API `/api/v1/modelo/calibracion` |
 | Arequipa: 36 de 42 obras anticipadas, mediana 40,5 días | API `/api/v1/modelo` → `metricas.arequipa` |
 | Partición: entrenamiento 2024-06-30 a 2025-05-31; validación 2025-08-31 a 2025-10-31; prueba 2025-12-31 a 2026-06-30 | API `/api/v1/modelo` → `metricas.periodos` |
 
@@ -43,17 +44,19 @@ métrica no existe.
 | Sensibilidad 10/30/50/100 % y ablación del nombre | `artifacts/exante/resultados_y_{10,30,50,100}.json`, `resultados_y_30_sintexto.json` |
 | Calibración por nivel (Fig. 8) | `artifacts/cartera/cartera_card.json` (`umbrales`) |
 | 2 014 obras activas; 1 166 en nivel alto | tabla `sato.cartera_obra` / `cartera_riesgo` (API `/api/v1/cartera?estado=ACTIVA`) |
+| Defecto corregido: 1 800 de 2 014 obras activas sin explicación del riesgo de seguimiento; predicciones sin cambio (diferencia máxima 0,0) | commit `fix(cartera)`; comparación de `artifacts/cartera/riesgo.parquet` antes y después; chequeo `cartera_activa_sin_explicacion` = 0 |
 
 ## Prototipo
 
 | Afirmación | Evidencia | Reproducción |
 |---|---|---|
 | Latencias, throughput y errores (1, 20, 50 usuarios) | `evaluacion/k6_vus{1,20,50}.json` | `k6 run evaluacion/k6_carga.js` con `evaluacion/docker-compose.eval.yml` |
-| 10 de 10 casos de seguridad | `evaluacion/seguridad_resultados.json` | `python docs/articulo/evaluacion/pruebas_seguridad.py` |
+| 13 de 13 casos de seguridad | `evaluacion/seguridad_resultados.json` | `python docs/articulo/evaluacion/pruebas_seguridad.py` |
 | Primera ejecución de seguridad 9 de 10 (límite de tasa no efectivo por contador por worker) | registro de la sesión de evaluación; corrección en `docker/nginx.conf` | — |
-| Lighthouse 100/100/100 accesibilidad; 88/100/95 desempeño | `evaluacion/lighthouse_{radar,ficha,cartera}.json` | `npx lighthouse` (preset escritorio) |
-| Primera medición de accesibilidad 96/89/95 | registro de la sesión de evaluación; correcciones de contraste y etiquetas en `web/src` | — |
-| 43 pruebas aprobadas; 28 tablas; 6 662 MB; 32 endpoints; 14 rutas; carga en 557 s | `evaluacion/metricas_prototipo.json` | `python docs/articulo/evaluacion/consolidar_metricas.py` |
+| Lighthouse 100/100/100 accesibilidad; 93/99/99 desempeño; 100 buenas prácticas y SEO | `evaluacion/lighthouse_{panorama,ficha,cartera}.json` | `npx lighthouse` (preset escritorio) |
+| Primera medición de la interfaz rediseñada: accesibilidad 100/93/96 | registro de la sesión de evaluación; correcciones de contraste, ARIA y desplazamiento en `web/src` | — |
+| 56 pruebas aprobadas; 28 tablas; 6 439 MB; 36 endpoints; 15 rutas; carga en 634 s | `evaluacion/metricas_prototipo.json` | `python docs/articulo/evaluacion/consolidar_metricas.py` |
+| Auditoría de calidad: 29 chequeos (14 sin hallazgos, 5 con hallazgos, 10 descriptivos) y sus cifras | configuración `calidad_datos` (API `/api/v1/sistema/calidad`) | `python -m sato.serving.calidad` |
 | Operación: 2 970 obras con cuaderno evaluadas, 190 ALTO, 461 MEDIO, 4 698 activas distintas | API `/api/v1/resumen` (`cuaderno`, `consolidado`) | — |
 
 ## Referencias

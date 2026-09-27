@@ -29,7 +29,7 @@ seg = json.loads((EV / "seguridad_resultados.json").read_text(encoding="utf-8"))
 out["seguridad"] = {"aprobados": seg["aprobados"], "total": seg["total"], "fecha": seg["fecha"]}
 
 out["lighthouse"] = {}
-for n in ("radar", "ficha", "cartera"):
+for n in ("panorama", "ficha", "cartera"):
     r = json.loads((EV / f"lighthouse_{n}.json").read_text(encoding="utf-8"))
     out["lighthouse"][n] = {k: round(100 * v["score"]) for k, v in r["categories"].items()}
     out["lighthouse"][n]["lcp_s"] = round(r["audits"]["largest-contentful-paint"]["numericValue"] / 1000, 2)
@@ -57,7 +57,7 @@ for p in (ROOT / "sato" / "api" / "routes").glob("*.py"):
     rutas += len(re.findall(r"@router\.(get|post|put|delete|patch)\(", p.read_text(encoding="utf-8")))
 out["api_endpoints"] = rutas
 app = (ROOT / "web" / "src" / "App.tsx").read_text(encoding="utf-8")
-out["frontend_rutas"] = len(re.findall(r"<Route ", app))
+out["frontend_rutas"] = len(re.findall(r"<Route\s", app))
 dist = ROOT / "web" / "dist" / "assets"
 out["frontend_js_kb"] = round(sum(p.stat().st_size for p in dist.glob("*.js")) / 1024)
 (EV / "metricas_prototipo.json").write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
