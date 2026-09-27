@@ -37,7 +37,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=[settings.rate_lim
 app = FastAPI(
     title="SATO API",
     version=__version__,
-    description="Deteccion temprana de riesgo de atraso significativo en obras publicas de Arequipa (datos abiertos OECE, MEF, Contraloria).",
+    description="Alerta temprana de atraso en obras publicas del Peru con datos abiertos oficiales (OECE, MEF, Contraloria).",
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
     redoc_url=None,

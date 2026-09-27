@@ -161,3 +161,49 @@ def test_sincronizacion_y_suscripcion(client):
     assert s["proxima_sincronizacion"] and s["corte"]
     assert client.post("/api/v1/suscripciones", json={"email": "no-es-correo"}).status_code == 422
     assert "invalido" in client.get("/api/v1/suscripciones/confirmar", params={"token": "x" * 30}).text
+
+
+def test_busqueda_literal_no_usa_comodines(client):
+    # "%" y "_" escritos por el usuario se buscan como texto, no como comodines de SQL
+    todas = client.get("/api/v1/obras", params={"tamanio": 1}).json()["total"]
+    assert client.get("/api/v1/obras", params={"q": "%", "tamanio": 1}).json()["total"] < todas
+    assert client.get("/api/v1/cartera", params={"q": "_", "tamanio": 1}).json()["total"] < client.get("/api/v1/cartera", params={"tamanio": 1}).json()["total"]
+    assert client.get("/api/v1/obras", params={"q": "   ", "tamanio": 1}).json()["total"] == todas
+
+
+def test_filtros_se_leen_de_los_datos(client):
+    j = client.get("/api/v1/filtros").json()
+    assert j["sectores"] and j["tipos_obra"] and j["modalidades"]
+    s = db.rows("select distinct sector from sato.obra where sector is not null")
+    assert set(j["sectores"]) == {r["sector"] for r in s}
+
+
+def test_calibracion_con_datos_observados(client):
+    j = client.get("/api/v1/modelo/calibracion").json()
+    a = j["alerta_60d"]
+    assert a["n"] > 1000 and 0 < a["tasa_base"] < 1 and len(a["deciles"]) == 10
+    tasas = {n["nivel"]: n["tasa_observada"] for n in a["niveles"]}
+    assert tasas["ALTO"] > tasas["MEDIO"] > tasas["BAJO"]  # los niveles ordenan el riesgo real
+    assert sum(d["n"] for d in a["deciles"]) == a["n"]
+    obs = db.one("select avg(y_observado::float) t from sato.prediccion where tipo = 'backtest' and y_observado is not null and nivel = 'ALTO'")["t"]
+    assert abs(obs - tasas["ALTO"]) < 1e-9
+    assert set(j["cartera"]) == {"inicio", "seguimiento"}
+
+
+def test_auditoria_de_calidad(client):
+    j = client.get("/api/v1/sistema/calidad").json()
+    assert j and len(j["chequeos"]) >= 20
+    assert all(c["estado"] in ("OK", "AVISO", "INFO") for c in j["chequeos"])
+    por = {c["clave"]: c for c in j["chequeos"]}
+    assert por["obras"]["valor"] == db.one("select count(*) n from sato.obra")["n"]
+    assert por["vigentes_sin_explicacion"]["valor"] == 0
+    assert por["cartera_activa_sin_explicacion"]["valor"] == 0  # regresion: todas las obras activas tienen explicacion vigente
+
+
+def test_factores_en_lenguaje_claro(client):
+    # ninguna explicacion expone nombres internos de variables ni jerga de modelado
+    for tabla in ("explicacion", "cartera_explicacion"):
+        n = db.one(f"select count(*) n from sato.{tabla} where descripcion ~ '(TF-IDF|embeddings|codigo INEI|código INEI|_log_|txt_|asi_|ea_|hist_)'")["n"]
+        assert n == 0, tabla
+    ej = db.one("select descripcion from sato.explicacion where feature = 'ib_dias_para_fin_programado' and valor < 0 limit 1")
+    assert ej["descripcion"].startswith("El plazo original venció hace")

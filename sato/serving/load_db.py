@@ -22,6 +22,7 @@ import pandas as pd
 import psycopg
 
 from sato.config import ARTIFACTS, CURATED, RAW, ROOT, STAGING
+from sato.serving.lenguaje import GRUPOS_CLAROS, categoria, factor_cartera, factor_cuaderno
 from sato.serving.texto_es import acentuar
 
 log = logging.getLogger(__name__)
@@ -52,12 +53,21 @@ DEPARTAMENTO_CANONICO = {"P C DEL CALLAO": "CALLAO"}
 TEXTOS_UI = {"explicacion", "cartera_explicacion", "simulacion"}
 
 
+def textos_factores(df: pd.DataFrame, table: str) -> list[str]:
+    """Frase en lenguaje claro de cada factor a partir de la variable y su valor real (las categorias se leen de la descripcion original)."""
+    fn = factor_cuaderno if table == "explicacion" else factor_cartera
+    return [fn(f, v, categoria(d) if v is None else None) for f, v, d in zip(df["feature"], df["valor"], df["descripcion"], strict=True)]
+
+
 def copy_df(conn: psycopg.Connection, table: str, df: pd.DataFrame) -> None:
     if df.empty:
         return
     df = df.replace({np.nan: None})
-    if table in TEXTOS_UI:  # textos generados para la interfaz: ortografia con tildes
+    if table in TEXTOS_UI:  # textos generados para la interfaz: lenguaje claro y ortografia con tildes
         df = df.copy()
+        if table in ("explicacion", "cartera_explicacion"):
+            df["descripcion"] = textos_factores(df, table)
+            df["grupo"] = df["grupo"].map(lambda g: GRUPOS_CLAROS.get(acentuar(g), GRUPOS_CLAROS.get(g, g)))
         for c in ("descripcion", "grupo"):
             if c in df.columns:
                 df[c] = df[c].map(acentuar)

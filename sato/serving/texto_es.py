@@ -11,7 +11,7 @@ import re
 _PALABRAS = {
     "anio": "año", "Anio": "Año", "aprobacion": "aprobación", "administracion": "administración", "aplicacion": "aplicación",
     "Caracteristicas": "Características", "caracteristicas": "características", "climaticos": "climáticos", "codigo": "código",
-    "Dias": "Días", "dias": "días", "dia": "día", "Ejecucion": "Ejecución", "ejecucion": "ejecución", "fisicas": "físicas",
+    "Dias": "Días", "dias": "días", "dia": "día", "Ejecucion": "Ejecución", "ejecucion": "ejecución", "fisicas": "físicas", "historica": "histórica", "historico": "histórico",
     "Fraccion": "Fracción", "Funcion": "Función", "inversion": "inversión", "Metodo": "Método", "Minimo": "Mínimo",
     "ordenes": "órdenes", "paralizacion": "paralización", "participacion": "participación", "poblacion": "población",
     "Proporcion": "Proporción", "segun": "según", "Supervision": "Supervisión", "suspension": "suspensión", "tecnico": "técnico",

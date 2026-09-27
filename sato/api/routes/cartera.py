@@ -24,8 +24,9 @@ def listar(departamento: str | None = None, provincia: str | None = None, tipo_o
     where = """where (cast(:dep as text) is null or c.departamento = :dep) and (cast(:prov as text) is null or c.provincia = :prov)
       and (cast(:tipo as text) is null or c.tipo_obra = :tipo) and (cast(:mod as text) is null or c.modalidad = :mod)
       and (cast(:est as text) is null or c.estado_operativo = :est) and (cast(:nivel as text) is null or lr.nivel = :nivel)
-      and (cast(:q as text) is null or c.nombre ilike '%' || :q || '%' or c.cui = :q or c.codigo_infobras = :q or c.entidad ilike '%' || :q || '%')"""
-    p = dict(dep=departamento, prov=provincia, tipo=tipo_obra, mod=modalidad, est=estado, nivel=nivel, q=q)
+      and (cast(:q as text) is null or c.nombre ilike :qq escape '!' or c.cui = :q or c.codigo_infobras = :q or c.entidad ilike :qq escape '!')"""
+    q = q.strip() if q and q.strip() else None
+    p = dict(dep=departamento, prov=provincia, tipo=tipo_obra, mod=modalidad, est=estado, nivel=nivel, q=q, qq=db.patron(q))
     order = {"riesgo": "lr.score desc nulls last", "monto": "c.costo desc nulls last", "reciente": "c.fecha_inicio desc nulls last"}[orden]
     total = db.one(f"select count(*) n from cartera_obra c {LAST} {where}", **p)["n"]
     items = db.rows(f"""select c.codigo_infobras, c.nombre, c.departamento, c.provincia, c.distrito, c.tipo_obra, c.modalidad, c.costo,

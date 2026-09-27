@@ -121,10 +121,12 @@ def resumen(departamento: str | None = None):
     hist = db.rows(
         """select p.fecha_corte, count(*) evaluadas, count(*) filter (where p.alerta) alertas,
                   count(*) filter (where p.alerta and p.y_observado = 1) alertas_confirmadas,
-                  count(*) filter (where p.y_observado = 1) eventos_observados
+                  count(*) filter (where p.y_observado = 1) eventos_observados,
+                  count(*) filter (where p.y_observado is not null) observables
            from prediccion p join modelo m on m.id = p.modelo_id and m.activo join obra o on o.cuaderno_id = p.cuaderno_id
            where (cast(:dep as text) is null or o.departamento = :dep) group by 1 order by 1""", dep=dep)
-    return {"fecha_corte_cuaderno": corte, "departamento": dep, "cuaderno": cua, "cartera": car, "consolidado": con, "cartera_otros": otros,
+    card = (db.one("select valor->>'obs_end' f from configuracion where clave = 'modelo_cartera'") or {}).get("f")
+    return {"fecha_corte_cuaderno": corte, "fecha_corte_cartera": card, "departamento": dep, "cuaderno": cua, "cartera": car, "consolidado": con, "cartera_otros": otros,
             "distribucion": dist, "historico": hist}
 
 
@@ -165,3 +167,13 @@ def ambitos():
              select departamento from cartera_obra union all select departamento from obra) x
            where departamento is not null and departamento not like '%-%'
              and departamento not in ('NO APLICA', 'MULTIDEPARTAMENTAL') group by 1 order by 2 desc""")
+
+
+@router.get("/filtros")
+def filtros():
+    """Valores disponibles para los filtros de la interfaz, leidos de los datos cargados (sin listas fijas)."""
+    return {
+        "sectores": [r["v"] for r in db.rows("select sector v, count(*) n from obra where sector is not null group by 1 order by 2 desc")],
+        "tipos_obra": [r["v"] for r in db.rows("select tipo_obra v, count(*) n from cartera_obra where tipo_obra is not null group by 1 order by 2 desc")],
+        "modalidades": [r["v"] for r in db.rows("select modalidad v, count(*) n from cartera_obra where modalidad is not null group by 1 order by 2 desc")],
+    }

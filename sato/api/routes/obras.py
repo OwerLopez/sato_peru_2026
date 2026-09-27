@@ -38,8 +38,9 @@ def listar(
       and (cast(:estado as text) is null or o.estado_observado = :estado)
       and (cast(:nivel as text) is null or lp.nivel = :nivel)
       and (not :solo or lp.tipo = 'vigente')
-      and (cast(:q as text) is null or o.denominacion ilike '%' || :q || '%' or o.cui = :q or e.nombre ilike '%' || :q || '%')"""
-    p = dict(dep=departamento, prov=provincia, sector=sector, estado=estado, nivel=nivel, solo=solo_vigentes, q=q)
+      and (cast(:q as text) is null or o.denominacion ilike :qq escape '!' or o.cui = :q or e.nombre ilike :qq escape '!')"""
+    q = q.strip() if q and q.strip() else None
+    p = dict(dep=departamento, prov=provincia, sector=sector, estado=estado, nivel=nivel, solo=solo_vigentes, q=q, qq=db.patron(q))
     total = db.one(f"select count(*) n from obra o left join entidad e on e.ruc = o.entidad_ruc {LATEST} {where}", **p)["n"]
     items = db.rows(
         f"""select o.cuaderno_id, o.denominacion, o.departamento, o.provincia, o.distrito, o.sector, o.cui, o.estado_observado,

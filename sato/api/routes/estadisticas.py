@@ -101,3 +101,26 @@ def desempeno_sectores():
     """Desempeno de cada modelo por sector o tipo de obra en su prueba temporal (IC 95 % por bootstrap de obras)."""
     r = db.one("select valor from configuracion where clave = 'desempeno_sectores'")
     return r["valor"] if r else None
+
+
+@router.get("/modelo/calibracion")
+def calibracion():
+    """Confiabilidad de las probabilidades: tasa de atraso OBSERVADA por nivel y por decil de riesgo en el backtest as-of
+    (predicciones emitidas cada mes solo con informacion anterior y ya contrastadas con lo ocurrido)."""
+    base = db.one(
+        """select count(*) n, avg(y_observado::float) tasa_base, min(fecha_corte) desde, max(fecha_corte) hasta
+           from prediccion p join modelo m on m.id = p.modelo_id and m.activo where p.tipo = 'backtest' and p.y_observado is not null""")
+    niveles = db.rows(
+        """select nivel, count(*) n, avg(score) probabilidad_media, avg(y_observado::float) tasa_observada, sum(y_observado) eventos
+           from prediccion p join modelo m on m.id = p.modelo_id and m.activo where p.tipo = 'backtest' and p.y_observado is not null
+           group by 1 order by 3 desc""")
+    deciles = db.rows(
+        """select decil, count(*) n, avg(score) probabilidad_media, avg(y::float) tasa_observada from (
+             select score, y_observado y, ntile(10) over (order by score) decil
+             from prediccion p join modelo m on m.id = p.modelo_id and m.activo where p.tipo = 'backtest' and p.y_observado is not null) x
+           group by 1 order by 1""")
+    card = (db.one("select valor from configuracion where clave = 'modelo_cartera'") or {}).get("valor") or {}
+    cartera = {t: {"tasa_base": u.get("tasa_base_test"), "desde": u.get("periodo_test_desde"),
+                   "niveles": [{"nivel": n, **v} for n, v in (u.get("tasa_por_nivel_test") or {}).items()]}
+               for t, u in (card.get("umbrales") or {}).items()}
+    return {"alerta_60d": {**(base or {}), "niveles": niveles, "deciles": deciles}, "cartera": cartera}

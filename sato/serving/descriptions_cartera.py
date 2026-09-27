@@ -37,9 +37,11 @@ ACTOR = {"hist_entidad": "Entidad", "hist_contratista": "Contratista", "hist_pro
 
 
 def group_c(f: str) -> str:
+    from sato.serving.lenguaje import GRUPOS_CLAROS
+
     for p, g in GRUPOS:
         if f.startswith(p):
-            return g
+            return GRUPOS_CLAROS.get(g, g)
     return "Otros"
 
 
@@ -62,6 +64,15 @@ def _fmt(v, kind):
 
 
 def describe_c(f: str, v) -> str:
+    """Frase en lenguaje claro (ver sato.serving.lenguaje); `v` es numerico o, para variables categoricas, texto."""
+    from sato.serving.lenguaje import factor_cartera
+
+    if isinstance(v, str):
+        return factor_cartera(f, None, v)
+    return factor_cartera(f, v)
+
+
+def describe_c_tecnico(f: str, v) -> str:
     if f in TXT:
         name, kind = TXT[f]
         return f"{name}: {_fmt(v, kind)}"

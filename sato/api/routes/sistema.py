@@ -52,6 +52,13 @@ def sincronizacion():
     }
 
 
+@router.get("/sistema/calidad")
+def calidad():
+    """Auditoria de calidad de los datos cargados (cobertura, nulos, duplicados, consistencia, relaciones y frescura)."""
+    r = db.one("select valor from configuracion where clave = 'calidad_datos'")
+    return r["valor"] if r else None
+
+
 class SuscripcionIn(BaseModel):
     email: str = Field(..., max_length=254)
     departamento: str | None = Field(None, max_length=40)

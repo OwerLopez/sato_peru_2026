@@ -63,7 +63,7 @@ def _grafico(serie, umbral):
     d.add(lp)
     y = lp.y + lp.height * (100 * umbral) / 100
     d.add(Line(lp.x, y, lp.x + lp.width, y, strokeColor=COLOR["MEDIO"], strokeDashArray=[3, 2], strokeWidth=0.8))
-    d.add(String(lp.x + lp.width - 2.6 * cm, y + 2, "umbral de alerta", fontSize=6, fillColor=COLOR["MEDIO"]))
+    d.add(String(lp.x + lp.width - 2.6 * cm, y + 2, "umbral de riesgo alto", fontSize=6, fillColor=COLOR["MEDIO"]))
     d.add(String(0, lp.y + lp.height + 6, "Probabilidad estimada (%)", fontSize=7))
     return d
 
@@ -96,50 +96,56 @@ def informe_pdf(cuaderno_id: UUID, request: Request):
                        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#eef6fb")), ("FONTSIZE", (0, 0), (-1, -1), 8)])
     ahora = dt.datetime.now().strftime("%d/%m/%Y %H:%M")
     E = []
-    E.append(_p("SATO - Sistema de Alerta Temprana de Obras Publicas", ParagraphStyle("k", parent=small, textColor=colors.grey)))
-    E.append(_p("INFORME TECNICO DE ALERTA TEMPRANA DE ATRASO EN OBRA PUBLICA", h1))
-    E.append(_p(f"Generado el {ahora} con el modelo {m['version']} a partir de datos abiertos oficiales (OECE, MEF, Contraloria). "
-                "Documento tecnico de apoyo a la supervision: no es un documento oficial de la entidad contratante ni determina responsabilidades.", small))
+    E.append(_p("SATO - Sistema de Alerta Temprana de Obras Públicas", ParagraphStyle("k", parent=small, textColor=colors.grey)))
+    E.append(_p("INFORME TÉCNICO DE ALERTA TEMPRANA DE ATRASO EN OBRA PÚBLICA", h1))
+    E.append(_p(f"Generado el {ahora} con el modelo {m['version']} a partir de datos abiertos oficiales (OECE, MEF, Contraloría). "
+                "Documento técnico de apoyo a la supervisión: no es un documento oficial de la entidad contratante ni determina responsabilidades.", small))
     E.append(Spacer(1, 6))
-    E.append(_p("1. Identificacion de la obra", h2))
+    E.append(_p("1. Identificación de la obra", h2))
     filas = [["Obra", _p(o["denominacion"], body)], ["Entidad", _p(o.get("entidad"), body)], ["Contratista", _p(o.get("contratista"), body)],
-             ["Ubicacion", _p(f"{o.get('distrito')} / {o.get('provincia')} / {o.get('departamento')}", body)],
-             ["CUI (Invierte.pe)", _p(o.get("cui") or "no enlazado", body)], ["Id. contrato (SEACE)", _p(o.get("contrato_id"), body)],
-             ["Monto del contrato", _p(_soles(o.get("monto_contrato")), body)], ["Monto viable de la inversion", _p(_soles(o.get("monto_viable")), body)],
-             ["Plazo original", _p(f"{o['plazo_original_dias']} dias" if o.get("plazo_original_dias") else "-", body)],
+             ["Ubicación", _p(f"{o.get('distrito')} / {o.get('provincia')} / {o.get('departamento')}", body)],
+             ["Código Único de Inversión", _p(o.get("cui") or "no enlazado", body)], ["Id. contrato (SEACE)", _p(o.get("contrato_id"), body)],
+             ["Monto del contrato", _p(_soles(o.get("monto_contrato")), body)], ["Monto aprobado de la inversión", _p(_soles(o.get("monto_viable")), body)],
+             ["Plazo original", _p(f"{o['plazo_original_dias']} días" if o.get("plazo_original_dias") else "-", body)],
              ["Cuaderno de obra digital", _p(f"{o.get('n_asientos')} asientos entre {_fecha(o.get('primer_asiento'))} y {_fecha(o.get('ultimo_asiento'))}", body)]]
     t = Table(filas, colWidths=[4.2 * cm, 12.8 * cm])
     t.setStyle(grid)
     E.append(t)
 
-    E.append(_p("2. Riesgo estimado a 60 dias", h2))
+    E.append(_p("2. Riesgo estimado a 60 días", h2))
     nivel = ult["nivel"]
     msg = (f"Al corte del {_fecha(ult['fecha_corte'])} la obra no registra el evento formal de atraso. El modelo estima una probabilidad de "
-           f"{100 * ult['score']:.1f} % de que se registre la causal de demora injustificada (valorizacion acumulada ejecutada menor al 80 % de la "
-           f"programada; RLCE art. 203 / RLGCP art. 207) en los proximos {m['horizonte_dias']} dias si persisten los factores detectados. "
-           f"Nivel: {nivel}.")
+           f"{100 * ult['score']:.1f} % de que se registre la causal de demora injustificada (valorización acumulada ejecutada menor al 80 % de la "
+           f"programada; RLCE art. 203 / RLGCP art. 207) en los próximos {m['horizonte_dias']} días si persisten los factores detectados. "
+           f"Nivel de riesgo: {nivel.lower()}. Es una estimación para priorizar la supervisión, no una certeza.")
     if o.get("fecha_atraso"):
-        msg = f"La obra ya registro el evento formal de atraso el {_fecha(o['fecha_atraso'])}. Ultima estimacion disponible: {100 * ult['score']:.1f} % (nivel {nivel})."
+        msg = f"La obra ya registró el evento formal de atraso el {_fecha(o['fecha_atraso'])}. Última estimación disponible: {100 * ult['score']:.1f} % (nivel {nivel})."
     box = Table([[_p(msg, ParagraphStyle("m", parent=body, textColor=colors.white))]], colWidths=[17 * cm])
     box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), COLOR[nivel]), ("BOX", (0, 0), (-1, -1), 0, COLOR[nivel]),
                              ("LEFTPADDING", (0, 0), (-1, -1), 8), ("RIGHTPADDING", (0, 0), (-1, -1), 8), ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6)]))
     E.append(box)
+    cal = db.one("""select avg(y_observado::float) filter (where nivel = :n) tasa, avg(y_observado::float) base
+                    from prediccion where modelo_id = :m and tipo = 'backtest' and y_observado is not null""", n=nivel, m=m["id"])
+    if cal and cal["tasa"] is not None:
+        E.append(Spacer(1, 3))
+        E.append(_p(f"Confiabilidad del nivel: en la validación con datos pasados, {100 * cal['tasa']:.1f} % de las obras clasificadas en nivel "
+                    f"{nivel.lower()} registró el atraso formal dentro de {m['horizonte_dias']} días (promedio general: {100 * cal['base']:.1f} %).", small))
     E.append(Spacer(1, 4))
     E.append(_grafico(serie, m["umbral_alerta"]))
-    E.append(_p("Serie de estimaciones mensuales calculadas solo con la informacion disponible en cada fecha (reentrenamiento trimestral).", small))
+    E.append(_p("Serie de estimaciones mensuales calculadas solo con la información disponible en cada fecha (reentrenamiento trimestral).", small))
 
-    E.append(_p("3. Factores que explican la estimacion (TreeSHAP)", h2))
-    ft = [["Factor (valor observado)", "Grupo", "Efecto"]] + [[_p(f["descripcion"], small), _p(f["grupo"], small),
-                                                              _p(("aumenta" if f["shap"] > 0 else "reduce") + f" ({f['shap']:+.3f})", small)] for f in fact]
+    E.append(_p("3. Factores que explican la estimación", h2))
+    ft = [["Dato de la obra", "Grupo", "Efecto en el riesgo"]] + [[_p(f["descripcion"], small), _p(f["grupo"], small),
+                                                              _p(("lo eleva" if f["shap"] > 0 else "lo reduce") + f" ({f['shap']:+.3f})", small)] for f in fact]
     t = Table(ft, colWidths=[10.2 * cm, 4.3 * cm, 2.5 * cm], repeatRows=1)
     t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#cbd5e1")), ("BACKGROUND", (0, 0), (-1, 0), AZUL),
                            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white), ("FONTSIZE", (0, 0), (-1, -1), 7.5), ("VALIGN", (0, 0), (-1, -1), "TOP")]))
     E.append(t)
 
     if sims:
-        E.append(_p("4. Sensibilidad del modelo (escenarios)", h2))
-        E.append(_p("Recalculo de la probabilidad modificando una senal a la vez. Indica cuanto depende la estimacion de cada senal; "
-                    "no es una estimacion causal del efecto de una intervencion real.", small))
+        E.append(_p("4. Qué cambiaría la estimación (sensibilidad del modelo)", h2))
+        E.append(_p("Recálculo de la probabilidad modificando una señal a la vez. Indica cuánto depende la estimación de cada señal; "
+                    "no es una estimación causal del efecto de una intervención real.", small))
         st = [["Escenario", "Actual", "Escenario"]] + [[_p(s["descripcion"], small), f"{100 * s['score_base']:.1f} %", f"{100 * s['score_escenario']:.1f} %"] for s in sims]
         t = Table(st, colWidths=[12 * cm, 2.5 * cm, 2.5 * cm])
         t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#cbd5e1")), ("BACKGROUND", (0, 0), (-1, 0), AZUL),
@@ -150,19 +156,19 @@ def informe_pdf(cuaderno_id: UUID, request: Request):
     if not evid:
         E.append(_p("No hay registros asociados a los factores que aumentan el riesgo.", small))
     for e in evid:
-        cab = (f"Asiento N. {e['nro_asiento']} - {e['tipo']} - {e.get('rol') or ''} - {_fecha(e['fecha'])} - fuente: {e.get('archivo_fuente') or ''}"
+        cab = (f"Asiento N.° {e['nro_asiento']} - {e['tipo']} - {e.get('rol') or ''} - {_fecha(e['fecha'])} - fuente: {e.get('archivo_fuente') or ''}"
                if e["fuente"] == "ASIENTO" else f"{e['fuente']} - {_fecha(e['fecha'])}")
         E.append(KeepTogether([_p(cab, ParagraphStyle("c", parent=small, textColor=AZUL)), _p(e["extracto"], small), Spacer(1, 3)]))
 
     met = m["metricas"].get("arequipa", {})
     nac = m["metricas"].get("nacional", {})
     E.append(_p("6. Marco normativo y validez del modelo", h2))
-    E.append(_p("Evento: primer asiento del cuaderno de obra digital de tipo 'Valorizacion acumulada ejecutada menor al 80% del monto acumulado "
+    E.append(_p("Evento: primer asiento del cuaderno de obra digital de tipo 'Valorización acumulada ejecutada menor al 80 % del monto acumulado "
                 "programado' o 'Calendario acelerado de obra' (Reglamento de la Ley 30225, D.S. 344-2018-EF, art. 203; Reglamento de la Ley 32069, "
                 "D.S. 009-2025-EF, art. 207). "
-                f"Desempeno en el periodo de prueba temporal ciego: ROC-AUC {nac.get('roc_auc', float('nan')):.3f} (nacional) y "
+                f"Desempeño en el periodo de prueba temporal ciego: ROC-AUC {nac.get('roc_auc', float('nan')):.3f} (nacional) y "
                 f"{met.get('roc_auc', float('nan')):.3f} (Arequipa); PR-AUC {nac.get('pr_auc', float('nan')):.3f} (nacional) frente a una prevalencia de "
-                f"{nac.get('prevalencia', float('nan')):.3f}. Las estimaciones son probabilisticas y sirven para priorizar la supervision.", small))
+                f"{nac.get('prevalencia', float('nan')):.3f}. Las estimaciones son probabilísticas y sirven para priorizar la supervisión.", small))
     audit(request, "INFORME_PDF", None, f"obra:{oid}")
 
     buf = io.BytesIO()
@@ -171,12 +177,12 @@ def informe_pdf(cuaderno_id: UUID, request: Request):
         canvas.saveState()
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(colors.grey)
-        canvas.drawString(2 * cm, 1.2 * cm, f"SATO - Informe tecnico de alerta temprana - {oid}")
-        canvas.drawRightString(A4[0] - 2 * cm, 1.2 * cm, f"Pagina {doc.page}")
+        canvas.drawString(2 * cm, 1.2 * cm, f"SATO - Informe técnico de alerta temprana - {oid}")
+        canvas.drawRightString(A4[0] - 2 * cm, 1.2 * cm, f"Página {doc.page}")
         canvas.restoreState()
 
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=2 * cm, rightMargin=2 * cm, topMargin=1.8 * cm, bottomMargin=1.8 * cm,
-                            title="Informe tecnico de alerta temprana", author="SATO")
+                            title="Informe técnico de alerta temprana", author="SATO")
     doc.build(E, onFirstPage=pie, onLaterPages=pie)
     buf.seek(0)
     return StreamingResponse(buf, media_type="application/pdf",

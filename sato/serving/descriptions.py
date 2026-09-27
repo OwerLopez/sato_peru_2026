@@ -37,9 +37,11 @@ GROUPS = [
 
 
 def group_of(f: str) -> str:
+    from sato.serving.lenguaje import GRUPOS_CLAROS
+
     for p, g in GROUPS:
         if f.startswith(p):
-            return g
+            return GRUPOS_CLAROS.get(g, g)
     return "Otros"
 
 
@@ -52,6 +54,15 @@ def _pct(v):
 
 
 def describe(f: str, v) -> str:
+    """Frase en lenguaje claro (ver sato.serving.lenguaje); `v` es numerico o, para variables categoricas, texto."""
+    from sato.serving.lenguaje import factor_cuaderno
+
+    if isinstance(v, str):
+        return factor_cuaderno(f, None, v)
+    return factor_cuaderno(f, v)
+
+
+def describe_tecnico(f: str, v) -> str:
     m = re.match(r"asi_(cum|90d)_(.+)", f)
     if m:
         per = "acumulados" if m.group(1) == "cum" else "en los ultimos 90 dias"

@@ -104,6 +104,6 @@ class TestEvaluacion:
 
 
 def test_descripciones_legibles():
-    assert "suspensiones del plazo" in describe("asi_90d_suspension_plazo", 2.0)
-    assert "lluvias" in describe("txt_lx_clima", 0.25) and "25%" in describe("txt_lx_clima", 0.25)
-    assert group_of("siaf_dev_3m") == "Ejecucion financiera (SIAF)"
+    assert describe("asi_90d_suspension_plazo", 2.0) == "2 asientos de suspensión del plazo en los últimos 90 días"
+    assert "lluvias" in describe("txt_lx_clima", 0.25) and "25 %" in describe("txt_lx_clima", 0.25)
+    assert group_of("siaf_dev_3m") == "Ejecución del gasto (SIAF)"
