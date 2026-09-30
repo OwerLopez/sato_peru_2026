@@ -18,14 +18,16 @@ const FUENTE = 'Calibri'
 const ANCHO = 12240 - 2 * 1300
 
 function runs(texto, base = {}) {
+  texto = texto.replace(/`/g, "")
   const out = []
-  const rx = /(\*\*[^*]+\*\*|https?:\/\/[^\s)]+?(?=[.,;:]?(\s|$)))/g
+  const rx = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|https?:\/\/[^\s]+?(?=[.,;:]?(\s|$)))/g
   let last = 0
   let m
   while ((m = rx.exec(texto))) {
     if (m.index > last) out.push(new TextRun({ text: texto.slice(last, m.index), font: FUENTE, ...base }))
     const s = m[0]
     if (s.startsWith('**')) out.push(new TextRun({ text: s.slice(2, -2), bold: true, font: FUENTE, ...base }))
+    else if (s.startsWith('*')) out.push(new TextRun({ text: s.slice(1, -1), italics: true, font: FUENTE, ...base }))
     else out.push(new ExternalHyperlink({ link: s, children: [new TextRun({ text: s, font: FUENTE, ...base, color: '0563C1', underline: {} })] }))
     last = m.index + s.length
   }
@@ -136,11 +138,11 @@ hijos.push(guion([
 ]))
 hijos.push(H3('Puntos técnicos para demostrar dominio'))
 hijos.push(...V([
-  '**Evento a predecir definido por la norma, no inventado:** el primer asiento que aplica la regla del 80 % (valorización acumulada ejecutada menor al 80 % de la programada), según el RLCE art. 203 y el RLGCP art. 207. Es un hecho legal, fechado y verificable por cualquiera.',
+  '**Evento a predecir definido por la norma, no inventado:** el primer asiento que aplica la regla del 80 % (valorización acumulada ejecutada menor al 80 % de la programada), según el RLCE art. 203 y el RLGCP art. 207 (reglamentos de las leyes de contrataciones del Estado, anterior y vigente). Es un hecho legal, fechado y verificable por cualquiera.',
   '**Relevancia del evento:** las obras que lo registran aparecen luego como paralizadas con una frecuencia de 3,3 % frente a 1,0 % de las demás, y en 45 de 53 casos el atraso precede a la paralización.',
   '**Magnitud:** de las 139 159 obras de INFOBRAS, el 51,2 % de las que tienen resultado conocido terminó con un retraso mayor al 30 % del plazo.',
   '**Pregunta de investigación:** ¿el texto del cuaderno mejora la anticipación respecto de los datos estructurados? **Hipótesis H1:** sí, y la mejora es estadísticamente distinta de cero.',
-  '**Brecha:** los estudios previos usan encuestas a expertos o pocos proyectos y validan con particiones aleatorias; ninguno usa registros diarios de ejecución de todo un país con validación temporal.',
+  '**Brecha:** los estudios previos usan encuestas a expertos o pocos proyectos y validan con particiones aleatorias (mezclando pasado y futuro); ninguno usa registros diarios de ejecución de todo un país con validación temporal. Los sistemas públicos similares de otros países (Brasil, Ucrania, Colombia) vigilan licitaciones y contratos, no la ejecución de la obra: ver la sección 9.',
 ]))
 hijos.push(caja('Frase para impresionar', ['«No inventamos qué es un atraso: usamos la misma regla que aplica la ley, así cualquier auditor puede reproducir nuestra etiqueta con los archivos públicos».']))
 hijos.push(P('**Transición:** «Para lograrlo, primero había que reunir datos que el Estado publica en portales distintos y que no conversan entre sí. Eso lo explica [Integrante 2]».', { italics: true }))
@@ -153,7 +155,7 @@ hijos.push(P('Mostrar que el mayor reto de ingeniería fue convertir datos públ
 hijos.push(guion([
   'Trabajamos con datos abiertos oficiales de tres instituciones: el OECE, que publica el cuaderno de obra digital y los contratos; el MEF, con el banco de inversiones y la ejecución presupuestal mes a mes; y la Contraloría, con INFOBRAS y los reportes de obras paralizadas.',
   'Son 2,73 millones de asientos del cuaderno, 139 159 obras de INFOBRAS y archivos de gasto de hasta 680 MB comprimidos. No usamos ningún dato privado ni inventado.',
-  'El reto: el cuaderno no trae el código único de inversión, así que no se puede unir directamente con el MEF. Lo resolvimos con técnicas de resolución de entidades y logramos 99,1 % de precisión en 10 075 pares de prueba.',
+  'El reto: el cuaderno no trae el código único de inversión, así que no se puede unir directamente con el MEF. Lo resolvimos con técnicas de resolución de entidades (reconocer que dos registros de fuentes distintas son la misma obra) y logramos 99,1 % de precisión en 10 075 pares de prueba.',
   'Y cuidamos algo clave: en cada mes solo usamos información disponible hasta esa fecha. Si el modelo viera el futuro, sus resultados serían falsos en la práctica.',
 ]))
 hijos.push(H3('Puntos técnicos'))
@@ -167,10 +169,10 @@ hijos.push(tabla(['Fuente', 'Institución', 'Uso en el sistema'], [
 ], [38, 16, 46]))
 hijos.push(esp())
 hijos.push(...V([
-  '**Descarga reproducible:** cada archivo se registra con su URL, tamaño y huella **SHA-256**; el corte de datos quedó congelado al 25 de septiembre de 2026. Detectamos que un archivo oficial cambió de 10 988 a 9 666 filas el mismo día: por eso la huella es indispensable.',
-  '**Procesamiento:** Python 3.12, pandas y **DuckDB** para procesar archivos de hasta 10 GB sin un servidor de datos.',
-  '**Resolución de entidades:** expresiones regulares + similitud **TF-IDF de n-gramas de caracteres**, bloqueada por departamento y calibrada con 10 075 pares con código explícito: **99,1 % de precisión**; enlazó el 90,2 % de los cuadernos de Arequipa.',
-  '**Panel obra-mes «as-of»:** 12 369 obras y 58 509 observaciones; en cada fin de mes solo se usan registros con fecha anterior, el SIAF hasta el mes previo y el historial de los actores calculado a esa fecha. Hay **pruebas automáticas de no fuga** que recalculan las variables sobre los datos reales.',
+  '**Descarga reproducible:** cada archivo se registra con su URL, tamaño y huella **SHA-256** (huella digital única del archivo: si cambia un solo byte, cambia la huella); el corte de datos quedó congelado al 25 de septiembre de 2026. Detectamos que un archivo oficial cambió de 10 988 a 9 666 filas el mismo día: por eso la huella es indispensable.',
+  '**Procesamiento:** Python 3.12, pandas y **DuckDB** (base de datos analítica que procesa archivos grandes directamente, sin instalar un servidor) para procesar archivos de hasta 10 GB sin un servidor de datos.',
+  '**Resolución de entidades:** expresiones regulares + similitud **TF-IDF de n-gramas de caracteres** (compara nombres por fragmentos de letras para reconocer la misma obra escrita de forma distinta), bloqueada por departamento y calibrada con 10 075 pares con código explícito: **99,1 % de precisión**; enlazó el 90,2 % de los cuadernos de Arequipa.',
+  '**Panel obra-mes «as-of»** (cada fila es una obra en un mes, calculada solo con lo que se sabía hasta ese mes)**:** 12 369 obras y 58 509 observaciones; en cada fin de mes solo se usan registros con fecha anterior, el SIAF hasta el mes previo y el historial de los actores calculado a esa fecha. Hay **pruebas automáticas de no fuga** que recalculan las variables sobre los datos reales.',
   '**Calidad de datos:** una auditoría automática de 32 chequeos (11 críticos, 11 de aviso y 10 informativos). En la base vigente: 17 sin hallazgos, 5 hallazgos propios de las fuentes y **0 fallas críticas**. Los hallazgos se muestran en la interfaz tal como están, sin maquillarlos.',
 ]))
 hijos.push(caja('Frase para impresionar', ['«El 80 % del trabajo de un sistema de IA serio está en los datos: integramos cinco fuentes oficiales que no comparten identificadores y lo medimos, no lo supusimos: 99,1 % de precisión de enlace».']))
@@ -183,19 +185,19 @@ hijos.push(H3('Objetivo de su parte'))
 hijos.push(P('Explicar el modelo de aprendizaje automático, el uso del lenguaje natural y demostrar con evidencia estadística que funciona, sin exagerar.'))
 hijos.push(guion([
   'Comparamos dos modelos. El modelo A usa solo datos estructurados: cuántos asientos hay de cada tipo, el ritmo de registro, el gasto, el contrato. El modelo B agrega lo que dicen los asientos: el texto escrito por el residente y el supervisor.',
-  'Para leer el texto usamos procesamiento de lenguaje natural: un diccionario de 16 categorías de causas de atraso, TF-IDF y un modelo de lenguaje multilingüe, Sentence-BERT, que convierte cada texto en un vector numérico.',
-  'Lo evaluamos como se usaría en la vida real: entrenamos con el pasado y probamos en meses futuros que el modelo nunca vio. El texto mejoró el ROC-AUC de 0,742 a 0,774, y esa mejora es estadísticamente significativa a nivel nacional.',
+  'Para leer el texto usamos procesamiento de lenguaje natural: un diccionario de 16 categorías de causas de atraso, TF-IDF (técnica que pondera cuánto importa cada palabra en un texto) y un modelo de lenguaje multilingüe, Sentence-BERT, que convierte cada texto en un vector numérico.',
+  'Lo evaluamos como se usaría en la vida real: entrenamos con el pasado y probamos en meses futuros que el modelo nunca vio. El texto mejoró el ROC-AUC (medida de 0,5 a 1 de qué tan bien ordena las obras por riesgo; 0,5 es azar) de 0,742 a 0,774, y esa mejora es estadísticamente significativa a nivel nacional.',
   'En la práctica: si un supervisor revisa solo el 10 % de obras que marcamos en riesgo alto, encuentra el 32 % de los atrasos, con una precisión de 17,6 % frente a 5,6 % si eligiera al azar. Es decir, 3,2 veces mejor.',
   'Y cada alerta se explica: con TreeSHAP mostramos qué datos de la obra subieron o bajaron el riesgo, en lenguaje claro y con el asiento oficial que lo respalda.',
 ]))
 hijos.push(H3('Puntos técnicos'))
 hijos.push(...V([
-  '**Algoritmo:** **LightGBM** (gradient boosting de árboles), elegido por su desempeño con datos tabulares y valores faltantes. Se comparó con regresión logística, bosque aleatorio y XGBoost: con las mismas variables obtienen resultados similares, lo que prueba que la ganancia viene de la **información añadida** (el texto) y no del algoritmo.',
-  '**Variables:** 84 estructuradas en el modelo A; el modelo B añade léxico de 16 categorías, LSA, embeddings **Sentence-BERT** (paraphrase-multilingual-MiniLM-L12-v2), puntuaciones supervisadas de texto y extracción de avances reportados.',
-  '**Validación temporal ciega:** entrenamiento de junio de 2024 a mayo de 2025, validación de agosto a octubre de 2025 y prueba de diciembre de 2025 a junio de 2026, con **purga de 60 días** entre bloques. Además, **rolling-origin** con 4 orígenes, **5 semillas** y **bootstrap** de 1 000 remuestreos por obra.',
-  '**Métricas:** con eventos raros (prevalencia 5,0 %) la exactitud engaña; por eso usamos **PR-AUC** (principal) y **ROC-AUC**.',
-  '**Calibración:** las probabilidades se pueden leer literalmente. En el grupo de mayor riesgo el modelo estimó 20,0 % y ocurrió 17,7 %. Por nivel: ALTO 17,6 %, MEDIO 8,5 %, BAJO 3,1 %.',
-  '**Explicabilidad:** **TreeSHAP** (valores de Shapley exactos para árboles). El contenido de los asientos aporta el 46,0 % de la importancia del modelo B.',
+  '**Algoritmo:** **LightGBM** (algoritmo que combina cientos de árboles de decisión pequeños, cada uno corrigiendo los errores del anterior; técnica llamada *gradient boosting*), elegido por su desempeño con datos tabulares y valores faltantes. Se comparó con regresión logística, bosque aleatorio y XGBoost: con las mismas variables obtienen resultados similares, lo que prueba que la ganancia viene de la **información añadida** (el texto) y no del algoritmo.',
+  '**Variables:** 84 estructuradas en el modelo A; el modelo B añade léxico de 16 categorías, LSA (análisis semántico latente: resume miles de palabras en pocos temas), embeddings (vectores numéricos que representan el significado de un texto) **Sentence-BERT** (paraphrase-multilingual-MiniLM-L12-v2), puntuaciones supervisadas de texto y extracción de avances reportados.',
+  '**Validación temporal ciega:** entrenamiento de junio de 2024 a mayo de 2025, validación de agosto a octubre de 2025 y prueba de diciembre de 2025 a junio de 2026, con **purga de 60 días** (un espacio vacío entre bloques para que ningún evento se filtre de un periodo a otro) entre bloques. Además, **rolling-origin** (repetir la evaluación desde varios puntos de partida en el tiempo) con 4 orígenes, **5 semillas** y **bootstrap** (remuestrear los datos muchas veces para calcular intervalos de confianza) de 1 000 remuestreos por obra.',
+  '**Métricas:** con eventos raros (prevalencia 5,0 %) la exactitud engaña; por eso usamos **PR-AUC** (mide qué tan bien encuentra los casos raros; es la métrica principal) y **ROC-AUC**.',
+  '**Calibración** (que la probabilidad estimada coincida con lo que realmente ocurre)**:** las probabilidades se pueden leer literalmente. En el grupo de mayor riesgo el modelo estimó 20,0 % y ocurrió 17,7 %. Por nivel: ALTO 17,6 %, MEDIO 8,5 %, BAJO 3,1 %.',
+  '**Explicabilidad:** **TreeSHAP** (método basado en teoría de juegos que reparte la predicción entre los datos de la obra para explicar cuánto aportó cada uno). El contenido de los asientos aporta el 46,0 % de la importancia del modelo B.',
   '**Segundo modelo (cartera INFOBRAS):** estima el riesgo de terminar con retraso mayor al 30 % del plazo para 139 159 obras de todas las modalidades: ROC-AUC 0,733 al inicio y 0,753 con el seguimiento mensual del gasto; en el nivel ALTO se atrasó el 91,6 % frente a 44,4 % en el nivel BAJO.',
 ]))
 hijos.push(tabla(['Resultado (prueba temporal nacional, 16 756 observaciones)', 'Modelo A', 'Modelo B'], [
@@ -220,7 +222,7 @@ hijos.push(H1('7. Integrante 4: ingeniería del sistema (4 min)'))
 hijos.push(H3('Objetivo de su parte'))
 hijos.push(P('Demostrar que SATO no es un notebook de ciencia de datos, sino un sistema de software completo, probado y preparado para producción.'))
 hijos.push(guion([
-  'SATO es un sistema web completo. Tiene un pipeline que descarga y procesa los datos, una base de datos PostgreSQL, una API REST hecha con FastAPI y una interfaz web en React con TypeScript. Todo corre en contenedores Docker.',
+  'SATO es un sistema web completo. Tiene un pipeline que descarga y procesa los datos, una base de datos PostgreSQL, una API REST (servicio web que entrega los datos a la interfaz en formato JSON) hecha con FastAPI y una interfaz web en React con TypeScript. Todo corre en contenedores Docker (paquetes que incluyen el programa y todo lo que necesita, para que funcione igual en cualquier equipo).',
   'Lo diseñamos como un sistema de producción: antes de publicar datos nuevos, una compuerta de integridad ejecuta 32 chequeos y rechaza la carga si algo crítico falla. Durante una recarga completa de 26,8 minutos, el sistema siguió respondiendo: 417 de 417 consultas sin error.',
   'Funciona solo: cada mes se sincroniza con las fuentes, reintenta si falla, avisa por correo y vigila si los datos nuevos se alejan de los de entrenamiento. Hoy detecta 8 variables con cambio grande y recomienda reentrenar: el sistema lo dice en lugar de ocultarlo.',
   'Y lo probamos: 192 pruebas automatizadas aprobadas, 13 de 13 pruebas de seguridad según OWASP y 100 de 100 en accesibilidad con Lighthouse.',
@@ -238,15 +240,15 @@ hijos.push(tabla(['Capa', 'Tecnologías', 'Por qué'], [
 hijos.push(H3('Puntos técnicos'))
 hijos.push(...V([
   '**Arquitectura por capas:** fuentes oficiales → pipeline (ingesta, normalización, integración, variables, modelos) → compuerta de integridad → PostgreSQL → API → nginx → interfaz. Un proceso programado (worker) cierra el ciclo.',
-  '**Recarga sin cortes:** se reemplazan filas dentro de una transacción en vez de vaciar tablas, y las vistas materializadas se refrescan de forma concurrente. Un error no deja datos a medias (reversión transaccional).',
+  '**Recarga sin cortes:** se reemplazan filas dentro de una transacción en vez de vaciar tablas, y las vistas materializadas (resultados de consultas guardados para responder más rápido) se refrescan de forma concurrente. Un error no deja datos a medias (reversión transaccional).',
   '**Operación autónoma:** candado de base de datos para impedir dos sincronizaciones a la vez, reintentos con espera exponencial, recuperación de ejecuciones interrumpidas, latido del servicio y avisos por correo.',
-  '**Monitoreo del modelo (MLOps):** deriva de cada variable con **PSI** (índice de estabilidad poblacional) y detección de anomalías en la proporción de obras en riesgo alto con **puntuación z robusta** (mediana y MAD, umbral 3,5).',
-  '**Seguridad en profundidad:** límites de tasa por IP en nginx, máximo de intentos de ingreso por cuenta (5) y por IP (20) en 15 minutos con tiempo de respuesta constante, JWT con emisor y vigencia, rol leído de la base, cabeceras de seguridad (CSP, X-Frame-Options), errores sin trazas internas y tiempos máximos por consulta. **13 de 13 casos OWASP** aprobados.',
-  '**Rendimiento:** con 20 usuarios concurrentes, p95 de 167,8 ms y 266,4 solicitudes por segundo sin errores (k6).',
+  '**Monitoreo del modelo (MLOps):** deriva de cada variable con **PSI** (índice de estabilidad poblacional: mide cuánto cambió cada variable respecto de los datos de entrenamiento) y detección de anomalías en la proporción de obras en riesgo alto con **puntuación z robusta** (mide qué tan lejos de lo normal está un valor usando la mediana, que no se deja arrastrar por casos extremos; umbral 3,5).',
+  '**Seguridad en profundidad:** límites de tasa por IP en nginx, máximo de intentos de ingreso por cuenta (5) y por IP (20) en 15 minutos con tiempo de respuesta constante, JWT (credencial digital firmada que identifica al usuario en cada solicitud) con emisor y vigencia, rol leído de la base, cabeceras de seguridad (CSP, X-Frame-Options), errores sin trazas internas y tiempos máximos por consulta. **13 de 13 casos OWASP** (estándar internacional de los riesgos de seguridad web más importantes) aprobados.',
+  '**Rendimiento:** con 20 usuarios concurrentes, p95 de 167,8 ms (el 95 % de las respuestas tardó menos de 167,8 milisegundos) y 266,4 solicitudes por segundo sin errores (medido con k6, herramienta de pruebas de carga).',
   '**Pruebas:** 192 pruebas del backend (unitarias, API, contratos, base de datos, seguridad, concurrencia y 36 de extremo a extremo en navegador, incluidas pantallas de teléfono de 375 px) y 12 de la interfaz, **todas aprobadas**.',
   '**Diseño accesible:** sistema de diseño institucional (tipografías Lexend y Source Sans 3, contraste AAA, colores de riesgo con ícono de forma distinta, paleta validada para daltonismo). Lighthouse: accesibilidad 100 en las páginas evaluadas; rendimiento 94, 99 y 100.',
 ]))
-hijos.push(caja('Frase para impresionar', ['«El sistema se vigila a sí mismo: si los datos cambian y el modelo empieza a envejecer, lo detecta y lo muestra públicamente. Eso es MLOps aplicado, no solo un modelo entrenado una vez».']))
+hijos.push(caja('Frase para impresionar', ['«El sistema se vigila a sí mismo: si los datos cambian y el modelo empieza a envejecer, lo detecta y lo muestra públicamente. Eso es MLOps (prácticas para operar y vigilar modelos de aprendizaje automático en producción) aplicado, no solo un modelo entrenado una vez».']))
 hijos.push(P('**Transición:** «Ahora les mostramos que todo esto funciona en vivo. [Integrante 5] hace la demostración».', { italics: true }))
 
 // ---------------------------------------------------------------- integrante 5
@@ -292,7 +294,65 @@ hijos.push(caja('Frase final', ['«Los datos para prevenir ya son públicos. SAT
 
 // ---------------------------------------------------------------- preguntas
 hijos.push(salto())
-hijos.push(H1('9. Preguntas probables del docente y cómo responder'))
+hijos.push(H1('9. Trabajos y sistemas similares, y qué nos diferencia'))
+hijos.push(P('Existen trabajos que predicen el atraso de obras con aprendizaje automático (ML, *machine learning*: programas que aprenden patrones a partir de datos) y sistemas públicos que usan analítica o inteligencia artificial para vigilar compras del Estado. Ninguno de los revisados combina lo que hace SATO: **predecir un atraso definido por la norma, durante la ejecución, con los registros diarios oficiales de todo un país y validación en el futuro**. Los artículos académicos provienen de la revisión verificada del artículo (DOI comprobados en Crossref); los sistemas públicos, de sus fuentes oficiales o de prensa.'))
+hijos.push(H2('9.1 Investigaciones académicas'))
+hijos.push(tabla(['Trabajo (enlace)', 'Qué hace', 'Diferencia con SATO'], [
+  ['Gondia et al., 2020 · https://doi.org/10.1061/(asce)co.1943-7862.0001736', 'Predice el riesgo de atraso de proyectos con árboles de decisión y bayesiano ingenuo (modelo probabilístico simple)', 'Pocos proyectos, sin dimensión temporal ni texto; SATO usa miles de obras y predice el futuro con validación temporal'],
+  ['Egwim et al., 2021 · https://doi.org/10.1016/j.mlwa.2021.100166', 'Ensamble apilado (varios modelos combinados) para predecir atrasos', 'Entrenado con encuestas a expertos; SATO usa registros oficiales de la ejecución'],
+  ['Sanni-Anibire et al., 2022 · https://doi.org/10.1080/15623599.2020.1768326', 'Riesgo de atraso en edificios altos con redes neuronales (93,75 % de exactitud)', 'Solo 48 respuestas de expertos y sin validación temporal; su exactitud no es comparable'],
+  ['Yaseen et al., 2020 · https://doi.org/10.3390/su12041514', 'Bosque aleatorio (muchos árboles que votan) con algoritmo genético', 'Datos de cuestionarios; la exactitud engaña cuando el evento es raro'],
+  ['Gallego et al., 2021 · https://doi.org/10.1016/j.ijforecast.2020.06.006', 'Alerta temprana de ineficiencia y corrupción en compras públicas con ML', 'Usa datos del contrato al adjudicar; SATO actualiza el riesgo cada mes durante la obra'],
+  ['Fazekas y Kocsis, 2020 · https://doi.org/10.1017/s0007123417000461', 'Indicadores de riesgo de corrupción con 2,8 millones de contratos europeos', 'Indicadores del proceso de compra, no del atraso de la ejecución'],
+  ['Son y Lee, 2019 · https://doi.org/10.3390/en12101956', 'Minería de texto (extraer información de documentos) en 13 proyectos petroleros para estimar atraso', 'Texto previo al contrato y solo 13 casos'],
+  ['Jamal et al., 2026 · https://doi.org/10.1061/9780784486986.002', 'Analiza reportes diarios de obra con procesamiento de lenguaje natural (PLN: técnicas para que el computador entienda texto)', 'Un solo proyecto y descriptivo, sin predicción'],
+  ['Montoya Villanueva et al., 2026 · https://doi.org/10.1080/15623599.2026.2664477', 'Factores para adoptar BIM, ML y gemelos digitales en la infraestructura pública peruana', 'Revisión de literatura; no construye ni evalúa un sistema'],
+], [34, 33, 33]))
+hijos.push(H2('9.2 Sistemas públicos con analítica o inteligencia artificial'))
+hijos.push(tabla(['Sistema (enlace)', 'País', 'Qué hace', 'Diferencia con SATO'], [
+  ['ALICE (Analisador de Licitações, Contratos e Editais), CGU y TCU · https://revista.cgu.gov.br/Revista_da_CGU/article/download/530/357/3347', 'Brasil', 'Revisa a diario licitaciones publicadas con minería de texto e IA y alerta indicios de sobreprecio o fraude', 'Vigila la licitación antes del contrato; SATO vigila la ejecución de la obra y anticipa su atraso'],
+  ['Indicadores de riesgo de ProZorro y portal DOZORRO · https://ti-ukraine.org/en/news/prozorro-introduces-risk-indicators-to-check-suspicious-tenders/', 'Ucrania', 'Reglas automáticas (35 indicadores) que marcan compras con riesgo de incumplir las normas', 'Son reglas fijas sobre el proceso de compra; SATO usa un modelo que aprende de los datos y lo valida en el futuro'],
+  ['Océano y convenio de analítica de la Contraloría con Colombia Compra Eficiente · https://www.colombiacompra.gov.co/?p=9976', 'Colombia', 'Cruce de bases de datos, minería de datos e IA para detectar riesgos de corrupción en la contratación', 'Detecta riesgos de corrupción en contratos; SATO predice el atraso de obras en ejecución'],
+  ['INFOBRAS (Contraloría) · https://infobras.contraloria.gob.pe/InfobrasWeb/', 'Perú', 'Registro público del avance de las obras', 'Muestra lo que ya ocurrió; SATO lo usa como fuente y estima lo que puede ocurrir'],
+  ['Reporte de obras paralizadas (Contraloría) · https://www.gob.pe/institucion/contraloria/colecciones/18230-obras-paralizadas-documentos', 'Perú', 'Inventario trimestral de obras paralizadas', 'Llega cuando la obra ya se paralizó; SATO busca anticiparse 60 días al atraso formal'],
+], [36, 10, 27, 27]))
+hijos.push(esp())
+hijos.push(caja('Diferenciadores de SATO en una frase cada uno', [
+  '**Momento:** predice durante la ejecución y se actualiza cada mes, no solo al adjudicar.',
+  '**Fuente:** usa el texto de 2,73 millones de asientos del cuaderno de obra digital, que nadie usaba para predecir.',
+  '**Evento:** el atraso lo define la norma (regla del 80 %), así cualquiera puede verificarlo.',
+  '**Rigor:** validado en meses futuros que el modelo no vio, con intervalos de confianza y probabilidades calibradas.',
+  '**Transparencia:** cada alerta se explica en lenguaje claro y enlaza al asiento oficial que la respalda.',
+  '**Escala:** cubre todo el Perú (25 departamentos) y dos modelos: cuaderno digital y cartera INFOBRAS.',
+]))
+
+hijos.push(salto())
+hijos.push(H1('10. ¿Cómo funciona la predicción? (no es un simulacro)'))
+hijos.push(P('Una pregunta frecuente es si las predicciones son reales o un *mock* (datos de ejemplo). **Son reales**: las produce el modelo entrenado aplicado a los datos oficiales de cada obra. Lo que cambia es **cuándo** se ejecuta el modelo: se usa **inferencia por lotes** (*batch scoring*: calcular todas las predicciones de una vez cada vez que llegan datos nuevos), el mismo patrón que usan los bancos para su evaluación mensual de riesgo crediticio.'))
+hijos.push(...N([
+  '**Los datos llegan una vez al mes:** el OECE publica el cuaderno de obra digital en archivos mensuales y el MEF actualiza el gasto mensual. Entre un corte y otro, los datos de una obra no cambian.',
+  '**Cada mes corre el pipeline** (cadena automática de pasos): calcula las variables de cada obra, convierte el texto de los asientos en vectores con Sentence-BERT, aplica el modelo LightGBM a las 2 970 obras vigentes del cuaderno y a las 2 014 de la cartera, calcula las explicaciones TreeSHAP y los escenarios de sensibilidad.',
+  '**Los resultados pasan la compuerta de integridad** (32 chequeos) y se guardan en PostgreSQL.',
+  '**La web muestra esos resultados** en milisegundos. Si el modelo se ejecutara cada vez que alguien abre una página, daría el mismo número, porque los datos no cambiaron hasta el próximo corte.',
+], 'lotes'))
+hijos.push(P('**La simulación** («¿Qué cambiaría la estimación?») también la calcula el modelo real: para cada obra se vuelve a ejecutar LightGBM cambiando una sola señal a la vez (por ejemplo, «ejecución financiera al día») y se guardan ambas probabilidades; hay 5 115 escenarios calculados. Es un **análisis de sensibilidad** (cuánto depende la estimación de cada señal), no una promesa de que una acción concreta evitará el atraso.'))
+hijos.push(caja('Respuesta técnica para el docente', ['«Usamos inferencia por lotes: en cada corte mensual el modelo LightGBM calcula las probabilidades, las explicaciones TreeSHAP y los escenarios de sensibilidad de todas las obras vigentes; esos resultados pasan una compuerta de integridad y la web los sirve. Es el patrón estándar cuando los datos de entrada se actualizan mensualmente».']))
+
+hijos.push(H1('11. ¿Por qué la versión pública es de solo lectura y por qué aún no está en un servidor?'))
+hijos.push(H2('11.1 Qué es la versión pública'))
+hijos.push(P(`El enlace ${URL_PUBLICA} está alojado en **GitHub Pages** (servicio gratuito de GitHub que publica páginas web **estáticas**, es decir, archivos fijos sin un programa ni una base de datos detrás). Para publicarlo, un script recorrió todo el sistema con un navegador automático y guardó la respuesta real de cada consulta: 2 053 respuestas de la API y 250 informes PDF. Por eso la copia muestra los resultados reales del modelo, pero **no puede responder consultas nuevas**: la búsqueda libre, el ingreso de analistas, las suscripciones y las combinaciones de filtros fuera del recorrido muestran un aviso.`))
+hijos.push(H2('11.2 Por qué no se subió todavía el sistema completo'))
+hijos.push(...V([
+  '**El sistema completo necesita un servidor encendido todo el tiempo** con tres piezas: la base de datos PostgreSQL, la API y la web. GitHub Pages no ejecuta programas ni bases de datos.',
+  '**La base de datos pesa 6,4 GB** (2,4 millones de asientos, 1,4 millones de registros de gasto, 139 159 obras y todas las predicciones y explicaciones). Las bases de datos gratuitas en la nube ofrecen entre 0,5 y 1 GB, que no alcanzan.',
+  '**Un servidor adecuado** (unos 4 GB de RAM y 40 GB de disco) tiene costo mensual, o requiere crear una cuenta en un programa gratuito para estudiantes o de nivel gratuito (Azure for Students, Oracle Cloud Always Free), lo que el equipo aún no ha hecho. La cuenta de alojamiento disponible (Hostinger) no tiene un servidor contratado.',
+  '**La configuración de producción ya está lista:** Docker Compose con Caddy (servidor web que obtiene el certificado HTTPS automáticamente). Con un servidor, la instalación toma alrededor de una hora.',
+  '**Mientras tanto,** el sistema completo se ejecuta en cualquier computadora con Docker restaurando un respaldo de 548 MB (probado desde cero en 8,1 minutos) y puede publicarse temporalmente con un túnel de Cloudflare (conexión segura que expone el equipo local a internet sin abrir puertos).',
+]))
+hijos.push(caja('Cómo explicarlo en 20 segundos', ['«La versión pública es una copia estática con los resultados reales del modelo, porque el sistema completo necesita un servidor con una base de datos de 6,4 GB que los planes gratuitos no cubren. El despliegue en servidor ya está configurado; solo falta contratar o activar el servidor. Aquí mismo podemos mostrar la versión completa ejecutándose localmente»']))
+
+hijos.push(salto())
+hijos.push(H1('12. Preguntas probables del docente y cómo responder'))
 const PR = [
   ['¿Por qué no reportan exactitud (accuracy)?', 'Porque el evento ocurre en 5 % de los casos: un modelo que nunca alerta tendría 95 % de exactitud y no serviría. Por eso usamos PR-AUC y ROC-AUC, y comparamos contra la prevalencia.'],
   ['¿Cómo evitaron que el modelo «haga trampa» con el futuro?', 'Con un panel as-of (cada mes solo usa información previa), partición temporal con purga de 60 días y pruebas automáticas que recalculan las variables para detectar fuga.'],
@@ -305,11 +365,14 @@ const PR = [
   ['¿Cómo garantizan la seguridad?', '13 de 13 casos OWASP aprobados: limitación de tasa, JWT, cabeceras de seguridad, validación de entrada, errores sin trazas, control de acceso y protección contra IP falsificada.'],
   ['¿Por qué LightGBM y no una red neuronal?', 'Con datos tabulares y valores faltantes los árboles con gradient boosting son el estándar; además comparamos con otros algoritmos y la diferencia vino de los datos, no del algoritmo. También permiten explicaciones exactas con TreeSHAP.'],
   ['¿Cuánto costaría operarlo?', 'Usa solo componentes libres y datos abiertos; corre en contenedores Docker en un solo servidor. El costo es el del servidor.'],
+  ['¿Las predicciones son reales o un simulacro?', 'Son reales: el modelo entrenado se aplica a los datos oficiales en cada corte mensual (inferencia por lotes) y los resultados se guardan; la web los muestra. Ver la sección 10.'],
+  ['¿Por qué la página pública es de solo lectura?', 'Porque GitHub Pages solo aloja archivos fijos; el sistema completo necesita un servidor con una base de datos de 6,4 GB que los planes gratuitos no cubren. La configuración de servidor ya está lista. Ver la sección 11.'],
+  ['¿Qué sistemas parecidos existen?', 'ALICE en Brasil, los indicadores de ProZorro en Ucrania y Océano en Colombia vigilan licitaciones y contratos; ninguno predice el atraso durante la ejecución con los registros diarios de obra. Ver la sección 9.'],
   ['¿Qué aporte es nuevo?', 'Hasta donde revisamos, es el primer uso documentado de los asientos abiertos del cuaderno de obra digital para alerta temprana, con una etiqueta normativa reproducible y validación temporal a escala nacional.'],
 ]
 hijos.push(tabla(['Pregunta', 'Respuesta sugerida'], PR, [30, 70], { primeraNegrita: true }))
 
-hijos.push(H1('10. Glosario rápido'))
+hijos.push(H1('13. Glosario rápido'))
 hijos.push(tabla(['Término', 'En palabras simples'], [
   ['ROC-AUC', 'Probabilidad de que el modelo ponga más riesgo a una obra que se atrasa que a una que no. 0,5 es azar; 1 es perfecto.'],
   ['PR-AUC', 'Mide qué tan bien encuentra los casos raros; se compara con la prevalencia (5,0 %).'],
@@ -323,9 +386,18 @@ hijos.push(tabla(['Término', 'En palabras simples'], [
   ['Embeddings', 'Representación numérica del significado de un texto.'],
   ['PSI', 'Índice que mide cuánto cambió la distribución de una variable respecto del entrenamiento.'],
   ['OWASP Top 10', 'Lista estándar de los riesgos de seguridad web más importantes.'],
+  ['Inferencia por lotes', 'Calcular todas las predicciones de una vez cuando llegan datos nuevos, en lugar de hacerlo en cada visita.'],
+  ['Pipeline', 'Cadena automática de pasos que descarga, limpia, integra los datos y ejecuta los modelos.'],
+  ['LightGBM', 'Algoritmo que combina muchos árboles de decisión pequeños, cada uno corrigiendo los errores del anterior.'],
+  ['Sentence-BERT', 'Modelo de lenguaje que convierte cada texto en un vector numérico que representa su significado.'],
+  ['API REST', 'Servicio web que entrega datos en formato JSON a la interfaz u otros sistemas.'],
+  ['Docker', 'Tecnología de contenedores: empaqueta un programa con todo lo que necesita para que funcione igual en cualquier equipo.'],
+  ['GitHub Pages', 'Servicio gratuito de GitHub que publica sitios web estáticos (archivos fijos, sin servidor ni base de datos).'],
+  ['Sitio estático', 'Página formada solo por archivos ya generados; no ejecuta consultas nuevas.'],
+  ['MLOps', 'Prácticas para operar, vigilar y actualizar modelos de aprendizaje automático en producción.'],
 ], [22, 78], { primeraNegrita: true }))
 
-hijos.push(H1('11. Lista de control antes de exponer'))
+hijos.push(H1('14. Lista de control antes de exponer'))
 hijos.push(...V([
   'El enlace público es permanente y no depende de ningún equipo: basta con internet en el aula.',
   `Abrir ${URL_PUBLICA} unos minutos antes y recorrer las pantallas de la demostración.`,
@@ -345,6 +417,7 @@ const doc = new Document({
     config: [
       { reference: 'vinetas', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 500, hanging: 260 } } } }] },
       { reference: 'demo', levels: [{ level: 0, format: LevelFormat.DECIMAL, text: '%1.', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 500, hanging: 300 } } } }] },
+      { reference: 'lotes', levels: [{ level: 0, format: LevelFormat.DECIMAL, text: '%1.', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 500, hanging: 300 } } } }] },
     ],
   },
   sections: [{
