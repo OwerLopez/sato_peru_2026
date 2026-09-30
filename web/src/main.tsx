@@ -28,7 +28,7 @@ createRoot(document.getElementById('root')!).render(
       <Tooltip.Provider>
         <AuthProvider>
           <AmbitoProvider>
-            <BrowserRouter>
+            <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
               <App />
             </BrowserRouter>
           </AmbitoProvider>

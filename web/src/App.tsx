@@ -7,6 +7,7 @@ import { api, fmtFecha, qs, titulo, useEstado } from './api'
 import { useAmbito } from './ambito'
 import { useAuth } from './auth'
 import { CargandoPagina, LimiteDeError, Vacio } from './components/ui'
+import { ESTATICO } from './estatico'
 
 // Cada página se descarga al visitarla: el mapa y los gráficos no se cargan en pantallas que no los usan
 const Buscar = lazy(() => import('./pages/Buscar'))
@@ -48,7 +49,7 @@ const ESTADO_TEXTO = { OPERATIVO: 'Operativo', CON_AVISOS: 'Operativo con avisos
 const ESTADO_PUNTO = { OPERATIVO: 'bg-bajo', CON_AVISOS: 'bg-amber-500', DEGRADADO: 'bg-alto' } as const
 
 function Logo({ className = 'size-9' }: { className?: string }) {
-  return <img src="/favicon.svg" alt="" className={className} />
+  return <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className={className} />
 }
 
 function Marca({ compacta }: { compacta?: boolean }) {
@@ -173,13 +174,19 @@ function BarraSuperior({ abrirMenu }: { abrirMenu: () => void }) {
         <div className="lg:hidden">
           <Marca compacta />
         </div>
-        <div className="hidden max-w-xl flex-1 md:block">
-          <Busqueda />
-        </div>
-        <div className="flex-1 md:hidden" />
-        <button className="btn-fantasma size-10 p-0 md:hidden" onClick={() => setAbiertoEn(buscando ? null : pathname)} aria-label={buscando ? 'Cerrar búsqueda' : 'Buscar'} aria-expanded={buscando}>
-          {buscando ? <X className="size-5" /> : <Search className="size-5" />}
-        </button>
+        {ESTATICO ? (
+          <div className="flex-1" />
+        ) : (
+          <>
+            <div className="hidden max-w-xl flex-1 md:block">
+              <Busqueda />
+            </div>
+            <div className="flex-1 md:hidden" />
+            <button className="btn-fantasma size-10 p-0 md:hidden" onClick={() => setAbiertoEn(buscando ? null : pathname)} aria-label={buscando ? 'Cerrar búsqueda' : 'Buscar'} aria-expanded={buscando}>
+              {buscando ? <X className="size-5" /> : <Search className="size-5" />}
+            </button>
+          </>
+        )}
         <label className="hidden items-center gap-2 sm:flex">
           <MapPin className="size-4 text-slate-500" aria-hidden />
           <span className="sr-only">Ámbito geográfico</span>
@@ -192,11 +199,13 @@ function BarraSuperior({ abrirMenu }: { abrirMenu: () => void }) {
             ))}
           </select>
         </label>
+        {!ESTATICO && (
         <NavLink to="/suscribirse" className="btn-primario hidden lg:inline-flex">
           <Mail className="size-4" aria-hidden />
           Recibir alertas
         </NavLink>
-        {usuario ? (
+        )}
+        {ESTATICO ? null : usuario ? (
           <button onClick={logout} className="btn-fantasma" title={usuario.email}>
             <LogOut className="size-4" aria-hidden />
             <span className="hidden sm:inline">Salir</span>
@@ -280,9 +289,15 @@ function Pie() {
               </NavLink>
             </li>
             <li>
-              <a href="/api/docs" className="font-medium text-marca-700 hover:underline">
-                API pública y su documentación
-              </a>
+              {ESTATICO ? (
+                <a href="https://github.com/OwerLopez/sato_peru_2026" className="font-medium text-marca-700 hover:underline">
+                  Código fuente del sistema
+                </a>
+              ) : (
+                <a href="/api/docs" className="font-medium text-marca-700 hover:underline">
+                  API pública y su documentación
+                </a>
+              )}
             </li>
           </ul>
         </div>
@@ -327,8 +342,17 @@ export default function App() {
         <p className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-1.5 text-xs sm:px-6">
           <span className="font-semibold text-white">Prototipo de investigación</span>
           <span aria-hidden>·</span>
-          <span className="hidden truncate sm:inline">Construido con datos abiertos del Estado peruano; no es un sitio oficial de ninguna entidad pública.</span>
-          <span className="truncate sm:hidden">No es un sitio oficial del Estado.</span>
+          {ESTATICO ? (
+            <>
+              <span className="hidden truncate sm:inline">Copia pública de solo lectura con los resultados reales del modelo; no es un sitio oficial de ninguna entidad pública.</span>
+              <span className="truncate sm:hidden">Copia pública de solo lectura.</span>
+            </>
+          ) : (
+            <>
+              <span className="hidden truncate sm:inline">Construido con datos abiertos del Estado peruano; no es un sitio oficial de ninguna entidad pública.</span>
+              <span className="truncate sm:hidden">No es un sitio oficial del Estado.</span>
+            </>
+          )}
         </p>
       </div>
       <div className="flex">

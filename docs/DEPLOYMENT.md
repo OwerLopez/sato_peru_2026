@@ -89,3 +89,27 @@ nginx confía en `X-Forwarded-For` solo cuando la conexión viene del contenedor
 de modo que los límites de tasa se aplican por visitante. Limitaciones: la URL cambia cada vez que se reinicia el
 túnel o el equipo, y el sistema deja de responder si el equipo anfitrión se apaga o entra en suspensión. Para una URL
 estable se usa `deploy/docker-compose.prod.yml` en un servidor con dominio propio.
+
+## Copia pública permanente en GitHub Pages (solo lectura)
+
+https://owerlopez.github.io/sato_peru_2026/ publica, sin servidor, la interfaz con las respuestas reales de la API
+del corte vigente. `scripts/exportar_estatico.py` recorre la interfaz con un navegador contra una API local sin
+límite de tasa, registra cada consulta GET y guarda su respuesta como JSON (más el informe PDF de cada ficha); la
+interfaz compilada con `VITE_ESTATICO=1` lee esos archivos con la misma clave (`web/src/estatico.ts`, verificada
+por `web/src/estatico.test.ts`). El resultado se publica en la rama `gh-pages`.
+
+```bash
+# API local sin límite de tasa y la interfaz normal con proxy a esa API
+SATO_RATE_LIMIT=100000/minute python -m uvicorn sato.api.main:app --port 8000 --workers 4
+cd web && npx vite build --outDir dist-crawl && VITE_API_PROXY=http://127.0.0.1:8000 npx vite preview --outDir dist-crawl --port 4173
+# interfaz estática y exportación de datos
+VITE_ESTATICO=1 npx vite build --base /sato_peru_2026/ --outDir dist-pages
+python scripts/exportar_estatico.py --web http://127.0.0.1:4173 --salida web/dist-pages/datos
+cp web/dist-pages/index.html web/dist-pages/404.html && touch web/dist-pages/.nojekyll
+# publicar el contenido de web/dist-pages en la rama gh-pages
+```
+
+Alcance: todas las pantallas para todo el Perú y los 25 departamentos, las fichas de las obras en riesgo alto y
+las 60 primeras en riesgo medio del cuaderno digital, y las 100 primeras de la cartera en riesgo alto. No incluye
+búsqueda libre, ingreso de analistas, suscripciones ni combinaciones de filtros fuera del recorrido: la interfaz
+lo indica con un mensaje en lugar de mostrar datos incompletos.

@@ -10,6 +10,7 @@ import { ConfianzaNivel, ListaFactores, VecesPromedio } from '../components/Fact
 import { Cargando, CargandoPagina, Dato, ErrorMsg, EscalaRiesgo, InfoTip, Migas, NivelBadge, Paginacion, Panel, Seccion, Vacio } from '../components/ui'
 import { COLOR_NIVEL, COLORES, SERIE } from '../lib/colores'
 import { NIVEL_TEXTO } from '../lib/nivel'
+import { urlPdf } from '../estatico'
 
 interface Detalle {
   obra: Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -90,7 +91,7 @@ export default function ObraDetalle() {
           </h1>
           <div className="flex flex-wrap gap-2">
             {o.score !== null && (
-              <a href={`/api/v1/obras/${o.cuaderno_id}/informe-pdf`} className="btn-primario">
+              <a href={urlPdf(o.cuaderno_id)} className="btn-primario">
                 <FileText className="size-4" /> Informe técnico PDF
               </a>
             )}

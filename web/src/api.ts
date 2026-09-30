@@ -1,5 +1,6 @@
 // Cliente de la API REST de SATO (mismo origen: nginx hace proxy de /api).
 import { useQuery } from '@tanstack/react-query'
+import { BASE, claveDatos, ESTATICO } from './estatico'
 
 export const API = '/api/v1'
 
@@ -52,7 +53,22 @@ const MENSAJES: Record<number, string> = {
   503: 'El servicio no está disponible en este momento.',
 }
 
+async function apiEstatica<T>(path: string, init: RequestInit): Promise<T> {
+  if ((init.method ?? 'GET').toUpperCase() !== 'GET')
+    throw new ApiError(0, 'Esta es una copia pública de solo lectura: el ingreso de analistas, las suscripciones y las revisiones están disponibles en la versión completa del sistema.')
+  let r: Response
+  try {
+    r = await fetch(`${BASE}datos/${claveDatos(path)}.json`)
+  } catch {
+    throw new ApiError(0, 'No hay conexión. Verifique su red e intente de nuevo.')
+  }
+  if (!r.ok)
+    throw new ApiError(404, 'Esta consulta no está incluida en la copia pública de demostración. La versión completa del sistema responde cualquier combinación de filtros y búsquedas.')
+  return (await r.json()) as T
+}
+
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  if (ESTATICO) return apiEstatica<T>(path, init)
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(init.headers as Record<string, string>) }
   const t = getToken()
   if (t) headers.Authorization = `Bearer ${t}`

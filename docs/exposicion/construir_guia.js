@@ -9,7 +9,7 @@ const {
   Header, Footer, PageNumber, BorderStyle, LevelFormat, TableLayoutType, VerticalAlign, PageBreak, ExternalHyperlink,
 } = require(process.env.DOCX_MODULE || 'docx')
 
-const URL_PUBLICA = process.env.SATO_URL_PUBLICA || 'https://crest-governance-hopefully-void.trycloudflare.com'
+const URL_PUBLICA = process.env.SATO_URL_PUBLICA || 'https://owerlopez.github.io/sato_peru_2026/'
 const REPO = 'https://github.com/OwerLopez/sato_peru_2026'
 const AZUL = '0A1C30'
 const AZUL_T = '1F72B4'
@@ -83,7 +83,7 @@ hijos.push(new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 120 
 hijos.push(P('Alerta temprana del atraso en obras públicas del Perú mediante aprendizaje automático explicable y el cuaderno de obra digital', { size: 26, color: GRIS, align: AlignmentType.LEFT }))
 hijos.push(esp(200))
 hijos.push(tabla(['Dato', 'Valor'], [
-  ['Sistema en línea', URL_PUBLICA],
+  ['Sistema en línea', URL_PUBLICA + ' (copia pública permanente, de solo lectura, con los resultados reales del modelo)'],
   ['Código fuente', REPO],
   ['Integrantes', '5 (Integrante 1 a Integrante 5; reemplazar por los nombres del equipo)'],
   ['Duración sugerida', '20 minutos de exposición + preguntas (incluye una versión corta de 10 minutos)'],
@@ -255,7 +255,7 @@ hijos.push(H1('8. Integrante 5: demostración en vivo y cierre (5 min)'))
 hijos.push(H3('Objetivo de su parte'))
 hijos.push(P('Mostrar el sistema funcionando con datos reales y cerrar con conclusiones, limitaciones honestas y visión de futuro.'))
 hijos.push(H3('Recorrido de la demostración (3 minutos)'))
-hijos.push(P(`Abrir ${URL_PUBLICA} antes de empezar la exposición (la primera carga puede tardar algunos segundos).`))
+hijos.push(P(`Abrir ${URL_PUBLICA} antes de empezar la exposición. Es una copia de solo lectura: evite escribir en el buscador de la lista, porque solo están incluidas las consultas del recorrido.`))
 hijos.push(...N([
   '**Panorama:** «Hoy el sistema monitorea 4 698 obras en ejecución. 190 obras del cuaderno digital están en riesgo alto de atraso formal en los próximos 60 días». Mostrar el mapa en grises con los puntos de riesgo y la línea de tendencia.',
   '**Alertas del cuaderno:** mostrar el resumen por nivel (que también filtra) y abrir la primera obra.',
@@ -278,7 +278,7 @@ hijos.push(...V([
   'La etiqueta depende de que el supervisor anote el hecho; el subregistro reduce la precisión medida.',
   'En Arequipa la mejora del texto no fue significativa, por el tamaño de la muestra (42 obras con evento).',
   'No se evaluó todavía con supervisores reales (usabilidad y utilidad percibida).',
-  'El enlace público actual es temporal: depende de que el equipo anfitrión esté encendido; el despliegue permanente requiere un servidor contratado (la configuración con HTTPS ya está lista).',
+  'La copia pública en GitHub Pages es de solo lectura: muestra los resultados reales del corte del 31 de agosto de 2026 para las pantallas, departamentos y fichas exportadas, pero no tiene buscador libre, ingreso de analistas ni suscripciones; el sistema completo requiere un servidor (la configuración con HTTPS ya está lista).',
 ]))
 hijos.push(H3('Visión a futuro'))
 hijos.push(...V([
@@ -327,10 +327,10 @@ hijos.push(tabla(['Término', 'En palabras simples'], [
 
 hijos.push(H1('11. Lista de control antes de exponer'))
 hijos.push(...V([
-  'El equipo que publica el sistema debe estar **encendido, con Docker Desktop abierto y sin suspensión** durante la exposición.',
+  'El enlace público es permanente y no depende de ningún equipo: basta con internet en el aula.',
   `Abrir ${URL_PUBLICA} unos minutos antes y recorrer las pantallas de la demostración.`,
-  'Si el equipo se reinició, ejecutar `powershell -ExecutionPolicy Bypass -File scripts/publicar.ps1`: imprime la nueva URL pública (cambia en cada reinicio).',
-  '**Plan B:** si falla internet, mostrar el sistema en `http://localhost:8080` desde el equipo anfitrión; si todo falla, usar las capturas del artículo (figuras 7 a 13).',
+  'Para mostrar la versión completa (búsqueda libre, ingreso de analistas), levantarla en una laptop con `scripts/instalar_laptop.ps1` (ver docs/EJECUTAR_EN_LAPTOP.md).',
+  '**Plan B:** si falla internet, mostrar el sistema en `http://localhost:8080` desde una laptop con el sistema instalado; si todo falla, usar las capturas del artículo (figuras 7 a 13).',
   'Tener abierto el artículo en Word y el informe PDF de una obra descargado previamente.',
   'Ensayar los tiempos con cronómetro: 3 / 3,5 / 4,5 / 4 / 5 minutos.',
 ]))

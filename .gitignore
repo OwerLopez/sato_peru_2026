@@ -59,3 +59,7 @@ docs/articulo/plantilla_gesiti*
 # respaldos de la base de datos (varios GB): se trasladan fuera del repositorio
 backups/
 *.dump
+
+# copia estatica para GitHub Pages (se publica en la rama gh-pages)
+web/dist-pages/
+web/dist-crawl/

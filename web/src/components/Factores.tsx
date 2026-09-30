@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { api, fmtDec, fmtFecha, fmtPct, useCalibracion, type Explicacion, type Factor, type Nivel } from '../api'
 import { Cargando, ErrorMsg, EscalaRiesgo, InfoTip, NivelBadge } from './ui'
 import { NIVEL_TEXTO } from '../lib/nivel'
+import { urlPdf } from '../estatico'
 
 // Lista de factores explicativos en lenguaje claro. Los valores técnicos (variable y contribución SHAP) quedan disponibles bajo demanda.
 export function ListaFactores({ factores, tecnico: tecnicoInicial = false, alVerEvidencia, conEvidencia }: { factores: Factor[]; tecnico?: boolean; alVerEvidencia?: (f: Factor) => void; conEvidencia?: Set<string> }) {
@@ -109,7 +110,7 @@ export function VistaPreviaCuaderno({ prediccionId, cuadernoId, nombre }: { pred
         <Link to={`/obras/${cuadernoId}`} className="btn-primario">
           Ver ficha completa <ArrowRight className="size-4" />
         </Link>
-        <a href={`/api/v1/obras/${cuadernoId}/informe-pdf`} className="btn">
+        <a href={urlPdf(cuadernoId)} className="btn">
           <FileText className="size-4" /> Informe PDF
         </a>
       </div>
