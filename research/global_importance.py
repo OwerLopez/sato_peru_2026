@@ -38,4 +38,10 @@ imp.sort_values(["alcance", "mean_abs_shap"], ascending=[True, False]).to_csv(d 
 g = imp.groupby(["alcance", "grupo"])["share"].sum().unstack(0).sort_values("nacional", ascending=False)
 g.to_csv(d / "importancia_grupos.csv")
 print(g.round(3).to_string())
-print(imp[imp.alcance == "nacional"].sort_values("mean_abs_shap", ascending=False).head(20)[["feature", "grupo", "share", "mean_abs_shap"]].round(4).to_string())
+print(
+    imp[imp.alcance == "nacional"]
+    .sort_values("mean_abs_shap", ascending=False)
+    .head(20)[["feature", "grupo", "share", "mean_abs_shap"]]
+    .round(4)
+    .to_string()
+)

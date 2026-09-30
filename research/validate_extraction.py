@@ -11,13 +11,17 @@ Salida: docs/research/validacion_extraccion.json
 import json
 
 import duckdb
-import numpy as np
 import pandas as pd
 
 from sato.config import CURATED, FEATURES, ROOT, STAGING
 from sato.features.extraction import extract_all
 
-MESES = {m: i for i, m in enumerate(["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SETIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"], 1)}
+MESES = {
+    m: i
+    for i, m in enumerate(
+        ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SETIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"], 1
+    )
+}
 MESES["SEPTIEMBRE"] = 9
 
 extract_all()
@@ -25,7 +29,7 @@ con = duckdb.connect()
 val = con.sql(f"""select IDENTIFICADOR_DEL_CONTRATO contrato_id, PERIODO_DE_VALORIZACION per,
    try_cast(replace(AVANCE_FISICO_ACUMULADO_EJECUTADO, ',', '.') as double) of_ejec,
    try_cast(replace(AVANCE_FISICO_ACUMULADO_PROGRAMADO, ',', '.') as double) of_prog
- from '{(STAGING / 'oece_valorizaciones.parquet').as_posix()}'
+ from '{(STAGING / "oece_valorizaciones.parquet").as_posix()}'
  where DESCRIPCION_DEL_IDENTIFICADOR_DEL_TIPO_VALORIZACION ilike 'Obra principal'""").df()
 p = val["per"].str.upper().str.split()
 val["fin"] = [pd.Timestamp(int(x[1]), MESES[x[0]], 1) + pd.offsets.MonthEnd(0) if len(x) == 2 and x[0] in MESES else pd.NaT for x in p]

@@ -1,16 +1,27 @@
 import duckdb
-con=duckdb.connect()
-R='data/raw/mef/'
-def q(s): print(con.sql(s).df().to_string(max_colwidth=60)); print()
-o="all_varchar=true,header=true"
+
+con = duckdb.connect()
+R = "data/raw/mef/"
+
+
+def q(s):
+    print(con.sql(s).df().to_string(max_colwidth=60))
+    print()
+
+
+o = "all_varchar=true,header=true"
 con.sql(f"create view det as select * from read_csv('{R}DETALLE_INVERSIONES.csv',{o})")
 con.sql(f"create view cie as select * from read_csv('{R}CIERRE_INVERSIONES.csv',{o})")
-con.sql("create table aqp as select CODIGO_UNICO cui, FUNCION, 'ACTIVO' src from det where DEPARTAMENTO='AREQUIPA' union all select CODIGO_UNICO, FUNCION, 'CERRADO' from cie where DEPARTAMENTO='AREQUIPA'")
+con.sql(
+    "create table aqp as select CODIGO_UNICO cui, FUNCION, 'ACTIVO' src from det where DEPARTAMENTO='AREQUIPA' union all select CODIGO_UNICO, FUNCION, 'CERRADO' from cie where DEPARTAMENTO='AREQUIPA'"
+)
 con.sql(f"create table psa as select ps.* from read_csv('{R}PROCESO_SELECCION.csv',{o}) ps where CODIGO_UNICO in (select cui from aqp)")
 con.sql("copy psa to 'data/staging/mef_componentes_aqp.parquet' (format parquet)")
-q("select DES_ETAPA, (DES_ACCION is null) agg_row, regexp_matches(PERIODO,'^\d{4}-\d{2}$') ym, count(*), count(distinct CODIGO_UNICO) cui from psa group by all order by 1,2,3")
+q(
+    r"select DES_ETAPA, (DES_ACCION is null) agg_row, regexp_matches(PERIODO,'^\d{4}-\d{2}$') ym, count(*), count(distinct CODIGO_UNICO) cui from psa group by all order by 1,2,3"
+)
 # per CUI monthly series
-con.sql("""create table ser as select CODIGO_UNICO cui, DES_ETAPA etapa, PERIODO per, sum(try_cast(VALORIZ_ACUM as double)) val, max(try_cast(AVANCE as double)) av, count(*) nrows
+con.sql(r"""create table ser as select CODIGO_UNICO cui, DES_ETAPA etapa, PERIODO per, sum(try_cast(VALORIZ_ACUM as double)) val, max(try_cast(AVANCE as double)) av, count(*) nrows
  from psa where DES_ACCION is null and regexp_matches(PERIODO,'^\d{4}-\d{2}$') and DES_ETAPA in ('EJECUCION','CONTRACTUAL') group by all""")
 q("select etapa, count(distinct cui), count(*), min(per), max(per) from ser group by 1")
 q("""with e as (select cui, count(*) ne from ser where etapa='EJECUCION' group by 1), c as (select cui, count(*) nc from ser where etapa='CONTRACTUAL' group by 1)
