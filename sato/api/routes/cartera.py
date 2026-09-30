@@ -5,15 +5,12 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query
 
 from sato.api import db
+from sato.api.cache import cacheado
 
 router = APIRouter(prefix="/cartera", tags=["cartera"])
 
-LAST = """
-  left join lateral (
-    select r.id riesgo_id, r.tipo modelo, r.fecha_corte, r.score, r.nivel from cartera_riesgo r
-    where r.codigo_infobras = c.codigo_infobras order by (r.tipo = 'seguimiento') desc, r.fecha_corte desc limit 1
-  ) lr on true
-"""
+# riesgo vigente de cada obra de la cartera (vista materializada que se refresca en cada carga)
+LAST = " left join cartera_riesgo_vigente lr on lr.codigo_infobras = c.codigo_infobras "
 
 
 @router.get("")
@@ -38,6 +35,7 @@ def listar(departamento: str | None = None, provincia: str | None = None, tipo_o
 
 
 @router.get("/mapa")
+@cacheado
 def mapa(departamento: str | None = None, estado: Literal["ACTIVA", "CONSUMADO"] = "ACTIVA"):
     return db.rows(f"""select c.codigo_infobras, c.nombre, c.departamento, c.provincia, c.tipo_obra, c.costo, c.latitud, c.longitud,
                               lr.score, lr.nivel, lr.modelo

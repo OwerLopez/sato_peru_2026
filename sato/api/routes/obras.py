@@ -7,16 +7,12 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query
 
 from sato.api import db
+from sato.api.cache import cacheado
 
 router = APIRouter(prefix="/obras", tags=["obras"])
 
-LATEST = """
-  left join lateral (
-    select p.id prediccion_id, p.fecha_corte, p.score, p.nivel, p.alerta, p.percentil, p.tipo
-    from prediccion p join modelo m on m.id = p.modelo_id and m.activo
-    where p.cuaderno_id = o.cuaderno_id order by p.fecha_corte desc limit 1
-  ) lp on true
-"""
+# ultima prediccion del modelo activo de cada obra (vista materializada que se refresca en cada carga)
+LATEST = " left join obra_prediccion_vigente lp on lp.cuaderno_id = o.cuaderno_id "
 
 
 @router.get("")
@@ -54,6 +50,7 @@ def listar(
 
 
 @router.get("/mapa")
+@cacheado
 def mapa(departamento: str | None = None, solo_vigentes: bool = True):
     """Obras con coordenadas y su ultimo nivel de riesgo (para el mapa). Por defecto solo obras activas evaluadas hoy."""
     return db.rows(

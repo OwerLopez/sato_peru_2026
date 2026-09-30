@@ -77,6 +77,8 @@ def informe_pdf(cuaderno_id: UUID, request: Request):
     if not o:
         raise HTTPException(404, "Obra no encontrada")
     m = db.one("select id, version, horizonte_dias, umbral_alerta, entrenado_hasta, metricas from modelo where activo")
+    if not m:
+        raise HTTPException(503, "No hay un modelo activo cargado")
     serie = db.rows("select id, fecha_corte, tipo, score, nivel, alerta from prediccion where cuaderno_id = :id and modelo_id = :m order by fecha_corte", id=oid, m=m["id"])
     if not serie:
         raise HTTPException(409, "La obra no tiene predicciones del modelo activo")
@@ -112,7 +114,7 @@ def informe_pdf(cuaderno_id: UUID, request: Request):
     t.setStyle(grid)
     E.append(t)
 
-    E.append(_p("2. Riesgo estimado a 60 días", h2))
+    E.append(_p(f"2. Riesgo estimado a {m['horizonte_dias']} días", h2))
     nivel = ult["nivel"]
     msg = (f"Al corte del {_fecha(ult['fecha_corte'])} la obra no registra el evento formal de atraso. El modelo estima una probabilidad de "
            f"{100 * ult['score']:.1f} % de que se registre la causal de demora injustificada (valorización acumulada ejecutada menor al 80 % de la "

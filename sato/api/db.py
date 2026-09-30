@@ -7,6 +7,7 @@ from typing import Any
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import ResourceClosedError
 
 from sato.api.settings import get_settings
 
@@ -16,7 +17,11 @@ def engine() -> Engine:
     url = get_settings().database_url
     if url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+psycopg://", 1)
-    return create_engine(url, pool_pre_ping=True, pool_size=5, max_overflow=5, connect_args={"options": "-c search_path=sato,public", "connect_timeout": 10})
+    # statement_timeout: ninguna consulta ocupa una conexion mas de 20 s (proteccion ante consultas costosas);
+    # lock_timeout: si una tabla esta bloqueada (mantenimiento manual), la solicitud falla en 5 s con 503 en vez de quedar colgada
+    return create_engine(url, pool_pre_ping=True, pool_size=5, max_overflow=5, pool_recycle=1800,
+                         connect_args={"options": "-c search_path=sato,public -c statement_timeout=20000 -c lock_timeout=5000",
+                                       "connect_timeout": 10})
 
 
 def rows(sql: str, **params: Any) -> list[dict]:
@@ -35,7 +40,7 @@ def execute(sql: str, **params: Any) -> dict | None:
         try:
             r = res.first()
             return dict(r._mapping) if r else None
-        except Exception:
+        except ResourceClosedError:  # sentencia sin filas de retorno
             return None
 
 

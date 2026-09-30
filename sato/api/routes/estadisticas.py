@@ -3,12 +3,14 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query
 
 from sato.api import db
+from sato.api.cache import cacheado
 from sato.api.security import require_role
 
 router = APIRouter(tags=["estadisticas e investigacion"])
 
 
 @router.get("/estadisticas/resumen")
+@cacheado
 def resumen():
     corte = db.one("select max(fecha_corte) f from prediccion where tipo = 'vigente'")["f"]
     kpi = db.one(
@@ -55,6 +57,7 @@ def modelo():
 
 
 @router.get("/investigacion/experimentos")
+@cacheado
 def experimentos(objetivo: str = Query("atraso", max_length=20), alcance_test: str = Query("arequipa", max_length=20)):
     return db.rows(
         """select objetivo, horizonte, conjunto_features, alcance_entrenamiento, modelo, alcance_test, metricas
@@ -64,6 +67,7 @@ def experimentos(objetivo: str = Query("atraso", max_length=20), alcance_test: s
 
 
 @router.get("/investigacion/comparacion")
+@cacheado
 def comparacion(objetivo: str = Query("atraso", max_length=20)):
     return db.rows("select * from comparacion_ab where objetivo = :o order by horizonte, alcance_test, metrica, variante", o=objetivo)
 
@@ -104,6 +108,7 @@ def desempeno_sectores():
 
 
 @router.get("/modelo/calibracion")
+@cacheado
 def calibracion():
     """Confiabilidad de las probabilidades: tasa de atraso OBSERVADA por nivel y por decil de riesgo en el backtest as-of
     (predicciones emitidas cada mes solo con informacion anterior y ya contrastadas con lo ocurrido)."""

@@ -11,6 +11,7 @@ parametrizadas, auditoria y registro con request-id.
 from __future__ import annotations
 
 import logging
+import re
 import time
 import uuid
 
@@ -22,6 +23,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 
 from sato import __version__
 from sato.api.db import engine
@@ -54,21 +56,41 @@ app.add_middleware(
 )
 
 
+RID_OK = re.compile(r"[A-Za-z0-9._-]{1,64}")
+# rutas cuya respuesta depende del usuario o de una accion: nunca se guardan en caches intermedias
+PRIVADAS = ("/api/v1/auth", "/api/v1/admin", "/api/v1/suscripciones")
+
+
 @app.middleware("http")
 async def security_and_logging(request: Request, call_next):
-    rid = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:16]
+    # identificador de solicitud: se acepta el del proxy solo si es un token simple (evita inyectar texto en los registros)
+    rid = request.headers.get("X-Request-ID", "")
+    rid = rid if RID_OK.fullmatch(rid) else uuid.uuid4().hex[:16]
     t0 = time.perf_counter()
     response = await call_next(request)
     ms = (time.perf_counter() - t0) * 1000
+    path = request.url.path
     response.headers["X-Request-ID"] = rid
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
-    if not request.url.path.startswith(("/api/docs", "/api/v1/suscripciones")):
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    if not path.startswith(("/api/docs", "/api/v1/suscripciones")):
         response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
-    log.info("%s %s %s %.1fms rid=%s", request.method, request.url.path, response.status_code, ms, rid)
+    if "Cache-Control" not in response.headers:
+        publica = request.method == "GET" and response.status_code == 200 and path.startswith("/api/v1/") \
+            and not path.startswith(PRIVADAS) and "authorization" not in request.headers and "/revisiones" not in path
+        response.headers["Cache-Control"] = "public, max-age=60" if publica else "no-store"
+    log.info("%s %s %s %.1fms rid=%s", request.method, path, response.status_code, ms, rid)
     return response
+
+
+@app.exception_handler(OperationalError)
+async def base_no_disponible(request: Request, exc: OperationalError):
+    # BD caida, conexion perdida o consulta cancelada por statement_timeout: el cliente puede reintentar
+    log.error("base de datos no disponible en %s: %s", request.url.path, type(exc.orig).__name__ if exc.orig else "")
+    return JSONResponse(status_code=503, content={"detail": "Servicio de datos no disponible temporalmente"}, headers={"Retry-After": "30"})
 
 
 @app.exception_handler(Exception)
@@ -84,13 +106,16 @@ def health():
 
 @app.get("/api/ready", tags=["salud"])
 def ready():
+    """Lista para atender: la base responde y hay un modelo activo con datos cargados."""
     try:
         with engine().connect() as c:
-            c.execute(text("select 1"))
             m = c.execute(text("select version from sato.modelo where activo")).first()
-        return {"status": "ready", "modelo": m[0] if m else None}
+            corte = c.execute(text("select max(fecha_corte) from sato.corte_datos")).scalar()
     except Exception as e:  # noqa: BLE001
         return JSONResponse(status_code=503, content={"status": "not_ready", "detail": type(e).__name__})
+    if not m:
+        return JSONResponse(status_code=503, content={"status": "not_ready", "detail": "sin modelo activo (base sin cargar)"})
+    return {"status": "ready", "modelo": m[0], "corte_datos": str(corte)}
 
 
 for r in (radar.router, cartera.router, informe.router, sistema.router, obras.router, alertas.router, estadisticas.router, auth.router):

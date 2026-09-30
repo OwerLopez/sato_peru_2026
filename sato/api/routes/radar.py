@@ -14,22 +14,20 @@ from typing import Literal
 from fastapi import APIRouter, Query
 
 from sato.api import db
+from sato.api.cache import cacheado
 
 router = APIRouter(tags=["radar"])
 
-CART_LAST = """
-  left join lateral (
-    select r.id riesgo_id, r.tipo, r.fecha_corte, r.score, r.nivel from cartera_riesgo r
-    where r.codigo_infobras = c.codigo_infobras
-    order by (r.tipo = 'seguimiento') desc, r.fecha_corte desc limit 1
-  ) lr on true
-"""
+# riesgo vigente de cada obra de la cartera (vista materializada que se refresca en cada carga)
+CART_LAST = " left join cartera_riesgo_vigente lr on lr.codigo_infobras = c.codigo_infobras "
 
 
 @router.get("/radar/cuaderno")
+@cacheado
 def radar_cuaderno(departamento: str | None = None, provincia: str | None = None, sector: str | None = None,
                    nivel: Literal["ALTO", "MEDIO", "BAJO"] | None = None, limite: int = Query(200, ge=1, le=1000)):
     corte = (db.one("select max(fecha_corte) f from prediccion where tipo = 'vigente'") or {}).get("f")
+    h = (db.one("select horizonte_dias h from modelo where activo") or {}).get("h")
     items = db.rows(
         """select p.id prediccion_id, p.fecha_corte, p.score, p.nivel, p.percentil,
                   o.cuaderno_id, o.denominacion nombre, o.departamento, o.provincia, o.distrito, o.sector, o.cui,
@@ -43,17 +41,18 @@ def radar_cuaderno(departamento: str | None = None, provincia: str | None = None
              and (cast(:sector as text) is null or o.sector = :sector) and (cast(:nivel as text) is null or p.nivel = :nivel)
            order by p.score desc limit :lim""",
         corte=corte, dep=departamento, prov=provincia, sector=sector, nivel=nivel, lim=limite)
-    return {"fecha_corte": corte, "horizonte_dias": 60, "items": items}
+    return {"fecha_corte": corte, "horizonte_dias": h, "items": items}
 
 
 @router.get("/radar/cartera")
+@cacheado
 def radar_cartera(departamento: str | None = None, provincia: str | None = None, tipo_obra: str | None = None,
                   modalidad: str | None = None, nivel: Literal["ALTO", "MEDIO", "BAJO"] | None = None,
                   limite: int = Query(200, ge=1, le=1000)):
     items = db.rows(
         f"""select c.codigo_infobras, c.nombre, c.departamento, c.provincia, c.distrito, c.tipo_obra, c.modalidad, c.costo monto,
                    c.entidad, c.fecha_inicio, c.fin_programado, c.plazo_dias, c.cuaderno_id,
-                   lr.riesgo_id, lr.tipo modelo, lr.fecha_corte, lr.score, lr.nivel,
+                   lr.riesgo_id, lr.modelo, lr.fecha_corte, lr.score, lr.nivel,
                    (select json_agg(json_build_object('descripcion', x.descripcion, 'shap', x.shap) order by x.shap desc)
                       from (select * from cartera_explicacion where riesgo_id = lr.riesgo_id and shap > 0 order by shap desc limit 3) x) factores
             from cartera_obra c {CART_LAST}
@@ -67,6 +66,7 @@ def radar_cartera(departamento: str | None = None, provincia: str | None = None,
 
 
 @router.get("/resumen")
+@cacheado
 def resumen(departamento: str | None = None):
     """Indicadores del centro de comando para el ambito seleccionado."""
     dep = departamento
@@ -131,6 +131,7 @@ def resumen(departamento: str | None = None):
 
 
 @router.get("/comparador")
+@cacheado
 def comparador(por: Literal["departamento", "sector"] = "departamento"):
     """Benchmarking territorial y sectorial con datos observados y predicciones vigentes."""
     if por == "departamento":
@@ -161,6 +162,7 @@ def comparador(por: Literal["departamento", "sector"] = "departamento"):
 
 
 @router.get("/ambitos")
+@cacheado
 def ambitos():
     return db.rows(
         """select departamento, count(*) obras from (
@@ -170,6 +172,7 @@ def ambitos():
 
 
 @router.get("/filtros")
+@cacheado
 def filtros():
     """Valores disponibles para los filtros de la interfaz, leidos de los datos cargados (sin listas fijas)."""
     return {
