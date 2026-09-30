@@ -1476,7 +1476,7 @@ No introducir:
 - microservicios innecesarios;
 - Kafka innecesariamente;
 - arquitectura distribuida innecesaria;
-- LLMs innecesarios;
+- modelos generativos innecesarios;
 - infraestructura empresarial innecesaria.
 
 Si un PostgreSQL + Python + pipeline bien diseñado resuelve el problema:

@@ -1,129 +1,116 @@
-# Arquitectura de SATO-AQP
+# Arquitectura de SATO
 
-## 1. Vista general
+Documento técnico de referencia. La visión general, los diagramas y la guía de uso están en el [README](../../README.md);
+las decisiones con su evidencia, en [DECISIONS.md](../DECISIONS.md).
 
-```
- FUENTES OFICIALES (datos abiertos)
- ├─ OECE  : asientos y cuadernos de obra digital, valorizaciones, contratos CONOSCE
- ├─ MEF   : Banco de Inversiones (Invierte.pe), estado situacional F12B, SIAF (devengado mensual)
- └─ CGR   : INFOBRAS (foto de obras), reportes trimestrales de obras paralizadas
-        │  sato.ingest.download  (idempotente, reintentos, SHA-256 -> data/raw/manifest.jsonl)
-        ▼
- data/raw  ──►  sato.staging.*   (parseo robusto, tipos, cp1252, reparación de separadores) ──► data/staging (Parquet)
-        ▼
- sato.integration.*  (resolución de entidades cuaderno→CUI→INFOBRAS; SEACE por id de contrato) ──► data/curated
-        ▼
- sato.features.*  (panel obra-mes, features estructuradas, léxico, LSA, embeddings, extracción) ──► data/features
-        ▼
- sato.models.*    (grilla temporal, rolling-origin, comparación A/B con bootstrap) ──► artifacts/experiments
-        ▼
- sato.serving.release  (modelo operativo, backtest as-of, TreeSHAP, evidencia) ──► artifacts/release
-        ▼
- sato.serving.load_db  (migraciones + carga transaccional) ──► PostgreSQL 16
-        ▼
- FastAPI (sato.api)  ◄──►  nginx (SPA React + proxy /api)  ◄── navegador
-```
+## 1. Componentes
+
+| Componente | Tecnología | Responsabilidad | Código |
+|---|---|---|---|
+| Pipeline de datos y ML | Python 3.12, DuckDB, pandas, LightGBM, SHAP | Descarga, normalización, integración, variables, entrenamiento, explicaciones, monitoreo y carga | `sato/` (salvo `api/`) |
+| Base de datos | PostgreSQL 16 (`pg_trgm`, `unaccent`, texto completo en español) | Datos servidos, historial de cargas, usuarios, revisiones, suscripciones y auditoría | `db/migrations/` |
+| API | FastAPI, SQLAlchemy Core, slowapi, PyJWT, bcrypt, ReportLab | Lectura pública, revisión autenticada, informes PDF, estado y monitoreo | `sato/api/` |
+| Interfaz | React 19, TypeScript, Vite, Tailwind, Radix UI, Recharts, Leaflet, TanStack Query | Panorama, alertas, cartera, fichas, validación, fuentes, estado del sistema | `web/src/` |
+| Proxy web | nginx 1.27 | Archivos estáticos, proxy `/api`, límites de tasa, cabeceras de seguridad | `docker/nginx.conf` |
+| Worker | Python (`sato.cron_runner`) | Sincronización mensual autocontrolada y resumen semanal por correo | `sato/cron_runner.py` |
+| HTTPS (producción) | Caddy 2 | Certificados automáticos y HSTS | `deploy/` |
 
 ## 2. Decisiones de arquitectura
 
 | Decisión | Alternativas evaluadas | Razón |
 |---|---|---|
-| **DuckDB + Parquet** para el procesamiento analítico | Spark, Pandas puro, PostgreSQL como data lake | Volumen de ~3 GB brutos (CSV de 7–10 GB por año de SIAF se agregan en ~1 min con DuckDB en un solo equipo). Sin servidor, reproducible, gratuito |
-| **PostgreSQL 16** para servir la plataforma | Supabase, MongoDB, SQLite | Relacional con integridad, búsqueda de texto completo en español (`tsvector` + `unaccent`), trigramas; gratuito y portable. Supabase no aporta nada que la tesis necesite y añade dependencia de un proveedor |
-| **Sin pgvector** | pgvector para búsqueda semántica | Los embeddings se usan fuera de línea como features; la plataforma no requiere búsqueda vectorial en línea |
-| **Sin Airflow/Prefect/Dagster** | Orquestadores | Actualización mensual y un único flujo lineal: `python -m sato.pipeline all` programado (cron / tarea programada / GitHub Actions) basta. Menos componentes que mantener |
-| **LightGBM + TreeSHAP** | Regresión logística, Random Forest, XGBoost, redes neuronales | Mejor o igual PR-AUC en validación, manejo nativo de nulos y categóricas, explicaciones exactas y rápidas. Deep learning no se justifica con ~50 mil filas tabulares |
-| **Sentence-BERT multilingüe preentrenado** (sin ajuste fino) | BETO ajustado, LLMs | Ajuste fino requeriría etiquetas por asiento que no existen; el preentrenado + TF-IDF + léxico permite medir el aporte del texto con costo bajo |
-| **FastAPI** | Django, Node/Express | Mismo lenguaje que el pipeline, validación con Pydantic, OpenAPI automático |
-| **React + Vite (SPA estática) + nginx** | Next.js | No se necesita renderizado en servidor; build estático servido por nginx, que además hace de proxy de la API (un solo origen, CSP estricta) |
-| **Docker Compose** | Kubernetes | 3 servicios + 1 job; Kubernetes sería sobreingeniería |
+| **DuckDB + Parquet** para el procesamiento analítico | Spark, pandas puro, PostgreSQL como data lake | ~3 GB brutos; los CSV anuales de SIAF (7–10 GB) se agregan en un minuto en un solo equipo, sin servidor |
+| **PostgreSQL 16** para servir la plataforma | Supabase, MongoDB, SQLite | Integridad relacional, búsqueda de texto completo en español, trigramas, MVCC para recargas sin cortar la lectura |
+| **Sin orquestador externo** (Airflow, Prefect, Dagster) | Orquestadores | Un flujo lineal y mensual; el worker propio aporta candado, reintentos, latido y avisos con menos componentes |
+| **LightGBM + TreeSHAP** | Regresión logística, bosque aleatorio, XGBoost, redes neuronales | Mejor o igual PR-AUC en validación, nulos nativos y explicaciones exactas; el volumen tabular no justifica aprendizaje profundo |
+| **Sentence-BERT preentrenado** (sin ajuste fino) | BETO ajustado, modelos generativos | No hay etiquetas por asiento para ajustar; el aporte del texto se mide por ablación |
+| **FastAPI** | Django, Node | Mismo lenguaje que el pipeline, validación con Pydantic, OpenAPI automático |
+| **SPA estática + nginx** | Next.js | No requiere render en servidor; un solo origen permite una CSP estricta |
+| **Docker Compose** | Kubernetes | 3 servicios, 1 trabajo y 1 worker: Kubernetes sería sobreingeniería |
+| **Vistas materializadas del riesgo vigente** | `LATERAL ... LIMIT 1` por fila | El listado de la cartera bajó de ~0,8 s a menos de 0,1 s (se refrescan en cada carga) |
+| **Caché en memoria por versión de datos** | Redis | Los datos cambian una vez al mes; la caché se invalida sola al cambiar `corte_datos` y no agrega un servicio |
 
-## 3. Modelo de datos (PostgreSQL, esquema `sato`)
+## 3. Modelo de datos (esquema `sato`)
 
-`db/migrations/001_schema.sql`
+| Grupo | Tablas | Se recarga en cada versión |
+|---|---|---|
+| Linaje | `fuente_archivo`, `corte_datos` | Sí |
+| Dominio | `entidad`, `contratista`, `inversion`, `obra`, `asiento`, `siaf_mensual`, `infobras_obra`, `contraloria_paralizada`, `mef_seguimiento` | Sí |
+| Cartera nacional | `cartera_obra`, `cartera_riesgo`, `cartera_explicacion` | Sí |
+| Modelo y explicaciones | `modelo`, `prediccion`, `explicacion`, `evidencia`, `simulacion`, `configuracion` | Sí |
+| Investigación | `experimento_resultado`, `comparacion_ab` | Sí |
+| Vistas derivadas | `obra_prediccion_vigente`, `cartera_riesgo_vigente` (materializadas) | Se refrescan |
+| Operación | `carga_datos`, `sincronizacion`, `servicio_latido`, `envio_correo` | No |
+| Personas | `usuario`, `revision_alerta`, `auditoria`, `suscripcion` | No |
 
-* **Linaje**: `fuente_archivo` (URL, SHA-256, fechas), `corte_datos`.
-* **Dominio**: `entidad`, `contratista`, `inversion` (CUI), `obra` (contrato con cuaderno digital; PK = id del cuaderno),
-  `asiento` (con `tsvector` generado e índice GIN), `siaf_mensual`, `infobras_obra` (foto), `contraloria_paralizada`, `mef_seguimiento`.
-* **ML**: `modelo` (versión, métricas de test, features, SHA-256, activo), `prediccion` (obra × corte; `backtest` o `vigente`;
-  `y_observado` cuando el horizonte ya transcurrió), `explicacion` (top-8 TreeSHAP), `evidencia` (asiento / SIAF / F12B / historial).
-* **Investigación**: `experimento_resultado`, `comparacion_ab`.
-* **Seguridad**: `usuario` (bcrypt), `revision_alerta` (clave natural obra+corte+versión, sobrevive recargas), `auditoria`.
+Las revisiones humanas se guardan por clave natural (obra, corte y versión del modelo), no por el identificador de la
+predicción, para que sobrevivan a cada recarga. Migraciones: `001_schema.sql`, `002_cartera_nacional.sql`, `003_operacion.sql`
+(historial de cargas, latido, vistas materializadas, vencimiento de enlaces y unicidad de suscripciones con `NULLS NOT DISTINCT`).
 
-Relaciones: `obra.cui → inversion`, `obra.entidad_ruc → entidad`, `obra.contratista_ruc → contratista`,
-`asiento.cuaderno_id → obra`, `prediccion → modelo, obra`, `explicacion/evidencia → prediccion`, `evidencia.asiento_id → asiento`.
+## 4. Carga de datos y compuerta de integridad
 
-## 4. Pipeline de datos: propiedades
-
-| Propiedad | Implementación |
-|---|---|
-| Idempotencia | Cada paso sobrescribe su salida; la carga a BD es una transacción `truncate + copy` |
-| Versionado | `manifest.jsonl` (SHA-256 por archivo), versión del modelo = objetivo-H-features-fecha de corte, git para código |
-| Logs | `logging` estándar con marca de tiempo en cada paso; request-id en la API |
-| Reintentos | Descargas con backoff exponencial (5 intentos) |
-| Calidad de datos | Estado de parseo por registro (`ok/repaired/rejected`) y reportes `*.quality.json`; pruebas de no-fuga |
-| Linaje | Cada evidencia apunta al registro fuente (asiento N°, archivo mensual OECE, mes SIAF, URL oficial) |
-| Incremental | Las fuentes publican archivos completos (no deltas); se recalcula todo mensualmente (~1 h, dominada por embeddings) |
-| Fallos | Un paso fallido detiene el pipeline; la BD solo se reemplaza si la carga completa termina (rollback automático) |
+1. Migraciones pendientes (`public.schema_migrations`).
+2. Validación de entradas: archivos presentes, columnas requeridas, claves sin nulos ni repetidos.
+3. Transacción única: `DELETE` de las tablas de datos (los lectores siguen viendo la versión vigente por MVCC) y `COPY` de
+   la nueva versión.
+4. Conciliación por tabla: filas de origen, cargadas y descartadas, con el motivo del descarte.
+5. `REFRESH MATERIALIZED VIEW CONCURRENTLY`, reporte de monitoreo y auditoría de calidad (`sato/serving/calidad.py`).
+6. Compuerta: se rechaza si algún chequeo CRÍTICO tiene hallazgos o si una tabla clave cae más de `SATO_CARGA_CAIDA_MAX`.
+7. `COMMIT` (o `ROLLBACK`) y registro del intento en `carga_datos`; después, `VACUUM (ANALYZE)`.
 
 ## 5. API (`/api/v1`)
 
-| Método | Ruta | Descripción | Auth |
+| Método | Ruta | Descripción | Acceso |
 |---|---|---|---|
-| GET | `/api/health`, `/api/ready` | Salud y disponibilidad (BD + modelo activo) | — |
-| GET | `/obras` | Listado con filtros (provincia, sector, estado, nivel, texto) y paginación | — |
-| GET | `/obras/mapa` | Obras con coordenadas y último nivel | — |
-| GET | `/obras/{id}` | Detalle integrado + enlaces a fuentes oficiales | — |
-| GET | `/obras/{id}/riesgo` | Serie de predicciones, actividad mensual, SIAF, hitos | — |
-| GET | `/obras/{id}/asientos` | Asientos con búsqueda de texto completo | — |
-| GET | `/alertas` | Alertas del corte con sus 3 factores principales | — |
-| GET | `/predicciones/{id}` | Explicación TreeSHAP + evidencia documental | — |
-| GET | `/estadisticas/resumen` | KPI, provincias, sectores, histórico de backtest | — |
-| GET | `/modelo`, `/investigacion/experimentos`, `/investigacion/comparacion`, `/fuentes` | Transparencia del modelo y de los datos | — |
-| POST | `/auth/login` · GET `/auth/me` | JWT (HS256) | — |
+| GET | `/api/health`, `/api/ready` | Proceso vivo; base con modelo activo y datos cargados | público |
+| GET | `/resumen`, `/comparador`, `/ambitos`, `/filtros` | Panorama por ámbito, comparación territorial y sectorial, valores de filtros | público |
+| GET | `/radar/cuaderno`, `/radar/cartera` | Obras activas ordenadas por riesgo con sus 3 factores principales | público |
+| GET | `/obras`, `/obras/mapa`, `/obras/{id}`, `/obras/{id}/riesgo`, `/obras/{id}/asientos`, `/obras/{id}/informe-pdf` | Contratos con cuaderno de obra digital | público |
+| GET | `/cartera`, `/cartera/mapa`, `/cartera/{codigo}` | Cartera nacional INFOBRAS | público |
+| GET | `/alertas`, `/predicciones/{id}`, `/predicciones/{id}/simulacion` | Alertas del corte, explicación con evidencia, sensibilidad | público |
+| GET | `/modelo`, `/modelo/cartera`, `/modelo/calibracion`, `/investigacion/*`, `/estadisticas/resumen`, `/fuentes` | Transparencia del modelo y de los datos | público |
+| GET | `/sistema/estado`, `/sistema/monitoreo`, `/sistema/cargas`, `/sistema/calidad`, `/sistema/sincronizacion` | Semáforo operativo, deriva, historial de cargas, calidad, fuentes | público |
+| POST | `/suscripciones` · GET `/suscripciones/confirmar`, `/suscripciones/baja` | Resumen semanal con doble confirmación | público |
+| POST | `/auth/login` · GET `/auth/me` | Sesión con JWT | público |
 | GET/POST | `/alertas/{obra}/{corte}/revisiones` | Revisión humana de alertas | analista, admin |
-| GET | `/admin/auditoria` | Registro de auditoría | admin |
+| GET | `/admin/auditoria`, `/admin/sincronizaciones` | Auditoría y errores completos de operación | admin |
 
-Errores: 401/403/404/422 con `detail`; 500 genérico sin filtrar detalles internos. Documentación OpenAPI en `/api/docs`.
+Errores: 401/403/404/422/429 con `detail`; 503 con `Retry-After` si la base no responde; 500 genérico sin detalles internos.
 
-## 6. Seguridad
+## 6. Seguridad (defensa en profundidad)
 
-* **Secretos** solo por variables de entorno (`.env` fuera de git; `SATO_JWT_SECRET` ≥ 32 caracteres obligatorio en producción).
-* **Contraseñas** con bcrypt; sin usuarios por defecto (el administrador se crea desde variables de entorno).
-* **Autorización** por rol (`analista`, `admin`); la lectura es pública porque los datos de origen son públicos.
-* **Inyección SQL**: solo consultas parametrizadas (SQLAlchemy `text()` con parámetros enlazados); prueba automática.
-* **Validación** de entrada con Pydantic/FastAPI (longitudes, enumeraciones, UUID, rangos de paginación).
-* **XSS**: React escapa por defecto; CSP estricta en nginx (`script-src 'self'`), sin HTML crudo del usuario.
-* **CORS** restringido a orígenes configurados; **rate limiting** (slowapi) por IP.
-* **Cabeceras**: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, CSP.
-* **Auditoría** de inicios de sesión (exitosos y fallidos) y revisiones.
-* **HTTPS**: terminado en el proxy/plataforma de despliegue (ver §7). Contenedores sin root.
+| Capa | Control | Verificación |
+|---|---|---|
+| Red | La API no publica puertos; la web escucha en `127.0.0.1` salvo `WEB_BIND`; en producción solo Caddy (80/443) | `docker-compose.yml`, `deploy/` |
+| Proxy | Límite por IP (5 r/s, ráfaga 60) y estricto en ingreso y suscripción (10 r/min); `X-Forwarded-For` aceptado solo desde la IP fija de Caddy (`SATO_PROXY_CONFIABLE`) y reemplazado hacia la API; CSP, `X-Frame-Options`, `nosniff` | `docs/articulo/evaluacion/pruebas_seguridad.py` |
+| API | Validación Pydantic (tipos, longitudes, enumeraciones, UUID); consultas parametrizadas; `statement_timeout` y `lock_timeout`; límite de intentos de ingreso por cuenta e IP; `Cache-Control: no-store` en respuestas privadas | `tests/test_seguridad.py` |
+| Sesión | JWT HS256 con emisor, `nbf`, `exp` y campos obligatorios; rol leído de la base en cada solicitud; secreto ≥ 32 caracteres obligatorio en producción; token en `sessionStorage` enviado por cabecera (sin cookies, sin CSRF) | `tests/test_seguridad.py`, `web/src/api.test.ts` |
+| Datos personales | Contraseñas bcrypt; respuestas de ingreso y suscripción que no revelan cuentas; auditoría de ingresos, bloqueos, revisiones e informes | `tests/test_seguridad.py` |
+| Interfaz | React escapa el contenido; enlaces externos solo http(s) con `rel="noopener noreferrer"`; CSP `script-src 'self'` | `web/src/api.test.ts` |
+| Dependencias | `pip-audit` y `npm audit` en CI | `.github/workflows/ci.yml` |
+| Contenedores | Usuarios sin privilegios (uid 10001), imágenes `slim`/`alpine`, `HEALTHCHECK` | `docker/*.Dockerfile` |
 
-## 7. Despliegue y costos
+## 7. Operación autocontrolada
 
-| Opción | Componentes | Costo aproximado | Comentario |
-|---|---|---|---|
-| **Local (entregado)** | `docker compose up` | 0 | Reproducible en cualquier PC con Docker |
-| **Costo mínimo** | VM pequeña (1–2 vCPU, 2 GB) con Docker Compose + Caddy para HTTPS automático | ~US$ 5–12/mes (o créditos académicos) | La BD de Arequipa ocupa < 500 MB; el pipeline mensual puede correr en el equipo del equipo de tesis y cargar la BD remota |
-| **Recomendada** | Frontend estático en CDN (Cloudflare Pages), API en contenedor gestionado (Render/Fly/Cloud Run), PostgreSQL gestionado con backups | ~US$ 15–30/mes | Backups automáticos, HTTPS y dominios gestionados |
+| Mecanismo | Implementación |
+|---|---|
+| Sincronización mensual | `cron_runner.bucle`: día `SATO_SYNC_DIA` (acotado a 1–28) |
+| Exclusión mutua | `pg_try_advisory_lock`: una segunda sincronización se omite |
+| Reintentos | Por paso con espera exponencial (`SATO_PASO_REINTENTOS`); por mes, hasta `SATO_SYNC_MAX_INTENTOS` con espera de 2, 4, 8 h |
+| Recuperación | Las sincronizaciones `EN_CURSO` huérfanas se marcan como interrumpidas al iniciar la siguiente |
+| Latido | `servicio_latido`: `/sistema/estado` avisa si el worker no reporta en 3 h |
+| Avisos | Correo a `SATO_ALERTAS_EMAIL` ante fallo, rechazo, intentos agotados o alertas del monitoreo |
+| Semáforo | `/sistema/estado`: OPERATIVO, CON_AVISOS o DEGRADADO, con motivos calculados a partir del estado real |
 
-El pipeline pesado (SIAF ~5 GB comprimidos, embeddings con GPU) **no** necesita correr en la nube: produce
-`artifacts/release` y la carga a la BD remota se hace con `DATABASE_URL`.
-
-**Backups y recuperación**: `pg_dump` diario del esquema `sato` (la BD se puede reconstruir íntegramente desde el
-pipeline; las únicas tablas no reproducibles son `usuario`, `revision_alerta` y `auditoria`).
-
-**Monitoreo**: `/api/ready` para health checks; logs estructurados con request-id; métricas de drift (§8).
-
-## 8. Drift y reentrenamiento
+## 8. Monitoreo del modelo
 
 | Qué se monitorea | Cómo | Acción |
 |---|---|---|
-| Cobertura de fuentes | nº de asientos/cuadernos por mes, % enlazado a CUI | alerta si cae > 20 % frente al promedio de 6 meses |
-| Cambio de catálogo de asientos | tipos nuevos sin armonizar (`tipo_std = OTRO`) | actualizar `TIPO_MAP` (ya ocurrió en 2025-05 y 2026-04) |
-| Drift de features | PSI mensual de las 20 features más importantes vs. entrenamiento | PSI > 0.25 → reentrenar |
-| Desempeño | cuando el horizonte H se cumple, `y_observado` permite calcular PR-AUC/recall del mes | caída > 30 % en 3 cortes → recalibrar umbral / reentrenar |
-| Normativa | cambios de reglamento (p.ej. DS 001-2026-EF) | revisar definición del evento y tipos de asiento |
+| Cobertura de la fuente | Asientos por mes frente al promedio de 6 meses | Aviso si cae más de 20 % |
+| Catálogo de asientos | Tipos sin armonizar (`tipo_std = OTRO`) | Actualizar el mapeo de tipos |
+| Deriva de variables | PSI del último corte frente al periodo de entrenamiento | Aviso si PSI > 0,25: evaluar reentrenamiento (decisión humana) |
+| Desempeño realizado | PR-AUC y proporción de atrasos anticipados cuando vence el horizonte de 60 días | Revisar si cae de forma sostenida |
+| Proporción de nivel alto | Puntaje z robusto del corte vigente frente a los cortes del backtest | Aviso si \|z\| > 3,5: revisar fuentes antes de difundir |
 
-Implementación: `sato/models/monitor.py` → `artifacts/monitoring/reporte.json` (paso `monitor` del pipeline).
-Reentrenamiento programado: trimestral con ventana expansiva (el backtest de la plataforma ya simula esta política).
+Implementación: `sato/models/monitor.py` (paso `monitor`) → `artifacts/monitoring/reporte.json` → configuración
+`monitoreo_modelo` → `/api/v1/sistema/monitoreo` → pantalla «Estado y monitoreo».

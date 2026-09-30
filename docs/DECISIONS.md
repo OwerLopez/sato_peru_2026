@@ -124,3 +124,58 @@ es reproducible con los scripts de `research/` y los módulos de `sato/` (ver `d
 * **Adoptada:** `sato/serving/calidad.py` ejecuta 29 chequeos sobre la base después de cada carga y los publica en
   «Datos y fuentes». Los hallazgos se informan tal como están en las fuentes; no se imputan ni se ocultan.
 * **Resultado:** detectó un defecto real (1 800 obras activas sin explicación del riesgo de seguimiento), corregido con prueba de regresión.
+
+## D17. Compuerta de integridad antes de publicar cada carga
+
+* **Motivo:** la carga reemplazaba todos los datos sin comprobar que la nueva versión fuera completa; un archivo oficial
+  truncado o un paso previo fallido habría publicado una base incompleta.
+* **Adoptada:** `load_db.load` valida las entradas (archivos, columnas, claves sin nulos ni repetidos), concilia filas de origen,
+  cargadas y descartadas con su motivo, y antes del `COMMIT` exige que los chequeos críticos de `calidad` estén en cero y que
+  ninguna tabla clave caiga más de `SATO_CARGA_CAIDA_MAX` (20 %) frente a la carga vigente. Si falla, la transacción se revierte.
+  Cada intento queda en `carga_datos` (OK, RECHAZADA o ERROR) y se publica en «Estado y monitoreo».
+* **Verificación:** pruebas de reversión sobre una base temporal (`tests/test_bd.py`) y unitarias de la compuerta (`tests/test_operacion.py`).
+
+## D18. Recarga sin interrumpir la lectura (DELETE en lugar de TRUNCATE)
+
+* **Evidencia:** durante una recarga real, `/api/v1/resumen` y `/api/v1/obras` no respondieron en 30 s: `TRUNCATE` toma un
+  bloqueo exclusivo que se mantiene toda la transacción (unos 10 minutos).
+* **Adoptada:** la transacción borra con `DELETE` y refresca las vistas con `REFRESH MATERIALIZED VIEW CONCURRENTLY`; por MVCC
+  la API sigue leyendo la versión vigente hasta el `COMMIT`. Después se ejecuta `VACUUM (ANALYZE)`. La API usa además
+  `lock_timeout` (5 s) y `statement_timeout` (20 s) para responder 503 en lugar de quedar colgada ante cualquier bloqueo.
+* **Costo medido:** la carga pasa de unos 10 a 22 minutos (más 4 minutos de `VACUUM`), y las consultas son más lentas mientras
+  dura (mediana de 2,1 s); a cambio, la API respondió 417 de 417 solicitudes durante la recarga.
+* **Hallazgos al implementarlo:** el borrado quedó detenido porque `evidencia.asiento_id` no tenía índice (cada asiento borrado
+  recorría la tabla hija); se indexaron las seis claves foráneas que no lo tenían y se agregó una prueba que lo exige. El
+  `VACUUM` posterior fallaba por la memoria compartida de 64 MB de Docker (`shm_size: 256mb`) y, al estar dentro de la carga,
+  marcaba como ERROR una versión ya publicada; ahora corre después del registro y su falla solo genera un aviso.
+
+## D19. Monitoreo del modelo visible y detección de anomalías
+
+* **Motivo:** el paso `monitor` calculaba deriva (PSI) y desempeño realizado, pero el reporte no llegaba a la plataforma.
+* **Adoptada:** el reporte se carga con cada versión de datos y se publica en `/sistema/monitoreo` y en la pantalla «Estado y
+  monitoreo», con nombres de variables en lenguaje claro. Se agregó la detección de una proporción atípica de obras en nivel
+  alto en el corte vigente (puntaje z robusto con mediana y MAD, umbral 3,5; Iglewicz y Hoaglin, 1993).
+* **No adoptado:** reentrenamiento automático. El PSI alto puede reflejar un cambio real de la cartera y no un deterioro; el
+  reentrenamiento exige revisar el desempeño realizado y repetir la validación temporal, por lo que queda como decisión humana.
+
+## D20. Worker autocontrolado
+
+* **Adoptada:** candado de base de datos (`pg_try_advisory_lock`) para que nunca haya dos sincronizaciones simultáneas;
+  reintentos por paso con espera exponencial (los rechazos de la compuerta no se reintentan); tope de intentos por mes con
+  espera creciente; recuperación de sincronizaciones interrumpidas; latido en `servicio_latido`; avisos por correo a
+  `SATO_ALERTAS_EMAIL` ante fallos, rechazos o alertas del monitoreo.
+
+## D21. Endurecimiento de seguridad verificado con pruebas
+
+* Límite de intentos de ingreso por cuenta y por IP en la API (además de nginx) y verificación bcrypt aun cuando la cuenta no
+  existe (sin diferencia de tiempo que revele cuentas).
+* JWT con emisor, `nbf` y campos obligatorios; el rol efectivo se lee de la base en cada solicitud.
+* Suscripciones con respuesta uniforme (no revelan suscriptores), enlace de confirmación con vencimiento, validación del
+  ámbito contra los datos y enlaces armados con `SATO_BASE_URL` (nunca con la cabecera `Host`). Se corrigió la restricción
+  única que, por tratar `NULL` como distinto, permitía duplicar suscripciones a «todo el Perú».
+* IP del cliente: nginx confiaba en `X-Forwarded-For` de toda la red privada, y un cliente que llegaba por la puerta de
+  enlace de Docker podía declarar cualquier IP y evadir los límites de tasa (lo detectó `tests/e2e/test_despliegue.py`: 20
+  intentos de ingreso sin un solo 429). Ahora solo se confía en la IP fija de Caddy (`SATO_PROXY_CONFIABLE`, plantilla de
+  nginx) y nginx reemplaza la cabecera hacia la API; la web se publica solo en `127.0.0.1` salvo que se indique `WEB_BIND`.
+* `Cache-Control: no-store` en respuestas autenticadas y de acciones; `X-Request-ID` solo si es un identificador simple.
+* Enlaces a fuentes externas solo con esquema http(s) en la interfaz.
