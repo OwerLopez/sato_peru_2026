@@ -27,7 +27,7 @@ export default function Buscar() {
   return (
     <div className="space-y-5">
       <EncabezadoPagina titulo={`Resultados para “${q}”`} descripcion={departamento ? `En ${titulo(departamento)}. Cambie el ámbito para buscar en todo el Perú.` : 'En todo el Perú.'} />
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Seccion titulo="Obras con cuaderno de obra digital" subtitulo={o.data ? `${fmtNum(o.data.total)} coincidencias` : undefined} sinRelleno>
           {o.isLoading ? (
             <div className="p-4">

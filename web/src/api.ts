@@ -3,22 +3,36 @@ import { useQuery } from '@tanstack/react-query'
 
 export const API = '/api/v1'
 
+// La sesión vive en sessionStorage (se borra al cerrar la pestaña) y se descarta al vencer el token.
+// Se envía como cabecera Authorization (no como cookie), por lo que no aplica la falsificación de solicitudes (CSRF).
 let token: string | null = null
+let expira = 0
 try {
   token = sessionStorage.getItem('sato_token')
+  expira = Number(sessionStorage.getItem('sato_token_exp') ?? 0)
 } catch {
   /* almacenamiento no disponible */
 }
-export const setToken = (t: string | null) => {
+export const SESION_EXPIRADA = 'sato:sesion-expirada'
+export const setToken = (t: string | null, minutos = 0) => {
   token = t
+  expira = t && minutos > 0 ? Date.now() + minutos * 60_000 : 0
   try {
-    if (t) sessionStorage.setItem('sato_token', t)
-    else sessionStorage.removeItem('sato_token')
+    if (t) {
+      sessionStorage.setItem('sato_token', t)
+      sessionStorage.setItem('sato_token_exp', String(expira))
+    } else {
+      sessionStorage.removeItem('sato_token')
+      sessionStorage.removeItem('sato_token_exp')
+    }
   } catch {
     /* almacenamiento no disponible */
   }
 }
-export const getToken = () => token
+export const getToken = () => {
+  if (token && expira && Date.now() > expira) setToken(null)
+  return token
+}
 
 export class ApiError extends Error {
   status: number
@@ -40,12 +54,18 @@ const MENSAJES: Record<number, string> = {
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(init.headers as Record<string, string>) }
-  if (token) headers.Authorization = `Bearer ${token}`
+  const t = getToken()
+  if (t) headers.Authorization = `Bearer ${t}`
   let r: Response
   try {
     r = await fetch(`${API}${path}`, { ...init, headers })
   } catch {
     throw new ApiError(0, 'No hay conexión con el servidor. Verifique su red e intente de nuevo.')
+  }
+  if (r.status === 401 && t) {
+    // token vencido o revocado: se cierra la sesión en toda la interfaz
+    setToken(null)
+    window.dispatchEvent(new Event(SESION_EXPIRADA))
   }
   if (!r.ok) {
     let detalle: string | null = null
@@ -139,6 +159,68 @@ export interface Filtros {
   sectores: string[]
   tipos_obra: string[]
   modalidades: string[]
+}
+
+export type EstadoGeneral = 'OPERATIVO' | 'CON_AVISOS' | 'DEGRADADO'
+export interface Desempeno {
+  T: string
+  n: number
+  eventos: number
+  pr_auc: number
+  recall_alerta: number
+}
+export interface EstadoSistema {
+  estado: EstadoGeneral
+  motivos: { nivel: 'INFO' | 'AVISO' | 'CRITICO'; componente: string; texto: string }[]
+  verificado_en: string
+  base_datos: { ok: boolean; latencia_ms: number }
+  datos: { fecha_corte: string | null; dias_desde_corte: number | null; frescura: { fuente: string; ultimo_dato: string }[] | null }
+  carga: { ultima: { inicio: string; fin: string | null; estado: string } | null; ultima_ok: string | null }
+  calidad: Partial<Record<'OK' | 'AVISO' | 'INFO' | 'CRITICO', number>> | null
+  modelo: { version: string; entrenado_hasta: string; horizonte_dias: number; variables_con_deriva: number; anomalia_nivel_alto: boolean | null; desempeno_realizado: Desempeno[] } | null
+  sincronizacion: { inicio: string; fin: string | null; estado: string } | null
+  worker: { ultimo_latido: string; detalle: Record<string, unknown> } | null
+}
+export interface Monitoreo {
+  alertas: string[]
+  psi_detalle?: { variable: string; etiqueta: string; psi: number }[]
+  desempeno_realizado: Desempeno[]
+  anomalia_nivel_alto?: {
+    evaluable: boolean
+    motivo?: string
+    corte?: string
+    tasa?: number
+    mediana?: number
+    z?: number
+    umbral_z?: number
+    anomala?: boolean
+    cortes_historicos?: number
+    serie?: { T: string; tipo: string; tasa: number }[]
+  }
+  cobertura_mensual: { mes: string; asientos: number; cuadernos_activos: number; var_vs_6m: number | null }[]
+  tipos_sin_armonizar: Record<string, number>
+}
+export interface Carga {
+  id: number
+  inicio: string
+  fin: string | null
+  estado: 'EN_CURSO' | 'OK' | 'RECHAZADA' | 'ERROR'
+  conteos: Record<string, number> | null
+  conciliacion: Record<string, { origen: number; cargadas: number; descartadas: number; motivo: string }> | null
+  validacion: { entradas?: string[]; criticos?: string[]; caidas?: string[]; forzada?: boolean; max_caida?: number } | null
+  mensaje: string | null
+}
+export const useEstado = () => useQuery({ queryKey: ['estado'], queryFn: () => api<EstadoSistema>('/sistema/estado'), staleTime: 60_000, refetchInterval: 5 * 60_000 })
+
+/** Solo enlaces http(s): un valor de la fuente con otro esquema (javascript:, data:) no se convierte en enlace. */
+export const urlSegura = (u?: string | null) => {
+  if (!u) return null
+  try {
+    const x = new URL(u)
+    return x.protocol === 'https:' || x.protocol === 'http:' ? x.href : null
+  } catch {
+    return null
+  }
 }
 
 export const useCalibracion = () => useQuery({ queryKey: ['calibracion'], queryFn: () => api<Calibracion>('/modelo/calibracion'), staleTime: Infinity })

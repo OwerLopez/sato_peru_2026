@@ -91,7 +91,7 @@ function Alerta60({ md }: { md: Modelo }) {
   const ma = md.metricas.arequipa
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <Calibracion />
         </div>
@@ -105,7 +105,7 @@ function Alerta60({ md }: { md: Modelo }) {
           ayuda="backtest"
           subtitulo="Cada mes del periodo de prueba se aplicó el modelo reentrenado solo con datos anteriores, se eligieron obras para revisar con distintas estrategias y se contrastó con lo ocurrido."
         >
-          <div className="grid gap-6 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <TablaPoliticas titulo="Todo el Perú" b={bn} />
             {ba && <TablaPoliticas titulo="Arequipa" b={ba} />}
           </div>
@@ -135,7 +135,7 @@ function ModelosCartera() {
           del plazo y la ejecución del gasto (SIAF, con un mes de rezago).
         </p>
       </Seccion>
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {(['inicio', 'seguimiento'] as const).map((t) => {
           const m = t === 'inicio' ? c.metricas_test.inicio.lgbm : c.metricas_test.seguimiento.seguimiento_lgbm
           const base = t === 'seguimiento' ? c.metricas_test.seguimiento.exante_lgbm : c.metricas_test.inicio.regla
@@ -379,7 +379,7 @@ export default function Laboratorio() {
         titulo="Validación del modelo"
         descripcion="Evidencia de que las predicciones funcionan: el modelo se entrenó con el pasado y se evaluó en meses posteriores que no conoció, comparando lo estimado con lo que realmente ocurrió."
       />
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Respuesta
           icono={<Scale className="size-4" />}
           pregunta="¿Distingue las obras que se atrasan?"

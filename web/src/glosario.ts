@@ -80,6 +80,25 @@ export const GLOSARIO = {
     termino: 'Intervalo de confianza (IC 95 %)',
     definicion: 'Rango de valores compatible con los datos al remuestrear las obras 1 000 veces (bootstrap). Si no incluye el cero, la diferencia es estadísticamente consistente.',
   },
+  deriva: {
+    termino: 'Cambio en los datos de entrada (PSI)',
+    definicion:
+      'Índice de estabilidad poblacional: compara cómo se distribuye cada variable en el último corte frente al periodo con el que se entrenó el modelo. Por debajo de 0,10 no hay cambio relevante; entre 0,10 y 0,25 hay un cambio moderado; sobre 0,25 el cambio es grande y conviene evaluar un reentrenamiento.',
+  },
+  deteccion: {
+    termino: 'Atrasos anticipados',
+    definicion:
+      'De las obras que registraron el atraso formal en los 60 días siguientes a un corte, proporción que ya estaba en nivel alto en ese corte. Solo se calcula para cortes cuyo plazo de 60 días ya venció.',
+  },
+  compuerta: {
+    termino: 'Compuerta de integridad',
+    definicion:
+      'Control automático que se ejecuta antes de publicar cada actualización de datos. Si una tabla importante pierde más del 20 % de sus filas o falla un chequeo crítico, la actualización se descarta y se siguen mostrando los datos anteriores.',
+  },
+  conciliacion: {
+    termino: 'Conciliación de registros',
+    definicion: 'Cuenta de filas de cada fuente: cuántas llegaron, cuántas se cargaron y cuántas se descartaron y por qué. Permite comprobar que no se pierden registros sin explicación.',
+  },
 } as const
 
 export type Termino = keyof typeof GLOSARIO

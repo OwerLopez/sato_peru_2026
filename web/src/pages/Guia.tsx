@@ -22,7 +22,7 @@ export default function Guia() {
   return (
     <div className="space-y-5">
       <EncabezadoPagina titulo="Guía y glosario" descripcion="SATO ayuda a decidir qué obras supervisar primero, con estimaciones explicadas y evidencia verificable en fuentes oficiales." />
-      <ol className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <ol className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {PASOS.map((p, i) => (
           <li key={p.t} className="tarjeta flex gap-3 p-4">
             <span className="num flex size-7 shrink-0 items-center justify-center rounded-full bg-marca-50 text-sm font-semibold text-marca-700">{i + 1}</span>
@@ -33,7 +33,7 @@ export default function Guia() {
           </li>
         ))}
       </ol>
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Seccion
           titulo="Glosario"
           className="lg:col-span-2"

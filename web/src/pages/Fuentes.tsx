@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, CheckCircle2, CircleDot, ExternalLink, Info } from 'lucide-react'
+import { AlertCircle, CheckCircle2, CircleDot, ExternalLink, Info, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { api, fmtFecha, fmtNum, fmtPct } from '../api'
 import { Cargando, CargandoPagina, EncabezadoPagina, ErrorMsg, InfoTip, Kpi, Panel, Seccion } from '../components/ui'
@@ -11,10 +11,10 @@ interface Fuentes {
 }
 interface Calidad {
   generado_en: string
-  chequeos: { seccion: string; clave: string; descripcion: string; valor: number; total: number | null; proporcion: number | null; estado: 'OK' | 'AVISO' | 'INFO' }[]
+  chequeos: { seccion: string; clave: string; descripcion: string; valor: number; total: number | null; proporcion: number | null; estado: 'OK' | 'AVISO' | 'INFO' | 'CRITICO' }[]
   frescura: { fuente: string; ultimo_dato: string }[]
   archivos: { total: number; bytes: number; sin_huella: number }
-  resumen: Record<'OK' | 'AVISO' | 'INFO', number>
+  resumen: Partial<Record<'OK' | 'AVISO' | 'INFO' | 'CRITICO', number>>
 }
 interface Sync {
   ultima_sincronizacion: { inicio: string; fin: string | null; estado: string } | null
@@ -33,7 +33,8 @@ const LIMITES = [
   'Las fuentes se regeneran periódicamente y pueden cambiar sin aviso; por eso cada archivo descargado se registra con su huella SHA-256.',
 ]
 
-function IconoEstado({ e }: { e: 'OK' | 'AVISO' | 'INFO' }) {
+function IconoEstado({ e }: { e: 'OK' | 'AVISO' | 'INFO' | 'CRITICO' }) {
+  if (e === 'CRITICO') return <XCircle className="size-4 text-alto" aria-label="Falla de integridad" />
   if (e === 'OK') return <CheckCircle2 className="size-4 text-bajo" aria-label="Sin hallazgos" />
   if (e === 'AVISO') return <AlertCircle className="size-4 text-medio" aria-label="Hallazgo documentado" />
   return <Info className="size-4 text-slate-400" aria-label="Dato descriptivo" />
@@ -169,7 +170,7 @@ export default function FuentesPage() {
         <Kpi titulo="Inversiones con gasto mensual (SIAF)" ayuda="devengado" valor={fmtNum(c.inversiones_con_siaf)} detalle={`De obras con cuaderno digital o de la cartera INFOBRAS; además, ${fmtNum(c.registros_contraloria)} registros de obras paralizadas.`} />
       </div>
       <CalidadDatos />
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <EstadoSync />
         <Seccion titulo="Limitaciones conocidas" subtitulo="Condiciones de las fuentes que acotan lo que el sistema puede afirmar.">
           <ul className="space-y-2 text-sm leading-relaxed text-slate-700">

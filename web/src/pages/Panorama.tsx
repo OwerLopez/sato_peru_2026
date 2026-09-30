@@ -298,7 +298,7 @@ function Confiabilidad({ historico }: { historico: Resumen['historico'] }) {
         </Link>
       }
     >
-      <div className="grid gap-5 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
         <div className="space-y-3 lg:col-span-2">
           {niveles.map((n) => (
             <div key={n.nivel} className="flex items-center gap-3">
@@ -393,7 +393,7 @@ export default function Panorama() {
           detalle={`${fmtNum(d.consolidado.alto)} obras en riesgo alto en al menos un modelo. Es el monto comprometido, no una pérdida estimada.`}
         />
       </div>
-      <div className="grid gap-5 xl:grid-cols-12">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
         <div className="xl:col-span-5 xl:h-[600px]">
           <Prioridad departamento={departamento} total={{ cuaderno: d.cuaderno.alto, cartera: d.cartera.alto }} />
         </div>

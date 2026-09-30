@@ -4,7 +4,7 @@ import { Tabs } from 'radix-ui'
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { api, ESTADO_OP, fmtFecha, fmtMes, fmtMillones, fmtNum, fmtPct, titulo, type Factor, type Nivel } from '../api'
+import { api, ESTADO_OP, fmtFecha, fmtMes, fmtMillones, fmtNum, fmtPct, titulo, type Factor, type Nivel, urlSegura } from '../api'
 import { ListaFactores, VecesPromedio } from '../components/Factores'
 import { CargandoPagina, Dato, ErrorMsg, InfoTip, Seccion, Vacio } from '../components/ui'
 import { COLOR_NIVEL, COLORES } from '../lib/colores'
@@ -168,7 +168,7 @@ export default function CarteraDetalle() {
         </Tabs.List>
         <div className="pt-4">
           <Tabs.Content value="factores">
-            <div className="grid gap-5 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
               {(['seguimiento', 'inicio'] as const).map((t) =>
                 d.explicaciones[t] ? (
                   <Seccion
@@ -216,7 +216,7 @@ export default function CarteraDetalle() {
             </Seccion>
           </Tabs.Content>
           <Tabs.Content value="datos">
-            <div className="grid gap-5 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
               <Seccion titulo="Datos de la obra (INFOBRAS)" className="lg:col-span-2">
                 <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <Dato l="Entidad" v={o.entidad} />
@@ -238,9 +238,9 @@ export default function CarteraDetalle() {
               </Seccion>
               <Seccion titulo="Fuentes oficiales">
                 <ul className="space-y-2">
-                  {d.enlaces.map((e) => (
+                  {d.enlaces.filter((e) => urlSegura(e.url)).map((e) => (
                     <li key={e.url}>
-                      <a href={e.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:border-marca-200 hover:bg-marca-50">
+                      <a href={urlSegura(e.url)!} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:border-marca-200 hover:bg-marca-50">
                         {e.fuente}
                         <ExternalLink className="size-4 text-slate-400" />
                       </a>

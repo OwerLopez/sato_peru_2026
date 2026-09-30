@@ -106,32 +106,34 @@ export function TablaPoliticas({ titulo, b }: { titulo: string; b: Backtest }) {
   return (
     <div>
       <div className="mb-2 text-sm font-medium text-slate-800">{titulo}</div>
-      <table className="tabla">
-        <thead>
-          <tr>
-            <th>Estrategia de revisión mensual</th>
-            <th className="text-right">Obras revisadas</th>
-            <th className="text-right">Aciertos</th>
-            <th className="text-right">Atrasos encontrados</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filas.map(([n, v]) => (
-            <tr key={n}>
-              <td>{n}</td>
-              <td className="num text-right">{fmtNum(100 * (v.tasa_marcadas ?? 0), 1)} %</td>
-              <td className="num text-right">{fmtNum(100 * v.precision, 1)} %</td>
-              <td className="num text-right">{fmtNum(100 * v.recall, 1)} %</td>
+      <div className="overflow-x-auto">
+        <table className="tabla">
+          <thead>
+            <tr>
+              <th>Estrategia de revisión mensual</th>
+              <th className="text-right">Obras revisadas</th>
+              <th className="text-right">Aciertos</th>
+              <th className="text-right">Atrasos encontrados</th>
             </tr>
-          ))}
-          <tr className="text-slate-500">
-            <td>Revisar al azar (referencia)</td>
-            <td className="num text-right">—</td>
-            <td className="num text-right">{fmtNum(100 * b.prevalencia, 1)} %</td>
-            <td className="num text-right">—</td>
-          </tr>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filas.map(([n, v]) => (
+              <tr key={n}>
+                <td>{n}</td>
+                <td className="num text-right">{fmtNum(100 * (v.tasa_marcadas ?? 0), 1)} %</td>
+                <td className="num text-right">{fmtNum(100 * v.precision, 1)} %</td>
+                <td className="num text-right">{fmtNum(100 * v.recall, 1)} %</td>
+              </tr>
+            ))}
+            <tr className="text-slate-500">
+              <td>Revisar al azar (referencia)</td>
+              <td className="num text-right">—</td>
+              <td className="num text-right">{fmtNum(100 * b.prevalencia, 1)} %</td>
+              <td className="num text-right">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <p className="mt-1.5 text-xs text-slate-500">
         {fmtNum(b.filas_observables)} obras-mes con resultado conocido. «Aciertos»: proporción de obras revisadas que tuvieron el atraso formal en 60 días. «Atrasos encontrados»: proporción de todos los
         atrasos que habrían estado entre las obras revisadas.
@@ -181,19 +183,19 @@ export function DetalleTecnico() {
           <table className="tabla max-w-md text-center">
             <thead>
               <tr>
-                <th />
+                <th><span className="sr-only">Estimación del modelo</span></th>
                 <th className="text-center">Hubo atraso formal</th>
                 <th className="text-center">No hubo</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="text-left font-medium">Alerta emitida</td>
+                <th scope="row" className="text-left font-medium normal-case tracking-normal text-sm text-slate-800 bg-transparent">Alerta emitida</th>
                 <td className="num">{fmtNum(mn.tp)}</td>
                 <td className="num">{fmtNum(mn.fp)}</td>
               </tr>
               <tr>
-                <td className="text-left font-medium">Sin alerta</td>
+                <th scope="row" className="text-left font-medium normal-case tracking-normal text-sm text-slate-800 bg-transparent">Sin alerta</th>
                 <td className="num">{fmtNum(mn.fn)}</td>
                 <td className="num">{fmtNum(mn.tn)}</td>
               </tr>

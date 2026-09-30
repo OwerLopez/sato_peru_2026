@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { api, getToken, setToken } from './api'
+import { api, getToken, SESION_EXPIRADA, setToken } from './api'
 
 export interface Usuario {
   id: number
@@ -20,10 +20,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   useEffect(() => {
     if (getToken()) api<Usuario>('/auth/me').then(setUsuario).catch(() => setToken(null))
+    const cerrar = () => setUsuario(null)
+    window.addEventListener(SESION_EXPIRADA, cerrar)
+    return () => window.removeEventListener(SESION_EXPIRADA, cerrar)
   }, [])
   const login = async (email: string, password: string) => {
-    const r = await api<{ access_token: string; usuario: Usuario }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
-    setToken(r.access_token)
+    const r = await api<{ access_token: string; expira_en_min: number; usuario: Usuario }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+    setToken(r.access_token, r.expira_en_min)
     setUsuario(r.usuario)
   }
   const logout = () => {

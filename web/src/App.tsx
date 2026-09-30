@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { BarChart3, BookOpen, Building2, Database, FileText, LayoutDashboard, LogIn, LogOut, Mail, Menu, Search, ShieldCheck, X } from 'lucide-react'
+import { Activity, BarChart3, BookOpen, Building2, Database, FileText, LayoutDashboard, LogIn, LogOut, Mail, Menu, Search, ShieldCheck, X } from 'lucide-react'
 import { Dialog } from 'radix-ui'
 import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { api, fmtFecha, qs } from './api'
+import { api, fmtFecha, qs, useEstado } from './api'
 import { useAmbito } from './ambito'
 import { useAuth } from './auth'
 import { CargandoPagina, Vacio } from './components/ui'
@@ -20,6 +20,7 @@ const Login = lazy(() => import('./pages/Login'))
 const ObraDetalle = lazy(() => import('./pages/ObraDetalle'))
 const Obras = lazy(() => import('./pages/Obras'))
 const Panorama = lazy(() => import('./pages/Panorama'))
+const Sistema = lazy(() => import('./pages/Sistema'))
 const Suscribirse = lazy(() => import('./pages/Suscribirse'))
 
 const NAV = [
@@ -37,6 +38,7 @@ const NAV = [
     items: [
       { to: '/laboratorio', label: 'Validación del modelo', icono: ShieldCheck },
       { to: '/fuentes', label: 'Datos y fuentes', icono: Database },
+      { to: '/sistema', label: 'Estado y monitoreo', icono: Activity },
     ],
   },
   { grupo: 'Ayuda', items: [{ to: '/guia', label: 'Guía y glosario', icono: BookOpen }] },
@@ -60,6 +62,9 @@ function Navegacion({ alNavegar }: { alNavegar?: () => void }) {
     queryKey: ['resumen', departamento],
     queryFn: () => api<{ fecha_corte_cuaderno: string; fecha_corte_cartera: string | null }>(`/resumen${qs({ departamento })}`),
   })
+  const estado = useEstado()
+  const punto = { OPERATIVO: 'bg-green-400', CON_AVISOS: 'bg-amber-400', DEGRADADO: 'bg-red-400' } as const
+  const texto = { OPERATIVO: 'Operativo', CON_AVISOS: 'Operativo con avisos', DEGRADADO: 'Degradado' } as const
   return (
     <div className="flex h-full flex-col gap-6 py-4">
       <Marca />
@@ -91,6 +96,12 @@ function Navegacion({ alNavegar }: { alNavegar?: () => void }) {
         <div className="font-semibold text-white">Datos al corte</div>
         <div>Cuaderno digital: {r.data ? fmtFecha(r.data.fecha_corte_cuaderno) : '…'}</div>
         <div>Cartera INFOBRAS: {r.data ? fmtFecha(r.data.fecha_corte_cartera) : '…'}</div>
+        {estado.data && (
+          <NavLink to="/sistema" onClick={alNavegar} className="mt-2 flex items-center gap-2 rounded-md py-0.5 text-white hover:underline">
+            <span className={`size-2 rounded-full ${punto[estado.data.estado]}`} aria-hidden />
+            Sistema: {texto[estado.data.estado].toLowerCase()}
+          </NavLink>
+        )}
       </div>
     </div>
   )
@@ -162,6 +173,9 @@ export default function App() {
   const [menu, setMenu] = useState(false)
   return (
     <div className="flex min-h-full">
+      <a href="#contenido" className="sr-only z-[2000] rounded-md bg-white px-3 py-2 text-sm font-medium text-marca-800 shadow focus:not-sr-only focus:fixed focus:top-2 focus:left-2">
+        Saltar al contenido principal
+      </a>
       <aside className="fixed inset-y-0 left-0 z-[1100] hidden w-64 bg-marca-950 lg:block">
         <Navegacion />
       </aside>
@@ -180,7 +194,7 @@ export default function App() {
       </Dialog.Root>
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
         <BarraSuperior abrirMenu={() => setMenu(true)} />
-        <main className="mx-auto w-full max-w-[1440px] flex-1 px-3 py-5 sm:px-5 lg:px-7 lg:py-6">
+        <main id="contenido" tabIndex={-1} className="mx-auto w-full max-w-[1440px] flex-1 px-3 py-5 outline-none sm:px-5 lg:px-7 lg:py-6">
           <Pagina>
             <Routes>
               <Route path="/" element={<Panorama />} />
@@ -194,6 +208,7 @@ export default function App() {
               <Route path="/modelo" element={<Navigate to="/laboratorio" replace />} />
               <Route path="/alertas" element={<Navigate to="/obras?nivel=ALTO" replace />} />
               <Route path="/fuentes" element={<Fuentes />} />
+              <Route path="/sistema" element={<Sistema />} />
               <Route path="/guia" element={<Guia />} />
               <Route path="/suscribirse" element={<Suscribirse />} />
               <Route path="/login" element={<Login />} />

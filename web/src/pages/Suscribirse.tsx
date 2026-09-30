@@ -40,7 +40,7 @@ export default function Suscribirse() {
           <span className="text-sm font-medium text-slate-700">Correo electrónico</span>
           <input className="entrada mt-1 w-full" type="email" required maxLength={254} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="text-sm font-medium text-slate-700">Departamento</span>
             <select className="entrada mt-1 w-full" value={dep} onChange={(e) => setDep(e.target.value)}>

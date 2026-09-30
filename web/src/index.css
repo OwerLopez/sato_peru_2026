@@ -85,3 +85,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Pantallas táctiles: controles de al menos 44 px de alto (WCAG 2.5.5) sin agrandar la vista de escritorio */
+@media (pointer: coarse) {
+  .btn, .btn-primario, .btn-fantasma, .entrada { min-height: 44px; }
+  .btn-sm { min-height: 40px; }
+  .segmento > button, .pestana { min-height: 44px; }
+}
+button, [role="button"], a[href], select, summary { cursor: pointer; }

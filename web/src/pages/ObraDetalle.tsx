@@ -4,7 +4,7 @@ import { Tabs } from 'radix-ui'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { api, ESTADOS, fmtFecha, fmtMes, fmtNum, fmtPct, fmtSoles, qs, ROL, SECTOR, titulo, useCalibracion, type Evidencia, type Explicacion, type Factor, type Nivel } from '../api'
+import { api, ESTADOS, fmtFecha, fmtMes, fmtNum, fmtPct, fmtSoles, qs, ROL, SECTOR, titulo, useCalibracion, type Evidencia, type Explicacion, type Factor, type Nivel, urlSegura } from '../api'
 import { useAuth } from '../auth'
 import { ConfianzaNivel, ListaFactores, VecesPromedio } from '../components/Factores'
 import { Cargando, CargandoPagina, Dato, ErrorMsg, EscalaRiesgo, InfoTip, NivelBadge, Paginacion, Panel, Seccion, Vacio } from '../components/ui'
@@ -219,9 +219,9 @@ function FactoresEvidencia({ ex, loading, error, preds, pid, setSel }: { ex?: Ex
   if (!ex) return <Vacio titulo="Sin predicciones para esta obra" texto="La obra no tiene historia suficiente en el cuaderno digital para ser evaluada." />
   const p = ex.prediccion
   const selector = (
-    <label className="flex items-center gap-2 text-sm">
+    <label className="flex max-w-full min-w-0 items-center gap-2 text-sm">
       <span className="text-slate-500">Corte</span>
-      <select className="entrada" value={pid ?? ''} onChange={(e) => setSel(Number(e.target.value))} aria-label="Corte de la predicción">
+      <select className="entrada min-w-0 max-w-full truncate" value={pid ?? ''} onChange={(e) => setSel(Number(e.target.value))} aria-label="Corte de la predicción">
         {[...preds].reverse().map((x) => (
           <option key={x.prediccion_id} value={x.prediccion_id}>
             {fmtMes(x.fecha_corte)} · riesgo {NIVEL_TEXTO[x.nivel].toLowerCase()} ({fmtPct(x.score)}){x.tipo === 'vigente' ? ' · vigente' : ''}
@@ -231,7 +231,7 @@ function FactoresEvidencia({ ex, loading, error, preds, pid, setSel }: { ex?: Ex
     </label>
   )
   return (
-    <div className="grid gap-5 lg:grid-cols-5">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <Seccion
           titulo="¿Por qué este nivel de riesgo?"
@@ -367,7 +367,7 @@ function Evolucion({ r, loading, fechaAtraso }: { r?: Riesgo; loading: boolean; 
   if (loading) return <Cargando filas={6} />
   const onset = fechaAtraso ? String(fechaAtraso).slice(0, 7) : null
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
       <div className="lg:col-span-2">
         <Seccion titulo="Riesgo estimado mes a mes" subtitulo="Línea: probabilidad de atraso formal en los 60 días siguientes, calculada cada mes solo con la información disponible en esa fecha. Barras: asientos registrados.">
           <div className="h-80">
@@ -414,7 +414,7 @@ function Evolucion({ r, loading, fechaAtraso }: { r?: Riesgo; loading: boolean; 
 function DatosObra({ d }: { d: Detalle }) {
   const o = d.obra
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
       <Seccion titulo="Datos integrados de la obra" className="lg:col-span-2">
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Dato l="Entidad contratante" v={o.entidad} />
@@ -445,9 +445,9 @@ function DatosObra({ d }: { d: Detalle }) {
           <p className="text-sm text-slate-500">La obra no tiene enlaces a otras fuentes.</p>
         ) : (
           <ul className="space-y-2">
-            {d.enlaces.map((e) => (
+            {d.enlaces.filter((e) => urlSegura(e.url)).map((e) => (
               <li key={e.url}>
-                <a href={e.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:border-marca-200 hover:bg-marca-50">
+                <a href={urlSegura(e.url)!} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:border-marca-200 hover:bg-marca-50">
                   {e.fuente}
                   <ExternalLink className="size-4 text-slate-400" />
                 </a>
@@ -586,7 +586,7 @@ function Asientos({ id }: { id: string }) {
           setPagina(1)
         }}
       >
-        <input className="entrada min-w-56 flex-1" aria-label="Buscar en los asientos" placeholder="Buscar en el texto (p. ej.: lluvias, falta de pago, expediente)" value={q} maxLength={200} onChange={(e) => setQ(e.target.value)} />
+        <input className="entrada min-w-0 flex-1 sm:min-w-56" aria-label="Buscar en los asientos" placeholder="Buscar en el texto (p. ej.: lluvias, falta de pago, expediente)" value={q} maxLength={200} onChange={(e) => setQ(e.target.value)} />
         <select
           aria-label="Tipo de asiento"
           className="entrada"
