@@ -3,11 +3,17 @@
     DATABASE_URL=postgresql://... python -m sato.serving.load_db
 
 1. Aplica migraciones SQL pendientes (db/migrations/*.sql, tabla schema_migrations).
-2. En UNA transaccion: vacia las tablas de datos y las recarga desde data/curated,
+2. Valida las entradas (archivos presentes, columnas requeridas, claves sin nulos ni duplicados).
+3. En UNA transaccion: borra con DELETE las tablas de datos (la API sigue leyendo los datos vigentes hasta el COMMIT) y las recarga desde data/curated,
    data/staging, artifacts/release y artifacts/cartera, con ALCANCE NACIONAL (todos los
    departamentos). Usuarios, revisiones, suscripciones, sincronizaciones y auditoria no se tocan.
-3. Registra el corte de datos y el linaje (manifest.jsonl).
-Si algo falla, la transaccion se revierte y la base queda como estaba.
+4. Registra el corte de datos, el linaje (manifest.jsonl) y la conciliacion de registros por tabla
+   (filas de origen, cargadas y descartadas con su motivo).
+5. Compuerta de integridad ANTES de confirmar: chequeos criticos de `calidad` y caida maxima de filas
+   de las tablas clave frente a la carga vigente (SATO_CARGA_CAIDA_MAX, 0.2 por defecto).
+Si algo falla o la compuerta rechaza la carga, la transaccion se revierte y la base queda como estaba.
+Cada intento queda en la tabla `carga_datos` (OK, RECHAZADA o ERROR) con su validacion y conciliacion.
+SATO_CARGA_FORZAR=1 acepta una caida de filas revisada manualmente (queda registrado); nunca omite los chequeos criticos.
 """
 
 from __future__ import annotations
@@ -22,7 +28,7 @@ import pandas as pd
 import psycopg
 
 from sato.config import ARTIFACTS, CURATED, RAW, ROOT, STAGING
-from sato.serving.lenguaje import GRUPOS_CLAROS, categoria, factor_cartera, factor_cuaderno
+from sato.serving.lenguaje import GRUPOS_CLAROS, categoria, etiqueta, factor_cartera, factor_cuaderno
 from sato.serving.texto_es import acentuar
 
 log = logging.getLogger(__name__)
@@ -33,9 +39,73 @@ DATA_TABLES = ["simulacion", "cartera_explicacion", "cartera_riesgo", "cartera_o
                "comparacion_ab", "fuente_archivo", "corte_datos"]
 
 
+# tablas cuya caida brusca de filas indica una fuente incompleta o un paso previo fallido
+TABLAS_CLAVE = ("obra", "asiento", "prediccion", "explicacion", "inversion", "siaf_mensual", "infobras_obra", "cartera_obra", "cartera_riesgo")
+# entradas de la carga: (columnas requeridas, clave que no puede tener nulos ni duplicados)
+ENTRADAS = {
+    "cuaderno": (["cuaderno_id", "tiene_metadatos", "denominacion", "ruc_entidad", "departamento", "cui", "primer_asiento", "ultimo_asiento",
+                  "n_asientos", "f_valorizacion_menor_80", "f_calendario_acelerado"], "cuaderno_id"),
+    "mef_inversiones": (["cui", "nombre", "funcion", "monto_viable", "departamento", "latitud", "longitud"], "cui"),
+    "infobras_obras": (["codigo_infobras", "codigo_unico_de_inversion", "nombre_de_obra", "plazo_de_ejecucion_en_dias"], None),
+    "seace_contratos": (["n_cod_contrato", "urlcontrato"], None),
+    "predicciones": (["cuaderno_id", "T", "tipo", "score", "percentil", "nivel", "alerta", "y_observado"], None),
+    "cartera_obras": (["codigo_infobras", "codigo_unico_de_inversion", "estado_operativo", "y_30"], "codigo_infobras"),
+}
+
+
+class CargaRechazada(RuntimeError):
+    """La compuerta de integridad rechazo la carga: la base conserva los datos anteriores."""
+
+
 def dsn() -> str:
     url = os.environ.get("DATABASE_URL", "postgresql://sato:sato@127.0.0.1:5432/sato")
     return url.replace("postgresql+psycopg://", "postgresql://")
+
+
+def validar_entradas(frames: dict[str, pd.DataFrame | None]) -> list[str]:
+    """Hallazgos que impiden cargar: archivo ausente o vacio, columnas faltantes, claves nulas o duplicadas."""
+    fallas = []
+    for nombre, (cols, clave) in ENTRADAS.items():
+        df = frames.get(nombre)
+        if df is None:
+            if nombre != "cartera_obras":  # la cartera INFOBRAS es opcional (versiones sin modelo de cartera)
+                fallas.append(f"{nombre}: archivo ausente")
+            continue
+        if df.empty:
+            fallas.append(f"{nombre}: archivo sin filas")
+            continue
+        faltan = [c for c in cols if c not in df.columns]
+        if faltan:
+            fallas.append(f"{nombre}: faltan columnas {faltan}")
+        if clave and clave in df.columns:
+            if n := int(df[clave].isna().sum()):
+                fallas.append(f"{nombre}: {n} filas sin {clave}")
+            if n := int(df[clave].dropna().duplicated().sum()):
+                fallas.append(f"{nombre}: {n} valores repetidos de {clave}")
+    return fallas
+
+
+def compuerta(previos: dict[str, int], nuevos: dict[str, int], max_caida: float) -> list[str]:
+    """Rechaza la carga si una tabla clave queda vacia o pierde mas de `max_caida` de sus filas frente a la carga vigente."""
+    fallas = []
+    for t in TABLAS_CLAVE:
+        a, b = previos.get(t, 0), nuevos.get(t, 0)
+        if b == 0 and t not in ("cartera_obra", "cartera_riesgo"):
+            fallas.append(f"{t}: la carga dejaria la tabla vacia")
+        elif a > 0 and b < (1 - max_caida) * a:
+            fallas.append(f"{t}: {b:,} filas frente a {a:,} de la carga vigente (caida de {1 - b / a:.0%}; maximo permitido {max_caida:.0%})")
+    return fallas
+
+
+def conteos(conn: psycopg.Connection) -> dict[str, int]:
+    return {t: conn.execute(f"select count(*) from sato.{t}").fetchone()[0] for t in DATA_TABLES}
+
+
+def _registro(sql: str, params: tuple) -> int | None:
+    """Historial de cargas en una conexion aparte: sobrevive a la reversion de la transaccion de carga."""
+    with psycopg.connect(dsn(), autocommit=True) as c:
+        r = c.execute(sql, params).fetchone() if "returning" in sql else c.execute(sql, params)
+        return r[0] if isinstance(r, tuple) else None
 
 
 def migrate(conn: psycopg.Connection) -> None:
@@ -83,12 +153,13 @@ def _date(s):
     return pd.to_datetime(s, errors="coerce").dt.date
 
 
-def copy_asientos(conn: psycopg.Connection, ids: set) -> None:
-    """Asientos nacionales transferidos por lotes (DuckDB -> COPY) sin cargar todo en memoria."""
+def copy_asientos(conn: psycopg.Connection, ids: set) -> int:
+    """Asientos nacionales transferidos por lotes (DuckDB -> COPY) sin cargar todo en memoria. Devuelve las filas de origen."""
     import duckdb
 
     con = duckdb.connect()
     con.register("ids", pd.DataFrame({"cuaderno_id": sorted(ids)}))
+    origen = con.sql(f"select count(*) from '{(CURATED / 'asiento.parquet').as_posix()}'").fetchone()[0]
     rel = con.sql(f"""
         select cuaderno_id, nro_asiento, fecha, fecha_hora, rol, tipo, tipo_std, titulo, descripcion, src_file archivo_fuente
         from (select *, row_number() over (partition by cuaderno_id, nro_asiento, fecha_hora, descripcion) rn
@@ -104,15 +175,17 @@ def copy_asientos(conn: psycopg.Connection, ids: set) -> None:
                     cp.write_row(row)
                 n += batch.num_rows
     log.info("  asiento: %s filas", n)
+    return origen
 
 
-def load_cartera(conn: psycopg.Connection, cart: pd.DataFrame, cartera: Path, mef: pd.DataFrame, cua: pd.DataFrame) -> None:
+def load_cartera(conn: psycopg.Connection, cart: pd.DataFrame, cartera: Path, mef: pd.DataFrame, cua: pd.DataFrame, conc: dict) -> None:
     coords = mef.drop_duplicates("cui").set_index("cui")[["latitud", "longitud"]]
     ok = coords["latitud"].between(-18.6, 0.1) & coords["longitud"].between(-81.5, -68.5)
     coords = coords[ok]
     link = pd.read_parquet(CURATED / "link_cuaderno_infobras.parquet").drop_duplicates("codigo_infobras").set_index("codigo_infobras")["cuaderno_id"]
     link = link[link.isin(set(cua["cuaderno_id"]))]
     c = cart.drop_duplicates("codigo_infobras")
+    conc["cartera_obra"] = {"origen": len(cart), "motivo": "códigos INFOBRAS repetidos"}
     copy_df(conn, "cartera_obra", pd.DataFrame(dict(
         codigo_infobras=c["codigo_infobras"], cui=c["codigo_unico_de_inversion"], nombre=c["nombre_de_obra"], entidad=c["entidad_publica"],
         codigo_entidad=c["codigo_entidad"], ruc_ejecucion=c["ruc_ejecucion"], contratista=c["nombre_o_razon_social_de_la_empresa_o_consorcio"],
@@ -124,6 +197,7 @@ def load_cartera(conn: psycopg.Connection, cart: pd.DataFrame, cartera: Path, me
         latitud=c["codigo_unico_de_inversion"].map(coords["latitud"]), longitud=c["codigo_unico_de_inversion"].map(coords["longitud"]),
         cuaderno_id=c["codigo_infobras"].map(link))))
     R = pd.read_parquet(cartera / "riesgo.parquet")
+    conc["cartera_riesgo"] = {"origen": len(R), "motivo": "estimaciones de obras que no están en la cartera cargada"}
     R = R[R["codigo_infobras"].isin(set(c["codigo_infobras"]))]
     copy_df(conn, "cartera_riesgo", pd.DataFrame(dict(
         codigo_infobras=R["codigo_infobras"], tipo=R["tipo"], fecha_corte=_date(R["T"]), score=R["score"], nivel=R["nivel"],
@@ -132,6 +206,7 @@ def load_cartera(conn: psycopg.Connection, cart: pd.DataFrame, cartera: Path, me
                        columns=["riesgo_id", "codigo_infobras", "tipo", "T"])
     rid["T"] = pd.to_datetime(rid["T"])
     E = pd.read_parquet(cartera / "explicaciones.parquet")
+    conc["cartera_explicacion"] = {"origen": len(E), "motivo": "factores de estimaciones no cargadas"}
     E["T"] = pd.to_datetime(E["T"])
     E = E.merge(rid, on=["codigo_infobras", "tipo", "T"])
     copy_df(conn, "cartera_explicacion", E[["riesgo_id", "rango", "feature", "grupo", "valor", "shap", "descripcion"]])
@@ -139,8 +214,42 @@ def load_cartera(conn: psycopg.Connection, cart: pd.DataFrame, cartera: Path, me
     conn.execute("insert into sato.configuracion values ('modelo_cartera', %s)", (json.dumps(card, default=str),))
 
 
-def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "cartera") -> None:
+def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "cartera") -> dict:
+    """Carga completa con validacion, conciliacion y compuerta de integridad. Devuelve el registro de la carga."""
+    with psycopg.connect(dsn()) as c0:
+        migrate(c0)
+        c0.commit()
+    cid = _registro("insert into sato.carga_datos (estado) values ('EN_CURSO') returning id", ())
+    log.info("carga %s: lectura y validacion de entradas", cid)
+    conc: dict[str, dict] = {}
+    validacion: dict = {"max_caida": max_caida()}
+    try:
+        res = _cargar(release, cartera, conc, validacion)
+    except CargaRechazada as e:
+        _registro("update sato.carga_datos set fin = now(), estado = 'RECHAZADA', validacion = %s, conciliacion = %s, mensaje = %s where id = %s",
+                  (json.dumps(validacion, default=str), json.dumps(conc, default=str), str(e)[:4000], cid))
+        log.error("carga rechazada por la compuerta de integridad: %s", e)
+        raise
+    except Exception as e:
+        _registro("update sato.carga_datos set fin = now(), estado = 'ERROR', validacion = %s, mensaje = %s where id = %s",
+                  (json.dumps(validacion, default=str), f"{type(e).__name__}: {e}"[:4000], cid))
+        raise
+    _registro("update sato.carga_datos set fin = now(), estado = 'OK', conteos = %s, conciliacion = %s, validacion = %s where id = %s",
+              (json.dumps(res), json.dumps(conc, default=str), json.dumps(validacion, default=str), cid))
+    mantenimiento()
+    return {"id": cid, "conteos": res, "conciliacion": conc, "validacion": validacion}
+
+
+def max_caida() -> float:
+    """Caida maxima de filas admitida en las tablas clave (parametro de operacion leido en cada carga)."""
+    return float(os.environ.get("SATO_CARGA_CAIDA_MAX", "0.2"))
+
+
+def _cargar(release: Path, cartera: Path, conc: dict, validacion: dict) -> dict[str, int]:
+    from sato.serving import calidad
+
     cua = pd.read_parquet(CURATED / "cuaderno.parquet")
+    n_cuadernos = len(cua)
     cua = cua[cua["tiene_metadatos"]].copy()
     ids = set(cua["cuaderno_id"])
     mef = pd.read_parquet(STAGING / "mef_inversiones.parquet")
@@ -150,11 +259,20 @@ def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "car
     ib = pd.read_parquet(STAGING / "infobras_obras.parquet")
     seace = pd.read_parquet(STAGING / "seace_contratos.parquet")
     card = json.loads((release / "modelo_card.json").read_text(encoding="utf-8"))
+    P_all = pd.read_parquet(release / "predicciones.parquet")
+    validacion["entradas"] = validar_entradas({"cuaderno": cua, "mef_inversiones": mef, "infobras_obras": ib, "seace_contratos": seace,
+                                               "predicciones": P_all, "cartera_obras": cart})
+    if validacion["entradas"]:
+        raise CargaRechazada("entradas invalidas: " + "; ".join(validacion["entradas"]))
 
     with psycopg.connect(dsn(), autocommit=False) as conn:
-        migrate(conn)
         conn.execute("set search_path to sato, public")
-        conn.execute("truncate " + ", ".join(f"sato.{t}" for t in DATA_TABLES) + " restart identity cascade")
+        previos = conteos(conn)
+        log.info("borrando la version vigente (los lectores la siguen viendo hasta el COMMIT)")
+        # DELETE (no TRUNCATE): TRUNCATE toma un bloqueo exclusivo que deja a la API sin poder leer durante toda la carga;
+        # con DELETE los lectores siguen viendo los datos vigentes (MVCC) hasta el COMMIT, que cambia todo de una vez.
+        for t in DATA_TABLES:  # orden de hijas a padres (claves foraneas)
+            conn.execute(f"delete from sato.{t}")
 
         # linaje
         man = RAW / "manifest.jsonl"
@@ -173,6 +291,7 @@ def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "car
 
         # inversiones enlazadas a obras (cuaderno digital o cartera INFOBRAS)
         inv = mef[mef["cui"].isin(cuis)].copy()
+        conc["inversion"] = {"origen": len(mef), "motivo": "inversiones sin obra con cuaderno digital ni obra de la cartera INFOBRAS"}
         inv["sector"] = np.select(
             [inv["funcion"].eq("SANEAMIENTO") | (inv["funcion"].eq("SALUD Y SANEAMIENTO") & inv["programa"].fillna("").str.contains("SANEAMIENTO")),
              inv["funcion"].eq("TRANSPORTE"), inv["funcion"].fillna("").str.startswith("EDUCACI"), inv["funcion"].isin(["SALUD", "SALUD Y SANEAMIENTO"]),
@@ -209,17 +328,22 @@ def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "car
             fecha_culminacion=_date(cua["f_culminacion"]), fecha_recepcion=_date(cua["f_recepcion"]),
             fecha_resolucion=_date(cua["f_resolucion_contrato"]), estado_observado=estado))
         copy_df(conn, "obra", obra)
+        conc["obra"] = {"origen": n_cuadernos, "motivo": "cuadernos sin metadatos del contrato en OECE"}
 
         # asientos nacionales (deduplicados, por lotes)
-        copy_asientos(conn, ids)
+        conc["asiento"] = {"origen": copy_asientos(conn, ids),
+                           "motivo": "asientos de cuadernos sin metadatos del contrato o repetidos (misma obra, número, fecha-hora y texto)"}
 
         # SIAF mensual de las CUI enlazadas
         siaf = pd.concat([pd.read_parquet(f, columns=["cui", "anio", "mes", "monto_devengado"]) for f in sorted((STAGING / "siaf").glob("*.parquet"))])
+        conc["siaf_mensual"] = {"origen": len(siaf), "motivo": "registros de CUI no enlazadas, mes fuera de 1-12 o anteriores a 2017; "
+                                                               "los demás se agregan por CUI y mes"}
         siaf = siaf[siaf["cui"].isin(set(inv["cui"])) & siaf["mes"].between(1, 12) & (siaf["anio"] >= 2017)].groupby(["cui", "anio", "mes"], as_index=False)["monto_devengado"].sum()
         copy_df(conn, "siaf_mensual", siaf.rename(columns={"monto_devengado": "devengado"}))
 
         # INFOBRAS (foto) nacional
         iba = ib.drop_duplicates("codigo_infobras")
+        conc["infobras_obra"] = {"origen": len(ib), "motivo": "códigos INFOBRAS repetidos"}
         copy_df(conn, "infobras_obra", pd.DataFrame(dict(
             codigo_infobras=iba["codigo_infobras"], cui=iba["codigo_unico_de_inversion"], nombre=iba["nombre_de_obra"], entidad=iba["entidad_publica"],
             estado_ejecucion=iba["estado_de_ejecucion"], modalidad=iba["modalidad_de_ejecucion_de_la_obra"],
@@ -235,6 +359,7 @@ def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "car
             fecha_consulta=_date(iba["fecha_consulta"]))))
 
         par = pd.read_parquet(STAGING / "contraloria_paralizadas.parquet")
+        conc["contraloria_paralizada"] = {"origen": len(par), "motivo": "-"}
         copy_df(conn, "contraloria_paralizada", pd.DataFrame(dict(
             fecha_corte=_date(par["fecha_corte"]), codigo_infobras=par["codigo_infobras"], cui=par["cui"], descripcion_obra=par["descripcion_obra"],
             entidad=par["entidad"], provincia=par["provincia"], distrito=par["distrito"], avance_fisico=par["avance_fisico"],
@@ -244,6 +369,7 @@ def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "car
         cuis_seg = set(cua["cui"].dropna())
         if cart is not None:
             cuis_seg |= set(cart.loc[cart["estado_operativo"].isin(["ACTIVA", "CONSUMADO"]), "codigo_unico_de_inversion"].dropna())
+        conc["mef_seguimiento"] = {"origen": len(ms), "motivo": "registros sin fecha o de inversiones no evaluadas"}
         ms = ms[ms["cui"].isin(cuis_seg) & ms["fecha_registro"].notna()]
         copy_df(conn, "mef_seguimiento", ms[["cui", "fecha_registro", "tipo_registro", "descripcion"]])
 
@@ -257,16 +383,20 @@ def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "car
                                                                           "operacion_backtest_nacional": card.get("operacion_backtest_nacional"),
                                                                           "periodos": card["periodos_evaluacion"]}, default=str),
              json.dumps(card["features"]), card["artefacto"], card["sha256"])).fetchone()[0]
-        P = pd.read_parquet(release / "predicciones.parquet")
-        P = P[P["cuaderno_id"].isin(ids)]
+        P = P_all[P_all["cuaderno_id"].isin(ids)]
+        conc["prediccion"] = {"origen": len(P_all), "motivo": "predicciones de cuadernos sin metadatos del contrato"}
         copy_df(conn, "prediccion", pd.DataFrame(dict(
             modelo_id=mid, cuaderno_id=P["cuaderno_id"], fecha_corte=_date(P["T"]), tipo=P["tipo"], score=P["score"], percentil=P["percentil"],
             nivel=P["nivel"], alerta=P["alerta"], y_observado=P["y_observado"].astype("Int64"))))
         pid = pd.DataFrame(conn.execute("select id, cuaderno_id::text, fecha_corte from sato.prediccion").fetchall(), columns=["prediccion_id", "cuaderno_id", "T"])
         pid["T"] = pd.to_datetime(pid["T"])
-        E = pd.read_parquet(release / "explicaciones.parquet").merge(pid, on=["cuaderno_id", "T"])
+        E = pd.read_parquet(release / "explicaciones.parquet")
+        conc["explicacion"] = {"origen": len(E), "motivo": "factores de predicciones no cargadas"}
+        E = E.merge(pid, on=["cuaderno_id", "T"])
         copy_df(conn, "explicacion", E[["prediccion_id", "rango", "feature", "grupo", "valor", "shap", "descripcion"]])
-        ev = pd.read_parquet(release / "evidencia.parquet").merge(pid, on=["cuaderno_id", "T"])
+        ev = pd.read_parquet(release / "evidencia.parquet")
+        conc["evidencia"] = {"origen": len(ev), "motivo": "evidencia de predicciones no cargadas"}
+        ev = ev.merge(pid, on=["cuaderno_id", "T"])
         aid = pd.DataFrame(conn.execute("select min(id), cuaderno_id::text, nro_asiento from sato.asiento group by 2, 3").fetchall(),
                            columns=["asiento_id", "cuaderno_id", "nro_asiento"])
         if "nro_asiento" in ev.columns:
@@ -278,13 +408,15 @@ def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "car
         copy_df(conn, "evidencia", ev[["prediccion_id", "feature", "fuente", "asiento_id", "fecha", "referencia", "extracto"]])
         simp = release / "simulaciones.parquet"
         if simp.exists():
-            sm = pd.read_parquet(simp).merge(pid, on=["cuaderno_id", "T"])
+            sm = pd.read_parquet(simp)
+            conc["simulacion"] = {"origen": len(sm), "motivo": "escenarios de predicciones no cargadas"}
+            sm = sm.merge(pid, on=["cuaderno_id", "T"])
             copy_df(conn, "simulacion", sm[["prediccion_id", "escenario", "descripcion", "score_base", "score_escenario", "alerta_escenario"]])
         conn.execute("insert into sato.configuracion values ('modelo_cuaderno', %s)", (json.dumps(card, default=str),))
 
         # cartera nacional INFOBRAS (modelos de inicio y seguimiento)
         if cart is not None:
-            load_cartera(conn, cart, cartera, mef, cua)
+            load_cartera(conn, cart, cartera, mef, cua, conc)
 
         # resultados de investigacion
         g = ARTIFACTS / "experiments" / "grid_resultados.csv"
@@ -300,8 +432,47 @@ def load(release: Path = ARTIFACTS / "release", cartera: Path = ARTIFACTS / "car
         if c.exists():
             cp = pd.read_csv(c).rename(columns={"target": "objetivo", "H": "horizonte", "test_scope": "alcance_test", "A": "a", "B": "b"})
             copy_df(conn, "comparacion_ab", cp[["objetivo", "horizonte", "variante", "alcance_test", "metrica", "a", "b", "diferencia", "ic_inf", "ic_sup", "p_valor", "filas", "obras"]])
+
+        # vistas derivadas, reporte de monitoreo del modelo y compuerta de integridad antes de confirmar
+        log.info("vistas derivadas, auditoria de calidad y compuerta de integridad")
+        conn.execute("refresh materialized view concurrently sato.cartera_riesgo_vigente")  # sin bloquear lecturas
+        conn.execute("refresh materialized view concurrently sato.obra_prediccion_vigente")
+        mon = ARTIFACTS / "monitoring" / "reporte.json"
+        if mon.exists():
+            rep = json.loads(mon.read_text(encoding="utf-8"))
+            # nombre legible de cada variable con deriva para la interfaz (sin codigos internos)
+            rep["psi_detalle"] = [{"variable": f, "etiqueta": etiqueta(f, "cuaderno"), "psi": v} for f, v in (rep.get("psi_ultimo_corte") or {}).items()]
+            conn.execute("insert into sato.configuracion values ('monitoreo_modelo', %s)", (json.dumps(rep, default=str),))
+        nuevos = conteos(conn)
+        for t, x in conc.items():
+            x["cargadas"] = nuevos.get(t, 0)
+            x["descartadas"] = x["origen"] - x["cargadas"]
+        out = calidad.evaluar(conn)
+        validacion["criticos"] = [f"{x['descripcion']}: {x['valor']:,}" for x in calidad.criticos(out)]
+        validacion["caidas"] = compuerta(previos, nuevos, max_caida())
+        validacion["forzada"] = bool(validacion["caidas"]) and os.environ.get("SATO_CARGA_FORZAR") == "1"
+        validacion["previos"] = {t: previos[t] for t in TABLAS_CLAVE}
+        if validacion["criticos"]:
+            raise CargaRechazada("chequeos criticos con hallazgos: " + "; ".join(validacion["criticos"]))
+        if validacion["caidas"] and not validacion["forzada"]:
+            raise CargaRechazada("caida de filas en tablas clave: " + "; ".join(validacion["caidas"]))
+        calidad.guardar(conn, out)
         conn.commit()
-    log.info("base de datos cargada")
+    log.info("base de datos cargada: %s", {t: nuevos[t] for t in TABLAS_CLAVE})
+    return nuevos
+
+
+def mantenimiento() -> None:
+    """Recupera el espacio de las filas reemplazadas y actualiza las estadisticas del planificador.
+
+    Se ejecuta despues del COMMIT: si falla, la nueva version ya esta publicada; solo se registra el aviso
+    (autovacuum lo completara despues)."""
+    try:
+        with psycopg.connect(dsn(), autocommit=True) as c:
+            for t in [*DATA_TABLES, "cartera_riesgo_vigente", "obra_prediccion_vigente"]:
+                c.execute(f"vacuum (analyze) sato.{t}")
+    except psycopg.Error as e:
+        log.warning("mantenimiento posterior a la carga incompleto (%s: %s); lo completara autovacuum", type(e).__name__, e)
 
 
 def ensure_admin() -> None:

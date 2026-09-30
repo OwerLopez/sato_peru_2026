@@ -4,7 +4,10 @@ Mide sobre la base real, sin muestreo ni valores fijos: cobertura de identificad
 consistencia de fechas, relaciones entre fuentes y frescura de cada fuente. El resultado se guarda en
 `configuracion('calidad_datos')` y se publica en /api/v1/sistema/calidad y en la pantalla "Datos y fuentes".
 
-Estados: OK (sin hallazgos), AVISO (hallazgo documentado que no invalida el uso) e INFO (dato descriptivo).
+Estados: OK (sin hallazgos), AVISO (hallazgo de la fuente documentado que no invalida el uso), INFO (dato descriptivo)
+y CRITICO (falla de integridad del propio pipeline: duplicados, huerfanos, predicciones sin explicacion o fuera de rango).
+Los chequeos criticos se evaluan DENTRO de la transaccion de carga (`load_db.load`): si alguno tiene hallazgos, la carga
+se revierte y la plataforma sigue sirviendo los datos anteriores.
 Ninguna regla modifica los datos: los hallazgos se informan tal como estan en las fuentes oficiales.
 
     python -m sato.serving.calidad
@@ -22,13 +25,13 @@ from sato.serving.load_db import dsn
 
 log = logging.getLogger(__name__)
 
-# (seccion, clave, descripcion, consulta que devuelve (valor, total) o (valor,), estado si valor > 0 cuando es un problema)
+# (seccion, clave, descripcion, consulta que devuelve (valor, total) o (valor,), tipo: INFO | AVISO | CRITICO si valor > 0)
 CHEQUEOS: list[tuple[str, str, str, str, str]] = [
     # ---- cuaderno de obra digital (OECE)
     ("Cuaderno de obra digital (OECE)", "obras", "Obras (contratos) con cuaderno de obra digital", "select count(*) from obra", "INFO"),
     ("Cuaderno de obra digital (OECE)", "asientos", "Asientos cargados", "select count(*) from asiento", "INFO"),
     ("Cuaderno de obra digital (OECE)", "asientos_duplicados", "Asientos repetidos (misma obra, número, fecha-hora y texto)",
-     "select count(*) from (select 1 from asiento group by cuaderno_id, nro_asiento, fecha_hora, md5(coalesce(descripcion, '')) having count(*) > 1) x", "AVISO"),
+     "select count(*) from (select 1 from asiento group by cuaderno_id, nro_asiento, fecha_hora, md5(coalesce(descripcion, '')) having count(*) > 1) x", "CRITICO"),
     ("Cuaderno de obra digital (OECE)", "obras_sin_entidad", "Obras sin entidad contratante identificada",
      "select count(*) filter (where entidad_ruc is null), count(*) from obra", "AVISO"),
     ("Cuaderno de obra digital (OECE)", "obras_sin_contratista", "Obras sin contratista identificado",
@@ -38,9 +41,9 @@ CHEQUEOS: list[tuple[str, str, str, str, str]] = [
     ("Cuaderno de obra digital (OECE)", "obras_sin_departamento", "Obras sin departamento",
      "select count(*) filter (where departamento is null), count(*) from obra", "AVISO"),
     ("Cuaderno de obra digital (OECE)", "fechas_invertidas", "Obras cuyo último asiento es anterior al primero",
-     "select count(*) filter (where ultimo_asiento < primer_asiento), count(*) from obra", "AVISO"),
+     "select count(*) filter (where ultimo_asiento < primer_asiento), count(*) from obra", "CRITICO"),
     ("Cuaderno de obra digital (OECE)", "asientos_futuros", "Asientos fechados después del corte de datos",
-     "select count(*) filter (where fecha > (select max(fecha_corte) from corte_datos)), count(*) from asiento", "AVISO"),
+     "select count(*) filter (where fecha > (select max(fecha_corte) from corte_datos)), count(*) from asiento", "CRITICO"),
     # ---- enlaces entre fuentes
     ("Relación entre fuentes", "obras_con_cui", "Obras enlazadas a una inversión pública (CUI, Invierte.pe)",
      "select count(*) filter (where cui is not null), count(*) from obra", "INFO"),
@@ -51,7 +54,7 @@ CHEQUEOS: list[tuple[str, str, str, str, str]] = [
     ("Relación entre fuentes", "cartera_con_cuaderno", "Obras de la cartera INFOBRAS con cuaderno de obra digital",
      "select count(*) filter (where cuaderno_id is not null), count(*) from cartera_obra", "INFO"),
     ("Relación entre fuentes", "cartera_cuaderno_huerfano", "Enlaces de la cartera a cuadernos inexistentes",
-     "select count(*) from cartera_obra c where c.cuaderno_id is not null and not exists (select 1 from obra o where o.cuaderno_id = c.cuaderno_id)", "AVISO"),
+     "select count(*) from cartera_obra c where c.cuaderno_id is not null and not exists (select 1 from obra o where o.cuaderno_id = c.cuaderno_id)", "CRITICO"),
     ("Relación entre fuentes", "inversiones_con_siaf", "Inversiones enlazadas con ejecución mensual SIAF",
      "select count(distinct o.cui) filter (where exists (select 1 from siaf_mensual s where s.cui = o.cui)), count(distinct o.cui) from obra o where o.cui is not null", "INFO"),
     # ---- cartera INFOBRAS (Contraloria)
@@ -75,16 +78,23 @@ CHEQUEOS: list[tuple[str, str, str, str, str]] = [
     ("Ejecución financiera (MEF)", "siaf_negativos", "Meses con devengado negativo (reversiones registradas en SIAF)",
      "select count(*) filter (where devengado < 0), count(*) from siaf_mensual", "INFO"),
     # ---- predicciones
+    ("Predicciones", "modelo_activo", "Modelos de alerta activos distintos de uno (debe haber exactamente uno)",
+     "select abs(count(*) filter (where activo) - 1) from modelo", "CRITICO"),
+    ("Predicciones", "sin_vigentes", "Corte vigente sin predicciones (0 = hay predicciones vigentes)",
+     "select case when exists (select 1 from prediccion where tipo = 'vigente') then 0 else 1 end", "CRITICO"),
+    ("Predicciones", "probabilidad_fuera_de_rango", "Probabilidades estimadas fuera del intervalo [0, 1]",
+     "select (select count(*) from prediccion where not score between 0 and 1) + (select count(*) from cartera_riesgo where not score between 0 and 1)",
+     "CRITICO"),
     ("Predicciones", "vigentes_duplicadas", "Obras con más de una predicción vigente en el mismo corte",
-     "select count(*) from (select cuaderno_id from prediccion where tipo = 'vigente' group by cuaderno_id, fecha_corte having count(*) > 1) x", "AVISO"),
+     "select count(*) from (select cuaderno_id from prediccion where tipo = 'vigente' group by cuaderno_id, fecha_corte having count(*) > 1) x", "CRITICO"),
     ("Predicciones", "vigentes_no_activas", "Predicciones vigentes sobre obras que no están en ejecución",
-     "select count(*) filter (where o.estado_observado <> 'EN_EJECUCION'), count(*) from prediccion p join obra o using (cuaderno_id) where p.tipo = 'vigente'", "AVISO"),
+     "select count(*) filter (where o.estado_observado <> 'EN_EJECUCION'), count(*) from prediccion p join obra o using (cuaderno_id) where p.tipo = 'vigente'", "CRITICO"),
     ("Predicciones", "vigentes_sin_explicacion", "Predicciones vigentes sin factores explicativos",
-     "select count(*) filter (where not exists (select 1 from explicacion e where e.prediccion_id = p.id)), count(*) from prediccion p where p.tipo = 'vigente'", "AVISO"),
+     "select count(*) filter (where not exists (select 1 from explicacion e where e.prediccion_id = p.id)), count(*) from prediccion p where p.tipo = 'vigente'", "CRITICO"),
     ("Predicciones", "cartera_activa_sin_explicacion", "Obras activas de la cartera cuyo riesgo actual no tiene factores explicativos",
      """with lr as (select distinct on (c.codigo_infobras) r.id from cartera_obra c join cartera_riesgo r using (codigo_infobras)
                    where c.estado_operativo = 'ACTIVA' order by c.codigo_infobras, (r.tipo = 'seguimiento') desc, r.fecha_corte desc)
-        select count(*) filter (where not exists (select 1 from cartera_explicacion e where e.riesgo_id = lr.id)), count(*) from lr""", "AVISO"),
+        select count(*) filter (where not exists (select 1 from cartera_explicacion e where e.riesgo_id = lr.id)), count(*) from lr""", "CRITICO"),
 ]
 
 FRESCURA = [
@@ -96,23 +106,39 @@ FRESCURA = [
 ]
 
 
-def build() -> dict:
+def estado_de(tipo: str, valor: int) -> str:
+    return "INFO" if tipo == "INFO" else ("OK" if valor <= 0 else tipo)
+
+
+def evaluar(c: psycopg.Connection) -> dict:
+    """Ejecuta los chequeos en la conexion dada (puede ser la transaccion de carga aun sin confirmar)."""
     res: list[dict] = []
+    for seccion, clave, desc, sql, tipo in CHEQUEOS:
+        r = c.execute(sql).fetchone()
+        valor = int(r[0] or 0)
+        total = int(r[1]) if len(r) > 1 and r[1] is not None else None
+        res.append({"seccion": seccion, "clave": clave, "descripcion": desc, "valor": valor, "total": total,
+                    "proporcion": (valor / total) if total else None, "estado": estado_de(tipo, valor)})
+    frescura = [{"fuente": f, "ultimo_dato": str(c.execute(sql).fetchone()[0])} for f, sql in FRESCURA]
+    archivos = c.execute("select count(*), coalesce(sum(bytes), 0), count(*) filter (where sha256 is null) from fuente_archivo").fetchone()
+    return {"generado_en": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"), "chequeos": res, "frescura": frescura,
+            "archivos": {"total": int(archivos[0]), "bytes": int(archivos[1]), "sin_huella": int(archivos[2])},
+            "resumen": {e: sum(1 for x in res if x["estado"] == e) for e in ("OK", "AVISO", "INFO", "CRITICO")}}
+
+
+def criticos(out: dict) -> list[dict]:
+    return [x for x in out["chequeos"] if x["estado"] == "CRITICO"]
+
+
+def guardar(c: psycopg.Connection, out: dict) -> None:
+    c.execute("insert into sato.configuracion (clave, valor) values ('calidad_datos', %s) on conflict (clave) do update set valor = excluded.valor",
+              (json.dumps(out),))
+
+
+def build() -> dict:
     with psycopg.connect(dsn(), options="-c search_path=sato,public") as c:
-        for seccion, clave, desc, sql, tipo in CHEQUEOS:
-            r = c.execute(sql).fetchone()
-            valor = int(r[0] or 0)
-            total = int(r[1]) if len(r) > 1 and r[1] is not None else None
-            estado = "INFO" if tipo == "INFO" else ("AVISO" if valor > 0 else "OK")
-            res.append({"seccion": seccion, "clave": clave, "descripcion": desc, "valor": valor, "total": total,
-                        "proporcion": (valor / total) if total else None, "estado": estado})
-        frescura = [{"fuente": f, "ultimo_dato": str(c.execute(sql).fetchone()[0])} for f, sql in FRESCURA]
-        archivos = c.execute("select count(*), coalesce(sum(bytes), 0), count(*) filter (where sha256 is null) from fuente_archivo").fetchone()
-        out = {"generado_en": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"), "chequeos": res, "frescura": frescura,
-               "archivos": {"total": int(archivos[0]), "bytes": int(archivos[1]), "sin_huella": int(archivos[2])},
-               "resumen": {e: sum(1 for x in res if x["estado"] == e) for e in ("OK", "AVISO", "INFO")}}
-        c.execute("insert into configuracion (clave, valor) values ('calidad_datos', %s) on conflict (clave) do update set valor = excluded.valor",
-                  (json.dumps(out),))
+        out = evaluar(c)
+        guardar(c, out)
         c.commit()
     log.info("calidad de datos: %s", out["resumen"])
     return out

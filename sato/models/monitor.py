@@ -41,6 +41,26 @@ def psi(ref: pd.Series, cur: pd.Series, bins: int = 10) -> float:
     return float(np.sum((c - r) * np.log(c / r)))
 
 
+def anomalia_tasa(p: pd.DataFrame, umbral_z: float = 3.5) -> dict:
+    """Detecta si la proporcion de obras en nivel ALTO del corte vigente se aparta de la de los cortes del backtest.
+
+    z robusto = 0.6745 * (x - mediana) / MAD (Iglewicz y Hoaglin, 1993); |z| > 3.5 se considera atipico. Un salto brusco
+    suele deberse a un cambio en la fuente (catalogo nuevo, publicacion incompleta) y no a un cambio real de la cartera.
+    """
+    tasas = p.groupby(["T", "tipo"])["nivel"].apply(lambda s: float((s == "ALTO").mean())).reset_index(name="tasa")
+    hist = tasas.loc[tasas["tipo"] == "backtest", "tasa"].to_numpy()
+    vig = tasas[tasas["tipo"] == "vigente"].sort_values("T")
+    if len(hist) < 6 or vig.empty:
+        return {"evaluable": False, "motivo": "menos de 6 cortes historicos o sin corte vigente"}
+    x = float(vig["tasa"].iloc[-1])
+    med = float(np.median(hist))
+    mad = float(np.median(np.abs(hist - med)))
+    z = 0.6745 * (x - med) / mad if mad > 0 else 0.0
+    return {"evaluable": True, "corte": str(pd.Timestamp(vig["T"].iloc[-1]).date()), "tasa": x, "mediana": med, "mad": mad,
+            "z": round(z, 2), "umbral_z": umbral_z, "anomala": bool(abs(z) > umbral_z), "cortes_historicos": len(hist),
+            "serie": [{"T": str(pd.Timestamp(t).date()), "tipo": k, "tasa": round(v, 4)} for t, k, v in tasas.itertuples(index=False)]}
+
+
 def report(out: Path = OUT) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     alertas = []
@@ -82,6 +102,11 @@ def report(out: Path = OUT) -> dict:
                 perf.append(dict(T=str(pd.Timestamp(T).date()), n=len(g), eventos=int(y.sum()), pr_auc=float(safe_ap(y, g["score"].to_numpy())),
                                  recall_alerta=float(((g["alerta"]) & (y == 1)).sum() / max(1, y.sum()))))
             res["desempeno_realizado"] = perf
+            res["anomalia_nivel_alto"] = anomalia_tasa(pd.read_parquet(preds))
+            if res["anomalia_nivel_alto"].get("anomala"):
+                a = res["anomalia_nivel_alto"]
+                alertas.append(f"Proporcion de obras en nivel alto atipica en el corte {a['corte']}: {a['tasa']:.1%} frente a una mediana "
+                               f"historica de {a['mediana']:.1%} (z robusto {a['z']:+.1f}) -> revisar fuentes y catalogos antes de difundir")
     res["alertas"] = alertas
     (out / "reporte.json").write_text(json.dumps(res, indent=1, default=str), encoding="utf-8")
     log.info("monitoreo: %s alertas", len(alertas))

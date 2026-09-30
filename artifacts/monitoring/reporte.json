@@ -104,131 +104,244 @@
  "desempeno_realizado": [
   {
    "T": "2025-01-31",
-   "n": 84,
-   "eventos": 5,
-   "pr_auc": 0.23049596443731749,
-   "recall_alerta": 0.6
+   "n": 1602,
+   "eventos": 101,
+   "pr_auc": 0.1714863646302529,
+   "recall_alerta": 0.3564356435643564
   },
   {
    "T": "2025-02-28",
-   "n": 81,
-   "eventos": 2,
-   "pr_auc": 0.2640845070422535,
-   "recall_alerta": 0.5
+   "n": 1654,
+   "eventos": 80,
+   "pr_auc": 0.1563938564934332,
+   "recall_alerta": 0.325
   },
   {
    "T": "2025-03-31",
-   "n": 85,
-   "eventos": 4,
-   "pr_auc": 0.14703196347031963,
-   "recall_alerta": 0.5
+   "n": 1619,
+   "eventos": 78,
+   "pr_auc": 0.10800714004566783,
+   "recall_alerta": 0.24358974358974358
   },
   {
    "T": "2025-04-30",
-   "n": 86,
-   "eventos": 11,
-   "pr_auc": 0.33734164250477566,
-   "recall_alerta": 0.5454545454545454
+   "n": 1724,
+   "eventos": 125,
+   "pr_auc": 0.21686992074672373,
+   "recall_alerta": 0.336
   },
   {
    "T": "2025-05-31",
-   "n": 89,
-   "eventos": 14,
-   "pr_auc": 0.349938195216118,
-   "recall_alerta": 0.5
+   "n": 1902,
+   "eventos": 157,
+   "pr_auc": 0.19433080956257553,
+   "recall_alerta": 0.29936305732484075
   },
   {
    "T": "2025-06-30",
-   "n": 91,
-   "eventos": 7,
-   "pr_auc": 0.24154757510239236,
-   "recall_alerta": 0.5714285714285714
+   "n": 2068,
+   "eventos": 143,
+   "pr_auc": 0.15246837198867258,
+   "recall_alerta": 0.2727272727272727
   },
   {
    "T": "2025-07-31",
-   "n": 90,
-   "eventos": 6,
-   "pr_auc": 0.2610908057179987,
-   "recall_alerta": 0.5
+   "n": 2145,
+   "eventos": 137,
+   "pr_auc": 0.16825538056500447,
+   "recall_alerta": 0.291970802919708
   },
   {
    "T": "2025-08-31",
-   "n": 96,
-   "eventos": 6,
-   "pr_auc": 0.2301061235115989,
-   "recall_alerta": 0.5
+   "n": 2132,
+   "eventos": 120,
+   "pr_auc": 0.16134104200890978,
+   "recall_alerta": 0.31666666666666665
   },
   {
    "T": "2025-09-30",
-   "n": 99,
-   "eventos": 8,
-   "pr_auc": 0.19606434384667829,
-   "recall_alerta": 0.5
+   "n": 2269,
+   "eventos": 129,
+   "pr_auc": 0.11985824637551011,
+   "recall_alerta": 0.27906976744186046
   },
   {
    "T": "2025-10-31",
-   "n": 125,
-   "eventos": 10,
-   "pr_auc": 0.2088677791412672,
-   "recall_alerta": 0.4
+   "n": 2488,
+   "eventos": 139,
+   "pr_auc": 0.12250933307589124,
+   "recall_alerta": 0.26618705035971224
   },
   {
    "T": "2025-11-30",
-   "n": 121,
-   "eventos": 11,
-   "pr_auc": 0.2782609922154575,
-   "recall_alerta": 0.36363636363636365
+   "n": 2679,
+   "eventos": 128,
+   "pr_auc": 0.12868741272583062,
+   "recall_alerta": 0.3125
   },
   {
    "T": "2025-12-31",
-   "n": 107,
-   "eventos": 12,
-   "pr_auc": 0.35907330907827506,
-   "recall_alerta": 0.5833333333333334
+   "n": 2490,
+   "eventos": 119,
+   "pr_auc": 0.13649074668237723,
+   "recall_alerta": 0.3025210084033613
   },
   {
    "T": "2026-01-31",
-   "n": 98,
-   "eventos": 8,
-   "pr_auc": 0.20621479215229216,
-   "recall_alerta": 0.625
+   "n": 2424,
+   "eventos": 123,
+   "pr_auc": 0.16838706288623032,
+   "recall_alerta": 0.3170731707317073
   },
   {
    "T": "2026-02-28",
-   "n": 90,
-   "eventos": 8,
-   "pr_auc": 0.15055156449553,
-   "recall_alerta": 0.125
+   "n": 2344,
+   "eventos": 100,
+   "pr_auc": 0.17149280576427892,
+   "recall_alerta": 0.34
   },
   {
    "T": "2026-03-31",
-   "n": 93,
-   "eventos": 10,
-   "pr_auc": 0.29879664092357594,
+   "n": 2181,
+   "eventos": 90,
+   "pr_auc": 0.1538601709816969,
    "recall_alerta": 0.3
   },
   {
    "T": "2026-04-30",
-   "n": 91,
-   "eventos": 7,
-   "pr_auc": 0.19174003986377214,
-   "recall_alerta": 0.2857142857142857
+   "n": 2239,
+   "eventos": 119,
+   "pr_auc": 0.1477773019698287,
+   "recall_alerta": 0.3277310924369748
   },
   {
    "T": "2026-05-31",
-   "n": 98,
-   "eventos": 8,
-   "pr_auc": 0.14809249798284885,
-   "recall_alerta": 0.375
+   "n": 2407,
+   "eventos": 146,
+   "pr_auc": 0.18666371938901302,
+   "recall_alerta": 0.4315068493150685
   },
   {
    "T": "2026-06-30",
-   "n": 116,
-   "eventos": 10,
-   "pr_auc": 0.47892717717717714,
-   "recall_alerta": 0.7
+   "n": 2671,
+   "eventos": 145,
+   "pr_auc": 0.21788703282131922,
+   "recall_alerta": 0.4206896551724138
   }
  ],
+ "anomalia_nivel_alto": {
+  "evaluable": true,
+  "corte": "2026-08-31",
+  "tasa": 0.06397306397306397,
+  "mediana": 0.10406431442608308,
+  "mad": 0.011293230088733675,
+  "z": -2.39,
+  "umbral_z": 3.5,
+  "anomala": false,
+  "cortes_historicos": 19,
+  "serie": [
+   {
+    "T": "2025-01-31",
+    "tipo": "backtest",
+    "tasa": 0.1155
+   },
+   {
+    "T": "2025-02-28",
+    "tipo": "backtest",
+    "tasa": 0.107
+   },
+   {
+    "T": "2025-03-31",
+    "tipo": "backtest",
+    "tasa": 0.105
+   },
+   {
+    "T": "2025-04-30",
+    "tipo": "backtest",
+    "tasa": 0.1044
+   },
+   {
+    "T": "2025-05-31",
+    "tipo": "backtest",
+    "tasa": 0.1125
+   },
+   {
+    "T": "2025-06-30",
+    "tipo": "backtest",
+    "tasa": 0.1199
+   },
+   {
+    "T": "2025-07-31",
+    "tipo": "backtest",
+    "tasa": 0.0993
+   },
+   {
+    "T": "2025-08-31",
+    "tipo": "backtest",
+    "tasa": 0.0905
+   },
+   {
+    "T": "2025-09-30",
+    "tipo": "backtest",
+    "tasa": 0.1014
+   },
+   {
+    "T": "2025-10-31",
+    "tipo": "backtest",
+    "tasa": 0.1061
+   },
+   {
+    "T": "2025-11-30",
+    "tipo": "backtest",
+    "tasa": 0.09
+   },
+   {
+    "T": "2025-12-31",
+    "tipo": "backtest",
+    "tasa": 0.0928
+   },
+   {
+    "T": "2026-01-31",
+    "tipo": "backtest",
+    "tasa": 0.0862
+   },
+   {
+    "T": "2026-02-28",
+    "tipo": "backtest",
+    "tasa": 0.0772
+   },
+   {
+    "T": "2026-03-31",
+    "tipo": "backtest",
+    "tasa": 0.0844
+   },
+   {
+    "T": "2026-04-30",
+    "tipo": "backtest",
+    "tasa": 0.1041
+   },
+   {
+    "T": "2026-05-31",
+    "tipo": "backtest",
+    "tasa": 0.1317
+   },
+   {
+    "T": "2026-06-30",
+    "tipo": "backtest",
+    "tasa": 0.1127
+   },
+   {
+    "T": "2026-07-31",
+    "tipo": "backtest",
+    "tasa": 0.0812
+   },
+   {
+    "T": "2026-08-31",
+    "tipo": "vigente",
+    "tasa": 0.064
+   }
+  ]
+ },
  "alertas": [
   "PSI > 0.25 en 8 features: ['ib_frac_plazo_transcurrido', 'mefseg_registros_180d', 'ib_dias_para_fin_programado', 'mefseg_problemas_180d', 'ib_log_monto_contrato', 'ib_plazo_original_dias', 'est_log_monto_contratado', 'est_plazo_vigencia_dias'] -> evaluar reentrenamiento"
  ]
