@@ -179,3 +179,22 @@ es reproducible con los scripts de `research/` y los módulos de `sato/` (ver `d
   nginx) y nginx reemplaza la cabecera hacia la API; la web se publica solo en `127.0.0.1` salvo que se indique `WEB_BIND`.
 * `Cache-Control: no-store` en respuestas autenticadas y de acciones; `X-Request-ID` solo si es un identificador simple.
 * Enlaces a fuentes externas solo con esquema http(s) en la interfaz.
+
+## D22. Sistema de diseño institucional y accesible
+
+* **Método:** se consultó una base de pautas de UI/UX (estilos, paletas, tipografías, reglas de accesibilidad y de React) para
+  una plataforma pública de supervisión. Recomendó el estilo «accesible y ético» con minimalismo y tablero ejecutivo: alto
+  contraste, texto de 16 px, foco visible de 3-4 px, controles táctiles de 44 px, movimiento reducido y sin ornamentos.
+* **Adoptada:**
+  * Tipografía Lexend (títulos y cifras, diseñada para facilitar la lectura) y Source Sans 3 (texto), autoalojadas; texto
+    secundario con contraste de 7:1 o más; espacio no separable entre número y unidad.
+  * Azul institucional para acciones; rojo, ámbar y verde reservados para el nivel de riesgo, siempre con texto e ícono de forma
+    distinta (triángulo, círculo, marca).
+  * Series de los gráficos con una paleta categórica validada con una herramienta de daltonismo y contraste (azul, violeta y
+    magenta, con etiquetas o vista de tabla para el tercero). Se eliminaron los gráficos de doble eje: riesgo y actividad se
+    muestran en paneles sincronizados con el mismo eje de tiempo.
+  * Franja superior que aclara que es un prototipo de investigación y no un sitio oficial; barra lateral clara; pie con los
+    portales oficiales; migas de pan; tarjetas en lugar de tablas en teléfonos; resumen por nivel que filtra las listas;
+    nombres de obras legibles con el nombre oficial conservado en la ficha; límite de errores por pantalla; impresión del panorama.
+* **Medición:** Lighthouse (escritorio) con accesibilidad 100 en panorama, alertas, ficha, estado y suscripción; rendimiento
+  90-100; sin desborde horizontal a 375 px en todas las pantallas (pruebas E2E).

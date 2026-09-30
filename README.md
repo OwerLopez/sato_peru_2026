@@ -377,10 +377,19 @@ flowchart LR
   P --> S["Estado y monitoreo"]
 ```
 
-* Filtros y paginación guardados en la URL (se pueden compartir).
-* Estados de carga, vacío, error con reintento y éxito en todas las pantallas; ayudas contextuales con un glosario único.
-* Accesibilidad: enlace para saltar al contenido, foco visible, nombres accesibles en todos los controles, controles de 44 px en
-  pantallas táctiles, sin desborde horizontal a 375 px, movimiento reducido respetado (verificado en las pruebas E2E).
+**Sistema de diseño** (decisión D22): estilo institucional y accesible para una plataforma pública. Tipografía Lexend para
+títulos y cifras y Source Sans 3 para el texto (16 px); azul institucional para acciones; rojo, ámbar y verde reservados para el
+nivel de riesgo y siempre acompañados de texto e ícono; paleta de gráficos validada para daltonismo; sin gráficos de doble eje.
+
+* Franja que identifica la plataforma como prototipo de investigación (no es un sitio oficial) y pie con los portales oficiales.
+* Resumen por nivel de riesgo que también filtra las listas; tarjetas en teléfonos y tablas en pantallas amplias.
+* Nombres de obras legibles (las fuentes los publican en mayúsculas); el nombre oficial se conserva en la ficha.
+* Filtros y paginación guardados en la URL (se pueden compartir); panorama imprimible.
+* Estados de carga, vacío, error con reintento y éxito en todas las pantallas; ayudas contextuales con un glosario único; un
+  error de dibujo en una pantalla no deja en blanco la aplicación.
+* Accesibilidad: enlace para saltar al contenido, foco visible de 3 px, nombres accesibles en todos los controles, controles de
+  44 px en pantallas táctiles, sin desborde horizontal a 375 px y movimiento reducido respetado (verificado en las pruebas E2E).
+  Lighthouse (escritorio): accesibilidad 100 en panorama, alertas, ficha, estado y suscripción; rendimiento entre 90 y 100.
 
 ## 11. Instalación y uso
 
