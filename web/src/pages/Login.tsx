@@ -11,9 +11,9 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
   const [cargando, setCargando] = useState(false)
   return (
-    <div className="mx-auto mt-6 max-w-sm sm:mt-12">
+    <div className="mx-auto mt-4 max-w-md sm:mt-10">
       <form
-        className="tarjeta space-y-4 p-6"
+        className="tarjeta space-y-5 p-6 sm:p-8"
         onSubmit={async (e) => {
           e.preventDefault()
           setError(null)
@@ -29,16 +29,16 @@ export default function Login() {
         }}
       >
         <div>
-          <h1 className="text-lg font-semibold text-slate-900">Ingreso de analistas</h1>
-          <p className="mt-1 text-sm text-slate-500">La consulta de datos es pública. El ingreso solo es necesario para registrar revisiones de alertas.</p>
+          <h1 className="font-display text-2xl font-semibold text-slate-900">Ingreso de analistas</h1>
+          <p className="mt-1.5 text-sm text-slate-600">La consulta de datos es pública. El ingreso solo es necesario para registrar revisiones de alertas.</p>
         </div>
         <label className="block">
-          <span className="text-sm font-medium text-slate-700">Correo</span>
-          <input className="entrada mt-1 w-full" type="email" autoComplete="username" required maxLength={200} value={email} onChange={(e) => setEmail(e.target.value)} />
+          <span className="font-semibold text-slate-800">Correo</span>
+          <input className="entrada mt-1.5 w-full" type="email" inputMode="email" spellCheck={false} aria-invalid={!!error} autoComplete="username" required maxLength={200} value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
         <label className="block">
-          <span className="text-sm font-medium text-slate-700">Contraseña</span>
-          <input className="entrada mt-1 w-full" type="password" autoComplete="current-password" required maxLength={200} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <span className="font-semibold text-slate-800">Contraseña</span>
+          <input className="entrada mt-1.5 w-full" type="password" aria-invalid={!!error} autoComplete="current-password" required maxLength={200} value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         {error && (
           <p className="rounded-lg bg-alto-suave px-3 py-2 text-sm text-red-800" role="alert">
@@ -46,7 +46,7 @@ export default function Login() {
           </p>
         )}
         <button className="btn-primario w-full" disabled={cargando}>
-          <LogIn className="size-4" />
+          <LogIn className="size-4" aria-hidden />
           {cargando ? 'Ingresando…' : 'Ingresar'}
         </button>
       </form>

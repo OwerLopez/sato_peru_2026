@@ -35,7 +35,7 @@ export function ListaFactores({ factores, tecnico: tecnicoInicial = false, alVer
                   )}
                 </div>
                 {tecnico && (
-                  <div className="mt-1 font-mono text-[11px] text-slate-500">
+                  <div className="mt-1 font-mono text-xs text-slate-500">
                     {f.feature} = {f.valor === null || f.valor === undefined ? 'categoría' : fmtDec(f.valor, 3)} · SHAP {f.shap > 0 ? '+' : ''}
                     {fmtDec(f.shap, 3)} (log-odds)
                   </div>

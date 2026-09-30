@@ -8,7 +8,7 @@ import { api, fmtDec, fmtFecha, fmtMes, fmtNum, fmtPct, qs, titulo, useCalibraci
 import { useAmbito } from '../ambito'
 import { useFiltrosUrl } from '../lib/filtrosUrl'
 import { BarraProporcion, Cargando, CargandoPagina, EncabezadoPagina, ErrorMsg, InfoTip, NivelBadge, Paginacion, Seccion, Segmentado, Vacio } from '../components/ui'
-import { COLOR_NIVEL, COLORES } from '../lib/colores'
+import { COLORES, SERIE } from '../lib/colores'
 import { DetalleTecnico, TablaPoliticas, type Modelo } from './Modelo'
 import { NIVEL_TEXTO } from '../lib/nivel'
 
@@ -21,7 +21,7 @@ interface CardCartera {
 function Respuesta({ icono, pregunta, respuesta, dato, ayuda }: { icono: ReactNode; pregunta: string; respuesta: ReactNode; dato: ReactNode; ayuda?: 'roc_auc' | 'calibracion' | 'backtest' }) {
   return (
     <div className="tarjeta flex flex-col p-4">
-      <div className="flex items-center gap-2 text-[13px] font-medium text-slate-600">
+      <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
         <span className="flex size-7 items-center justify-center rounded-lg bg-marca-50 text-marca-600">{icono}</span>
         {pregunta}
         {ayuda && <InfoTip termino={ayuda} />}
@@ -51,8 +51,8 @@ function Calibracion() {
             <YAxis unit="%" tick={{ fontSize: 11 }} />
             <Tooltip formatter={(v) => `${v} %`} labelFormatter={(l) => `Grupo ${l}`} />
             <Legend wrapperStyle={{ fontSize: 12 }} verticalAlign="top" />
-            <Bar isAnimationActive={false} dataKey="observada" name="Atraso formal observado" fill={COLORES.marca} radius={[3, 3, 0, 0]} />
-            <Line isAnimationActive={false} dataKey="estimada" name="Probabilidad estimada (promedio)" stroke={COLOR_NIVEL.ALTO} strokeWidth={2} dot={{ r: 3 }} />
+            <Bar isAnimationActive={false} dataKey="observada" name="Atraso formal observado" fill={SERIE[0]} radius={[3, 3, 0, 0]} />
+            <Line isAnimationActive={false} dataKey="estimada" name="Probabilidad estimada (promedio)" stroke={SERIE[1]} strokeWidth={2} dot={{ r: 3 }} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -166,7 +166,7 @@ function ModelosCartera() {
                   <dd className="text-xs text-slate-500">Azar: {fmtDec(m.nacional.prevalencia, 3)}</dd>
                 </div>
               </dl>
-              <div className="mt-4 text-[13px] font-medium text-slate-700">Resultado real por nivel</div>
+              <div className="mt-4 text-sm font-medium text-slate-700">Resultado real por nivel</div>
               <ul className="mt-2 space-y-3">
                 {(['ALTO', 'MEDIO', 'BAJO'] as Nivel[]).map((n) => (
                   <li key={n}>
@@ -338,11 +338,11 @@ function Historicas() {
                         {titulo(o.provincia)}, {titulo(o.departamento)}
                       </div>
                     </td>
-                    <td className="num text-[13px] whitespace-nowrap">{fmtFecha(o.fecha_inicio)}</td>
+                    <td className="num text-sm whitespace-nowrap">{fmtFecha(o.fecha_inicio)}</td>
                     <td>
                       <NivelBadge nivel={o.nivel} score={o.score} compacto />
                     </td>
-                    <td className="text-[13px]">
+                    <td className="text-sm">
                       {o.retraso_significativo === null ? (
                         '—'
                       ) : o.retraso_significativo ? (

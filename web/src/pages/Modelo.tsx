@@ -336,7 +336,7 @@ export function DetalleTecnico() {
           </div>
           <div className="md:col-span-2">
             <dt className="etiqueta">Variables del modelo ({md.features.length})</dt>
-            <dd className="mt-1 font-mono text-[11px] leading-relaxed text-slate-600">{md.features.join(', ')}</dd>
+            <dd className="mt-1 font-mono text-xs leading-relaxed text-slate-600">{md.features.join(', ')}</dd>
           </div>
         </dl>
       </Seccion>

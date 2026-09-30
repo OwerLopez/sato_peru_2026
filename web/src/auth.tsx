@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { api, getToken, SESION_EXPIRADA, setToken } from './api'
 
 export interface Usuario {
@@ -24,16 +24,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener(SESION_EXPIRADA, cerrar)
     return () => window.removeEventListener(SESION_EXPIRADA, cerrar)
   }, [])
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     const r = await api<{ access_token: string; expira_en_min: number; usuario: Usuario }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
     setToken(r.access_token, r.expira_en_min)
     setUsuario(r.usuario)
-  }
-  const logout = () => {
+  }, [])
+  const logout = useCallback(() => {
     setToken(null)
     setUsuario(null)
-  }
-  return <AuthCtx.Provider value={{ usuario, login, logout }}>{children}</AuthCtx.Provider>
+  }, [])
+  const valor = useMemo(() => ({ usuario, login, logout }), [usuario, login, logout])
+  return <AuthCtx.Provider value={valor}>{children}</AuthCtx.Provider>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

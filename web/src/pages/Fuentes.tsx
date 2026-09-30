@@ -83,7 +83,7 @@ function CalidadDatos() {
                         <span className="flex-1 text-slate-700">{x.descripcion}</span>
                         <span className="num shrink-0 text-right text-slate-900">
                           {fmtNum(x.valor)}
-                          {x.total !== null && x.total > 0 && x.valor > 0 && <span className="block text-[11px] text-slate-500">{fmtPct(x.proporcion, x.proporcion! < 0.01 && x.valor > 0 ? 2 : 1)} de {fmtNum(x.total)}</span>}
+                          {x.total !== null && x.total > 0 && x.valor > 0 && <span className="block text-xs text-slate-500">{fmtPct(x.proporcion, x.proporcion! < 0.01 && x.valor > 0 ? 2 : 1)} de {fmtNum(x.total)}</span>}
                         </span>
                       </li>
                     ))}
@@ -208,7 +208,7 @@ export default function FuentesPage() {
                 </td>
                 <td className="num text-right text-xs whitespace-nowrap">{fmtNum(a.bytes / 1e6, 1)} MB</td>
                 <td className="text-xs whitespace-nowrap">{fmtFecha(a.descargado_en)}</td>
-                <td className="font-mono text-[10px] text-slate-500">{a.sha256?.slice(0, 16)}…</td>
+                <td className="font-mono text-xs text-slate-500">{a.sha256?.slice(0, 16)}…</td>
               </tr>
             ))}
           </tbody>

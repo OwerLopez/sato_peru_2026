@@ -5,7 +5,7 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { api, fmtMillones, fmtNum, fmtPct, titulo } from '../api'
 import { useAmbito } from '../ambito'
 import { BarraProporcion, Cargando, EncabezadoPagina, ErrorMsg, InfoTip, Seccion, Segmentado } from '../components/ui'
-import { COLOR_NIVEL, COLORES } from '../lib/colores'
+import { COLOR_NIVEL, COLORES, SERIE } from '../lib/colores'
 
 interface Fila {
   clave: string
@@ -87,7 +87,7 @@ export default function Comparador() {
                   <YAxis dataKey="clave" type="category" tick={{ fontSize: 11 }} width={por === 'departamento' ? 110 : 210} interval={0} />
                   <Tooltip formatter={(v) => `${v} %`} cursor={{ fill: '#f1f5f9' }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar isAnimationActive={false} dataKey="historica" name="Obras terminadas con retraso significativo" fill={COLORES.marca} radius={[0, 3, 3, 0]} />
+                  <Bar isAnimationActive={false} dataKey="historica" name="Obras terminadas con retraso significativo" fill={SERIE[0]} radius={[0, 3, 3, 0]} />
                   <Bar isAnimationActive={false} dataKey="alto" name="Obras en ejecución con riesgo alto" fill={COLOR_NIVEL.ALTO} radius={[0, 3, 3, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -124,7 +124,7 @@ export default function Comparador() {
                           <span className="num w-12 shrink-0 text-right">{fmtPct(f.tasa_retraso_historica)}</span>
                           <BarraProporcion valor={f.tasa_retraso_historica ?? 0} max={maxTasa} />
                         </div>
-                        <div className="text-[11px] text-slate-500">de {fmtNum(f.obras_con_resultado)} con resultado</div>
+                        <div className="text-xs text-slate-500">de {fmtNum(f.obras_con_resultado)} con resultado</div>
                       </td>
                       <td className="num text-right">{fmtNum(f.activas)}</td>
                       <td className="num text-right">

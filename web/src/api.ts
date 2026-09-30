@@ -229,25 +229,61 @@ export const useFiltros = () => useQuery({ queryKey: ['filtros'], queryFn: () =>
 const fecha = (s: string) => new Date(s.length === 10 ? s + 'T12:00:00' : s)
 export const fmtFecha = (s?: string | null) => (s ? fecha(s).toLocaleDateString('es-PE', { year: 'numeric', month: 'short', day: 'numeric' }) : '—')
 export const fmtMes = (s?: string | null) => (s ? fecha(s).toLocaleDateString('es-PE', { year: 'numeric', month: 'short' }) : '—')
-export const fmtPct = (x?: number | null, d = 0) => (x === null || x === undefined || Number.isNaN(x) ? '—' : `${(100 * x).toLocaleString('es-PE', { maximumFractionDigits: d, minimumFractionDigits: d })} %`)
+// espacio no separable (U+00A0) entre número y unidad: la cifra nunca se parte en dos líneas
+const NBSP = '\u00a0'
+export const fmtPct = (x?: number | null, d = 0) => (x === null || x === undefined || Number.isNaN(x) ? '—' : `${(100 * x).toLocaleString('es-PE', { maximumFractionDigits: d, minimumFractionDigits: d })}${NBSP}%`)
 export const fmtNum = (x?: number | null, d = 0) => (x === null || x === undefined || Number.isNaN(x) ? '—' : x.toLocaleString('es-PE', { maximumFractionDigits: d, minimumFractionDigits: d }))
 export const fmtDec = (x?: number | null, d = 2) => (x === null || x === undefined || Number.isNaN(x) ? '—' : x.toLocaleString('es-PE', { minimumFractionDigits: d, maximumFractionDigits: d }))
-export const fmtSoles = (x?: number | null) => (x === null || x === undefined ? '—' : `S/ ${x.toLocaleString('es-PE', { maximumFractionDigits: 0 })}`)
+export const fmtSoles = (x?: number | null) => (x === null || x === undefined ? '—' : `S/${NBSP}${x.toLocaleString('es-PE', { maximumFractionDigits: 0 })}`)
 export const fmtMillones = (x?: number | null) =>
   x === null || x === undefined
     ? '—'
     : x >= 1e9
-      ? `S/ ${(x / 1e9).toLocaleString('es-PE', { maximumFractionDigits: 2 })} mil millones`
+      ? `S/${NBSP}${(x / 1e9).toLocaleString('es-PE', { maximumFractionDigits: 2 })} mil${NBSP}millones`
       : x >= 1e6
-        ? `S/ ${(x / 1e6).toLocaleString('es-PE', { maximumFractionDigits: 1 })} millones`
+        ? `S/${NBSP}${(x / 1e6).toLocaleString('es-PE', { maximumFractionDigits: 1 })} millones`
         : fmtSoles(x)
-const MENORES = new Set(['de', 'del', 'la', 'las', 'los', 'el', 'y', 'e', 'en'])
+/** Monto en dos partes (cifra y unidad) para mostrarlo grande sin que se parta en dos líneas. */
+export const montoPartes = (x?: number | null): { valor: string; unidad: string } =>
+  x === null || x === undefined
+    ? { valor: '—', unidad: '' }
+    : x >= 1e9
+      ? { valor: (x / 1e9).toLocaleString('es-PE', { maximumFractionDigits: 1 }), unidad: 'mil millones de soles' }
+      : x >= 1e6
+        ? { valor: (x / 1e6).toLocaleString('es-PE', { maximumFractionDigits: 1 }), unidad: 'millones de soles' }
+        : { valor: x.toLocaleString('es-PE', { maximumFractionDigits: 0 }), unidad: 'soles' }
+const MENORES = new Set(['de', 'del', 'la', 'las', 'los', 'el', 'y', 'e', 'en', 'a', 'al', 'con', 'para', 'por', 'o', 'u', 'sin', 'sobre'])
 export const titulo = (s?: string | null) =>
   s
     ? s
         .toLocaleLowerCase('es-PE')
         .replace(/(^|[\s(/-])(\p{L}+)/gu, (_, a: string, w: string) => a + (a && MENORES.has(w) ? w : w.charAt(0).toLocaleUpperCase('es-PE') + w.slice(1)))
     : '—'
+
+// Siglas y abreviaturas que se conservan en mayúsculas al mostrar nombres publicados íntegramente en mayúsculas
+const SIGLAS = new Set(['CUI', 'SNIP', 'IE', 'IEI', 'IEP', 'PRONEI', 'PSI', 'EPS', 'SAC', 'SRL', 'EIRL', 'SA', 'MDL', 'GM', 'GR', 'KV', 'MT', 'BT', 'SET', 'PTAR', 'PTAP',
+  'MEF', 'MTC', 'MINSA', 'MINEDU', 'MVCS', 'PNSU', 'PNSR', 'OECE', 'SEACE', 'SUNAT', 'SEDAPAL', 'ESSALUD', 'IOARR', 'PIP', 'UGEL', 'UNSA', 'EMAPA', 'SEDAPAR', 'II', 'III', 'IV',
+  'VI', 'VII', 'VIII', 'IX', 'XI', 'XII', 'AAHH', 'CP', 'CC', 'CCPP', 'RD', 'RM', 'DS', 'N', 'SN', 'S/N'])
+/** Nombre legible para textos publicados en mayúsculas: mayúscula inicial por palabra, conectores en minúscula,
+ *  siglas, códigos y abreviaturas intactos. El nombre original se conserva en la ficha. */
+export const nombreObra = (s?: string | null) => {
+  if (!s) return '—'
+  const letras = s.replace(/[^\p{L}]/gu, '')
+  const minusculas = letras.replace(/[^\p{Ll}]/gu, '').length
+  if (letras && minusculas / letras.length > 0.2) return s // ya viene en mayúsculas y minúsculas: se respeta
+  const palabra = (w: string, inicio: boolean): string => {
+    const base = w.replace(/[.°º]/g, '')
+    // siglas conocidas, códigos con dígitos y abreviaturas (I.E., AA., HH., AV.) se conservan
+    if (/\d/.test(w) || SIGLAS.has(base) || /^(\p{L}\.){2,}/u.test(w) || (w.endsWith('.') && base.length <= 3)) return w
+    const l = w.toLocaleLowerCase('es-PE')
+    return !inicio && MENORES.has(l) ? l : l.charAt(0).toLocaleUpperCase('es-PE') + l.slice(1)
+  }
+  return s.replace(/[\p{L}\p{N}./°º]+/gu, (w, pos: number) => {
+    // inicio de frase: comienzo del texto o después de dos puntos, comillas o paréntesis
+    const inicio = pos === 0 || /[:"«(¿]\s*$/.test(s.slice(Math.max(0, pos - 3), pos))
+    return w.includes('/') && !/\d/.test(w) ? w.split('/').map((x) => (x ? palabra(x, inicio) : x)).join('/') : palabra(w, inicio)
+  })
+}
 
 export const ROL: Record<string, string> = { SOEC_RESI: 'Residente', SOEC_SPV: 'Supervisor', SOEC_INSP: 'Inspector', SOEC_JEEXPTE: 'Jefe de expediente', SOEC_LIDER: 'Líder' }
 export const ESTADOS: Record<string, string> = { EN_EJECUCION: 'En ejecución', CULMINADA: 'Culminada', RESUELTA: 'Contrato resuelto', INACTIVA: 'Sin registros recientes' }

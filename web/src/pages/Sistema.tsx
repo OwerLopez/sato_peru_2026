@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { api, fmtDec, fmtFecha, fmtMes, fmtNum, fmtPct, useEstado, type Carga, type EstadoGeneral, type EstadoSistema, type Monitoreo } from '../api'
 import { Cargando, CargandoPagina, EncabezadoPagina, ErrorMsg, InfoTip, Kpi, Panel, Seccion, Segmentado, Vacio } from '../components/ui'
-import { COLOR_NIVEL, COLORES } from '../lib/colores'
+import { COLORES, SERIE } from '../lib/colores'
 
 const ESTADO: Record<EstadoGeneral, { texto: string; clase: string; icono: typeof CheckCircle2 }> = {
   OPERATIVO: { texto: 'Operativo', clase: 'border-green-200 bg-bajo-suave text-green-900', icono: CheckCircle2 },
@@ -97,7 +97,7 @@ function Desempeno({ m }: { m: Monitoreo }) {
                 formatter={(v, _n, p) => [`${v} % (${(p.payload as { eventos: number }).eventos} atrasos)`, 'Anticipados en nivel alto']}
                 labelFormatter={(l) => `Corte ${fmtFecha(String(l))}`}
               />
-              <Line isAnimationActive={false} dataKey="pct" stroke={COLORES.marca} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              <Line isAnimationActive={false} dataKey="pct" stroke={SERIE[0]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -153,7 +153,7 @@ function Deriva({ m }: { m: Monitoreo }) {
             <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => fmtDec(v, 2)} />
             <YAxis type="category" dataKey="etiqueta" width={230} tick={{ fontSize: 11, fill: '#334155' }} />
             <Tooltip formatter={(v) => [fmtDec(Number(v), 2), 'Índice de cambio (PSI)']} />
-            <ReferenceLine x={0.25} stroke={COLOR_NIVEL.MEDIO} strokeDasharray="4 3" />
+            <ReferenceLine x={0.25} stroke="#334155" strokeDasharray="4 3" />
             <Bar isAnimationActive={false} dataKey="psi" radius={[0, 4, 4, 0]} label={{ position: 'right', fontSize: 11, fill: '#334155', formatter: (v: unknown) => fmtDec(Number(v), 2) }}>
               {d.map((x) => (
                 <Cell key={x.variable} fill={x.psi > 0.25 ? COLORES.marcaOscuro : COLORES.marcaClaro} />
@@ -193,7 +193,7 @@ function Anomalia({ m }: { m: Monitoreo }) {
             <Line
               isAnimationActive={false}
               dataKey="pct"
-              stroke={COLORES.marca}
+              stroke={SERIE[0]}
               strokeWidth={2}
               dot={(p: { cx?: number; cy?: number; index?: number; payload?: { tipo: string } }) => (
                 <circle key={p.index} cx={p.cx} cy={p.cy} r={p.payload?.tipo === 'vigente' ? 5 : 2.5} fill={p.payload?.tipo === 'vigente' ? COLORES.marcaOscuro : COLORES.marca} stroke="#fff" strokeWidth={2} />

@@ -1,4 +1,5 @@
-import '@fontsource-variable/inter'
+import '@fontsource-variable/lexend'
+import '@fontsource-variable/source-sans-3'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Tooltip } from 'radix-ui'
 import { StrictMode } from 'react'

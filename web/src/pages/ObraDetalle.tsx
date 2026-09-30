@@ -1,14 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Building2, CalendarDays, ExternalLink, FileText, Highlighter, MapPin, Tag } from 'lucide-react'
+import { Building2, CalendarDays, ExternalLink, FileText, Highlighter, MapPin, Tag } from 'lucide-react'
 import { Tabs } from 'radix-ui'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { api, ESTADOS, fmtFecha, fmtMes, fmtNum, fmtPct, fmtSoles, qs, ROL, SECTOR, titulo, useCalibracion, type Evidencia, type Explicacion, type Factor, type Nivel, urlSegura } from '../api'
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { api, ESTADOS, fmtFecha, fmtMes, fmtNum, fmtPct, fmtSoles, nombreObra, qs, ROL, SECTOR, titulo, useCalibracion, type Evidencia, type Explicacion, type Factor, type Nivel, urlSegura } from '../api'
 import { useAuth } from '../auth'
 import { ConfianzaNivel, ListaFactores, VecesPromedio } from '../components/Factores'
-import { Cargando, CargandoPagina, Dato, ErrorMsg, EscalaRiesgo, InfoTip, NivelBadge, Paginacion, Panel, Seccion, Vacio } from '../components/ui'
-import { COLOR_NIVEL, COLORES } from '../lib/colores'
+import { Cargando, CargandoPagina, Dato, ErrorMsg, EscalaRiesgo, InfoTip, Migas, NivelBadge, Paginacion, Panel, Seccion, Vacio } from '../components/ui'
+import { COLOR_NIVEL, COLORES, SERIE } from '../lib/colores'
 import { NIVEL_TEXTO } from '../lib/nivel'
 
 interface Detalle {
@@ -57,7 +57,7 @@ const FUENTE_EVIDENCIA: Record<string, string> = {
 
 function Meta({ icono, children }: { icono: ReactNode; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] text-slate-600">
+    <span className="inline-flex items-center gap-1.5 text-sm text-slate-600">
       <span className="text-slate-400">{icono}</span>
       {children}
     </span>
@@ -83,11 +83,11 @@ export default function ObraDetalle() {
   return (
     <div className="space-y-5">
       <div>
-        <Link to="/obras" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-marca-700">
-          <ArrowLeft className="size-4" /> Alertas del cuaderno
-        </Link>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <h1 className="max-w-4xl text-lg leading-snug font-semibold text-slate-900 sm:text-xl">{o.denominacion}</h1>
+        <Migas items={[{ a: '/obras', l: 'Alertas del cuaderno' }, { l: 'Ficha de la obra' }]} />
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h1 className="max-w-4xl font-display text-xl leading-snug font-semibold text-slate-900 sm:text-2xl" title={o.denominacion}>
+            {nombreObra(o.denominacion)}
+          </h1>
           <div className="flex flex-wrap gap-2">
             {o.score !== null && (
               <a href={`/api/v1/obras/${o.cuaderno_id}/informe-pdf`} className="btn-primario">
@@ -110,7 +110,7 @@ export default function ObraDetalle() {
         <section className="tarjeta overflow-hidden">
           <div className="grid gap-5 p-5 md:grid-cols-[1.1fr_0.8fr_1.4fr]">
             <div>
-              <div className="flex items-center gap-1 text-[13px] font-medium text-slate-600">
+              <div className="flex items-center gap-1 text-sm font-medium text-slate-600">
                 Riesgo de atraso formal en los próximos 60 días <InfoTip termino="atraso_formal" />
               </div>
               <div className="mt-2 flex items-baseline gap-3">
@@ -126,16 +126,16 @@ export default function ObraDetalle() {
               <div className="mt-1 text-xs text-slate-500">Corte {fmtFecha(o.fecha_corte)}</div>
             </div>
             <div>
-              <div className="mb-2 text-[13px] font-medium text-slate-600">Posición entre las obras evaluadas</div>
+              <div className="mb-2 text-sm font-medium text-slate-600">Posición entre las obras evaluadas</div>
               <EscalaRiesgo percentil={o.percentil} nivel={o.nivel} />
             </div>
             <div>
-              <div className="mb-2 text-[13px] font-medium text-slate-600">Confiabilidad de este nivel</div>
+              <div className="mb-2 text-sm font-medium text-slate-600">Confiabilidad de este nivel</div>
               <ConfianzaNivel nivel={o.nivel} />
             </div>
           </div>
           <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-4">
-            <div className="text-[13px] font-medium text-slate-700">Principales factores que elevan el riesgo</div>
+            <div className="text-sm font-medium text-slate-700">Principales factores que elevan el riesgo</div>
             {ex.isLoading ? (
               <Cargando filas={2} />
             ) : suben.length ? (
@@ -314,7 +314,7 @@ function ListaEvidencia({ items }: { items: Evidencia[] }) {
             )}
           </div>
           <div className="leading-relaxed whitespace-pre-line text-slate-700">{e.extracto}</div>
-          {e.archivo_fuente && <div className="mt-1 text-[11px] text-slate-400">Archivo oficial: {e.archivo_fuente}</div>}
+          {e.archivo_fuente && <div className="mt-1 text-xs text-slate-400">Archivo oficial: {e.archivo_fuente}</div>}
         </li>
       ))}
     </ul>
@@ -369,25 +369,39 @@ function Evolucion({ r, loading, fechaAtraso }: { r?: Riesgo; loading: boolean; 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
       <div className="lg:col-span-2">
-        <Seccion titulo="Riesgo estimado mes a mes" subtitulo="Línea: probabilidad de atraso formal en los 60 días siguientes, calculada cada mes solo con la información disponible en esa fecha. Barras: asientos registrados.">
-          <div className="h-80">
+        <Seccion
+          titulo="Riesgo estimado mes a mes"
+          subtitulo="Probabilidad de atraso formal en los 60 días siguientes, calculada cada mes solo con la información disponible en esa fecha. Debajo, la actividad registrada en el cuaderno."
+        >
+          <div className="h-64" role="img" aria-label="Riesgo estimado por mes">
             <ResponsiveContainer>
-              <ComposedChart data={serie} margin={{ left: -12, right: 4, top: 8 }}>
+              <LineChart data={serie} syncId="evolucion-obra" margin={{ left: -8, right: 12, top: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLORES.rejilla} />
-                <XAxis dataKey="mes" tick={{ fontSize: 11 }} tickFormatter={(m) => fmtMes(m + '-01')} minTickGap={12} />
-                <YAxis yAxisId="a" tick={{ fontSize: 11 }} />
-                <YAxis yAxisId="r" orientation="right" domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-                <Tooltip labelFormatter={(m) => fmtMes(m + '-01')} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar isAnimationActive={false} yAxisId="a" dataKey="asientos" name="Asientos del mes" fill={COLORES.grisClaro} radius={[2, 2, 0, 0]} />
-                <Bar isAnimationActive={false} yAxisId="a" dataKey="suspensiones" name="Suspensiones" fill={COLORES.gris} radius={[2, 2, 0, 0]} />
-                <Line isAnimationActive={false} yAxisId="r" dataKey="riesgo" name="Riesgo estimado (%)" stroke={COLOR_NIVEL.ALTO} strokeWidth={2} dot={{ r: 2.5 }} connectNulls />
-                {modelo.data && <ReferenceLine yAxisId="r" y={100 * modelo.data.umbral_alerta} stroke={COLOR_NIVEL.MEDIO} strokeDasharray="4 4" label={{ value: 'umbral de riesgo alto', fontSize: 10, fill: COLOR_NIVEL.MEDIO, position: 'insideTopLeft' }} />}
-                {onset && <ReferenceLine yAxisId="r" x={onset} stroke={COLOR_NIVEL.ALTO} label={{ value: 'atraso formal', fontSize: 10, fill: COLOR_NIVEL.ALTO, position: 'insideTopRight' }} />}
-              </ComposedChart>
+                <XAxis dataKey="mes" tick={{ fontSize: 12 }} tickFormatter={(m) => fmtMes(m + '-01')} minTickGap={16} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} unit="%" width={48} />
+                <Tooltip labelFormatter={(m) => fmtMes(m + '-01')} formatter={(v) => [`${v}\u00a0%`, 'Riesgo estimado']} />
+                <Line isAnimationActive={false} dataKey="riesgo" name="Riesgo estimado" stroke={SERIE[0]} strokeWidth={2.5} dot={{ r: 3 }} connectNulls />
+                {modelo.data && (
+                  <ReferenceLine y={100 * modelo.data.umbral_alerta} stroke={COLOR_NIVEL.ALTO} strokeDasharray="5 4" label={{ value: 'umbral de riesgo alto', fontSize: 12, fill: COLOR_NIVEL.ALTO, position: 'insideTopLeft' }} />
+                )}
+                {onset && <ReferenceLine x={onset} stroke="#334155" strokeWidth={1.5} label={{ value: 'atraso formal registrado', fontSize: 12, fill: '#334155', position: 'insideTopRight' }} />}
+              </LineChart>
             </ResponsiveContainer>
           </div>
-          {cal.data && <p className="mt-2 text-xs text-slate-500">Referencia: la tasa promedio de atraso formal a 60 días es {fmtPct(cal.data.alerta_60d.tasa_base)}.</p>}
+          <div className="mt-2 h-40" role="img" aria-label="Asientos y suspensiones registrados por mes">
+            <ResponsiveContainer>
+              <BarChart data={serie} syncId="evolucion-obra" margin={{ left: -8, right: 12, top: 4 }} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLORES.rejilla} />
+                <XAxis dataKey="mes" tick={{ fontSize: 12 }} tickFormatter={(m) => fmtMes(m + '-01')} minTickGap={16} />
+                <YAxis tick={{ fontSize: 12 }} width={48} allowDecimals={false} />
+                <Tooltip labelFormatter={(m) => fmtMes(m + '-01')} />
+                <Legend wrapperStyle={{ fontSize: 13 }} />
+                <Bar isAnimationActive={false} dataKey="asientos" name="Asientos del mes" fill={COLORES.marcaClaro} radius={[3, 3, 0, 0]} />
+                <Bar isAnimationActive={false} dataKey="suspensiones" name="Suspensiones de plazo" fill={SERIE[1]} radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          {cal.data && <p className="mt-3 text-sm text-slate-600">Referencia: la tasa promedio de atraso formal a 60 días es {fmtPct(cal.data.alerta_60d.tasa_base)}.</p>}
         </Seccion>
       </div>
       <Seccion titulo="Hitos del cuaderno">
@@ -417,6 +431,9 @@ function DatosObra({ d }: { d: Detalle }) {
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
       <Seccion titulo="Datos integrados de la obra" className="lg:col-span-2">
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="sm:col-span-2 lg:col-span-3">
+            <Dato l="Denominación oficial (tal como la publica OECE)" v={o.denominacion} />
+          </div>
           <Dato l="Entidad contratante" v={o.entidad} />
           <Dato l="Contratista" v={o.contratista} />
           <Dato l="Código Único de Inversión" ayuda="cui" v={o.cui ? `${o.cui}${o.cui_metodo_enlace === 'fuzzy_tfidf' ? ' (identificado por similitud del nombre)' : ''}` : 'No enlazado'} />
@@ -636,7 +653,7 @@ function Asientos({ id }: { id: string }) {
                   </div>
                   <div className="mt-0.5 text-sm font-medium text-slate-900">{a.titulo}</div>
                 </button>
-                <div className={`mt-1 text-[13px] leading-relaxed whitespace-pre-line text-slate-700 ${abierto === a.id || resaltar ? '' : 'line-clamp-2'}`}>
+                <div className={`mt-1 text-sm leading-relaxed whitespace-pre-line text-slate-700 ${abierto === a.id || resaltar ? '' : 'line-clamp-2'}`}>
                   <Resaltado texto={a.descripcion} activo={resaltar} />
                 </div>
               </li>

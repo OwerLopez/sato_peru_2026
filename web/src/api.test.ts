@@ -1,6 +1,6 @@
 // Pruebas unitarias del cliente de la API y de los formatos que ve el usuario (npm test).
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { api, ApiError, fmtMillones, fmtNum, fmtPct, getToken, qs, SESION_EXPIRADA, setToken, titulo, urlSegura } from './api'
+import { api, ApiError, fmtMillones, fmtNum, fmtPct, getToken, nombreObra, qs, SESION_EXPIRADA, setToken, titulo, urlSegura } from './api'
 import { GLOSARIO } from './glosario'
 
 afterEach(() => {
@@ -11,21 +11,32 @@ afterEach(() => {
 
 describe('formatos es-PE', () => {
   it('porcentajes con espacio y decimales fijos', () => {
-    expect(fmtPct(0.176, 1)).toBe('17.6 %')
-    expect(fmtPct(0.2)).toBe('20 %')
+    expect(fmtPct(0.176, 1)).toBe('17.6 %')
+    expect(fmtPct(0.2)).toBe('20 %')
     expect(fmtPct(null)).toBe('—')
     expect(fmtPct(Number.NaN)).toBe('—')
   })
   it('miles y montos', () => {
     expect(fmtNum(96986)).toBe('96,986')
-    expect(fmtMillones(2.5e9)).toBe('S/ 2.5 mil millones')
-    expect(fmtMillones(3_400_000)).toBe('S/ 3.4 millones')
+    expect(fmtMillones(2.5e9)).toBe('S/ 2.5 mil millones')
+    expect(fmtMillones(3_400_000)).toBe('S/ 3.4 millones')
     expect(fmtMillones(undefined)).toBe('—')
   })
   it('nombres propios sin mayúsculas en las partículas', () => {
     expect(titulo('MADRE DE DIOS')).toBe('Madre de Dios')
     expect(titulo('construccion del puente y la via')).toBe('Construccion del Puente y la Via')
     expect(titulo(null)).toBe('—')
+  })
+  it('nombres de obra legibles sin perder siglas ni códigos', () => {
+    expect(nombreObra('CONTRATACIÓN PARA LA EJECUCIÓN DE LA OBRA: MEJORAMIENTO DEL SERVICIO DE AGUA POTABLE CON CUI N° 2427957')).toBe(
+      'Contratación para la Ejecución de la Obra: Mejoramiento del Servicio de Agua Potable con CUI N° 2427957',
+    )
+    expect(nombreObra('REHABILITACIÓN DE LA I.E. N°40052 EN AA.HH. SAN JOSÉ - UGEL AREQUIPA')).toBe('Rehabilitación de la I.E. N°40052 en AA.HH. San José - UGEL Arequipa')
+    expect(nombreObra('Ya Tiene Minúsculas')).toBe('Ya Tiene Minúsculas')
+    expect(nombreObra('CONTRATO N°04-2026-MDL/GM')).toBe('Contrato N°04-2026-MDL/GM')
+    expect(nombreObra('VÍAS INTERNAS DEL AA. HH. HUERTA Y/O PARQUE')).toBe('Vías Internas del AA. HH. Huerta y/o Parque')
+    expect(nombreObra('REMODELACIÓN DEL EDIFICIO EN LIMA con CUI N° 2427957')).toBe('Remodelación del Edificio en Lima con CUI N° 2427957')
+    expect(nombreObra(null)).toBe('—')
   })
   it('cadena de consulta sin valores vacíos', () => {
     expect(qs({ a: 1, b: null, c: '', d: undefined, e: 'x y' })).toBe('?a=1&e=x+y')

@@ -1,28 +1,65 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+/*
+  Sistema de diseño de SATO: estilo "accesible e institucional" para una plataforma pública.
+  - Texto base de 16 px; texto secundario con contraste de 7:1 o más sobre blanco (WCAG AAA para texto normal).
+  - Azul institucional para acciones y navegación; rojo, ámbar y verde reservados para el nivel de riesgo
+    (siempre acompañados de texto o ícono, nunca solo color).
+  - Títulos y cifras en Lexend (diseñada para facilitar la lectura); texto en Source Sans 3.
+*/
 @theme {
-  /* gris secundario algo más oscuro que el de Tailwind: contraste AA (4.5:1) también sobre el fondo de la página */
-  --color-slate-500: #556377;
-  --color-marca-50: #f0f5fa;
-  --color-marca-100: #dbe7f2;
-  --color-marca-200: #b7cee3;
-  --color-marca-500: #2f6a99;
-  --color-marca-600: #1f5a88;
-  --color-marca-700: #174a72;
-  --color-marca-800: #113a5a;
-  --color-marca-900: #0b2840;
-  --color-marca-950: #071b2c;
+  --font-sans: "Source Sans 3 Variable", "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Lexend Variable", "Lexend", "Source Sans 3 Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* escala tipográfica: el mínimo de lectura es 13 px (etiquetas); el texto corriente, 15-16 px */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.6rem;
+
+  /* azul institucional (acciones, navegación, datos de la marca) */
+  --color-marca-50: #eff6fc;
+  --color-marca-100: #dbeaf7;
+  --color-marca-200: #b7d4ee;
+  --color-marca-300: #86b6df;
+  --color-marca-400: #4b91cb;
+  --color-marca-500: #1f72b4;
+  --color-marca-600: #135c98;
+  --color-marca-700: #0f4c7f;
+  --color-marca-800: #0e3f68;
+  --color-marca-900: #0d2f4d;
+  --color-marca-950: #0a1c30;
+
+  /* grises con contraste AAA para el texto secundario */
+  --color-slate-500: #4b5a6d;
+  --color-slate-600: #3e4a5b;
+
+  /* nivel de riesgo (texto sobre fondo suave con contraste >= 4.5:1) */
   --color-alto: #b42318;
   --color-alto-suave: #fef3f2;
-  --color-medio: #b54708;
-  --color-medio-suave: #fffaeb;
+  --color-medio: #a64106;
+  --color-medio-suave: #fff8eb;
   --color-bajo: #067647;
   --color-bajo-suave: #ecfdf3;
-  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --color-fondo: #f4f6f9;
+
   --animate-aparecer: aparecer 160ms ease-out;
   --animate-deslizar: deslizar 220ms cubic-bezier(0.22, 1, 0.36, 1);
   --animate-brillo: brillo 1.4s ease-in-out infinite;
+}
+
+/* Escala de capas. Leaflet usa hasta 1000 en sus controles: todo lo de la interfaz queda por encima. */
+:root {
+  --z-cabecera: 1200;
+  --z-lateral: 1300;
+  --z-capa: 1400;
+  --z-dialogo: 1500;
+  --z-ayuda: 1600;
+  --z-salto: 1700;
 }
 
 @keyframes aparecer {
@@ -38,53 +75,58 @@
   50% { opacity: 0.55; }
 }
 
-html, body, #root { height: 100%; }
-html { background: #f4f6f9; }
+html, body, #root { min-height: 100%; }
+html { background: var(--color-fondo); scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body {
-  @apply bg-[#f4f6f9] text-slate-800 antialiased;
-  font-feature-settings: "cv11", "ss01";
+  @apply bg-fondo text-base text-slate-800 antialiased;
+  font-feature-settings: "kern", "liga";
 }
-:focus-visible { @apply outline-2 outline-offset-2 outline-marca-500; }
+h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
+/* foco visible de 3 px en todo control (teclado) */
+:focus-visible { outline: 3px solid var(--color-marca-600); outline-offset: 2px; border-radius: 4px; }
 .num { font-variant-numeric: tabular-nums; }
+::selection { background: var(--color-marca-100); color: var(--color-marca-950); }
 
 @layer components {
-  .tarjeta { @apply rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]; }
-  .etiqueta { @apply text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500; }
-  .titulo-pagina { @apply text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl; }
-  .subtitulo-pagina { @apply mt-1 max-w-3xl text-sm text-slate-600; }
-  .enlace { @apply font-medium text-marca-600 underline-offset-2 hover:text-marca-800 hover:underline; }
+  .tarjeta { @apply rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.05)]; }
+  .etiqueta { @apply text-xs font-semibold tracking-[0.04em] text-slate-600 uppercase; }
+  .titulo-pagina { @apply font-display text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.75rem] sm:leading-tight; }
+  .subtitulo-pagina { @apply mt-1.5 max-w-3xl text-base leading-relaxed text-slate-600; }
+  .enlace { @apply font-semibold text-marca-700 underline decoration-marca-300 underline-offset-3 transition-colors hover:text-marca-900 hover:decoration-marca-700; }
 
-  .btn { @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 shadow-[0_1px_1px_rgba(16,24,40,0.04)] transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-50; }
-  .btn-primario { @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-marca-700 px-3.5 text-sm font-medium text-white shadow-[0_1px_1px_rgba(16,24,40,0.08)] transition-colors hover:bg-marca-800 disabled:pointer-events-none disabled:opacity-50; }
-  .btn-fantasma { @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-50; }
-  .btn-sm { @apply h-8 px-2.5 text-[13px]; }
-  .entrada { @apply h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 shadow-[0_1px_1px_rgba(16,24,40,0.04)] transition-colors placeholder:text-slate-400 focus:border-marca-500 focus:ring-3 focus:ring-marca-100 focus:outline-none; }
+  .btn { @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-800 shadow-[0_1px_1px_rgba(16,24,40,0.04)] transition-colors duration-150 hover:border-slate-400 hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-50; }
+  .btn-primario { @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-marca-700 px-4 text-sm font-semibold text-white shadow-[0_1px_1px_rgba(16,24,40,0.08)] transition-colors duration-150 hover:bg-marca-800 disabled:pointer-events-none disabled:opacity-50; }
+  .btn-fantasma { @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-50; }
+  .btn-sm { @apply h-9 px-3 text-sm; }
+  .entrada { @apply h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-[0_1px_1px_rgba(16,24,40,0.04)] transition-colors duration-150 placeholder:text-slate-500 hover:border-slate-400 focus:border-marca-600 focus:ring-3 focus:ring-marca-100 focus:outline-none; }
   select.entrada { @apply pr-8; }
 
   .tabla { @apply w-full border-separate border-spacing-0 text-sm; }
-  .tabla th { @apply sticky top-0 z-[1] border-b border-slate-200 bg-slate-50 px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-slate-500; }
-  .tabla td { @apply border-b border-slate-100 px-3 py-2.5 align-middle; }
-  .tabla tbody tr { @apply transition-colors; }
-  .tabla tbody tr:hover td { @apply bg-slate-50/80; }
+  .tabla th { @apply sticky top-0 z-[1] border-b border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-xs font-semibold tracking-[0.03em] text-slate-600 uppercase; }
+  .tabla td { @apply border-b border-slate-100 px-3 py-3 align-middle; }
+  .tabla tbody tr { @apply transition-colors duration-150; }
+  .tabla tbody tr:hover td { @apply bg-marca-50/50; }
+  .tabla tbody tr:last-child td { @apply border-b-0; }
 
-  .segmento { @apply inline-flex rounded-lg bg-slate-100 p-0.5 text-sm; }
-  .segmento > button { @apply rounded-md px-3 py-1.5 font-medium text-slate-600 transition-colors hover:text-slate-900; }
-  .segmento > button[data-activo="true"] { @apply bg-white text-slate-900 shadow-sm; }
+  .segmento { @apply inline-flex rounded-lg bg-slate-100 p-1 text-sm; }
+  .segmento > button { @apply rounded-md px-3 py-1.5 font-semibold text-slate-600 transition-colors duration-150 hover:text-slate-900; }
+  .segmento > button[data-activo="true"] { @apply bg-white text-marca-800 shadow-sm ring-1 ring-slate-200; }
 
   .pestanas { @apply flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-200; scrollbar-width: none; }
-  .pestana { @apply -mb-px shrink-0 border-b-2 border-transparent px-3 py-2.5 text-sm font-medium whitespace-nowrap text-slate-500 transition-colors hover:text-slate-800; }
+  .pestana { @apply -mb-px shrink-0 border-b-[3px] border-transparent px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-slate-600 transition-colors duration-150 hover:text-slate-900; }
   .pestana[data-state="active"] { @apply border-marca-600 text-marca-800; }
 
   .esqueleto { @apply animate-brillo rounded-md bg-slate-200/70; }
 }
 
+/* Mapa: fondo cartográfico en grises para que solo los puntos de riesgo lleven color */
 .leaflet-container { font-family: inherit; background: #eef2f6; }
-.recharts-cartesian-axis-tick-value { fill: #64748b; }
-.recharts-default-tooltip { border-radius: 8px !important; border-color: #e2e8f0 !important; box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08); font-size: 12px; }
+.mapa-sobrio .leaflet-tile-pane { filter: grayscale(1) contrast(0.92) brightness(1.04); }
+.leaflet-control-zoom a { color: var(--color-slate-800, #1e293b) !important; }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-}
+.recharts-cartesian-axis-tick-value { fill: #4b5a6d; font-size: 12px; }
+.recharts-legend-item-text { color: #3e4a5b !important; }
+.recharts-default-tooltip { border-radius: 8px !important; border-color: #e2e8f0 !important; box-shadow: 0 6px 16px rgba(16, 24, 40, 0.1); font-size: 13px; }
 
 /* Pantallas táctiles: controles de al menos 44 px de alto (WCAG 2.5.5) sin agrandar la vista de escritorio */
 @media (pointer: coarse) {
@@ -92,4 +134,18 @@ body {
   .btn-sm { min-height: 40px; }
   .segmento > button, .pestana { min-height: 44px; }
 }
-button, [role="button"], a[href], select, summary { cursor: pointer; }
+button, [role="button"], a[href], select, summary, label[for] { cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Impresión: solo el contenido, sin navegación ni controles */
+@media print {
+  html, body { background: #fff; font-size: 11pt; }
+  .no-imprimir, header[role="banner"], aside, footer, nav[aria-label="Paginación"], .leaflet-control-container { display: none !important; }
+  main { padding: 0 !important; max-width: none !important; }
+  .tarjeta { box-shadow: none; break-inside: avoid; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 9pt; color: #4b5a6d; }
+}

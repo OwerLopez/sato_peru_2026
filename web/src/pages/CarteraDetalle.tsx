@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Building2, CalendarDays, ExternalLink, FileText, MapPin, Tag } from 'lucide-react'
+import { Building2, CalendarDays, ExternalLink, FileText, MapPin, Tag } from 'lucide-react'
 import { Tabs } from 'radix-ui'
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { api, ESTADO_OP, fmtFecha, fmtMes, fmtMillones, fmtNum, fmtPct, titulo, type Factor, type Nivel, urlSegura } from '../api'
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { api, ESTADO_OP, fmtFecha, fmtMes, fmtMillones, fmtNum, fmtPct, nombreObra, titulo, type Factor, type Nivel, urlSegura } from '../api'
 import { ListaFactores, VecesPromedio } from '../components/Factores'
-import { CargandoPagina, Dato, ErrorMsg, InfoTip, Seccion, Vacio } from '../components/ui'
-import { COLOR_NIVEL, COLORES } from '../lib/colores'
+import { CargandoPagina, Dato, ErrorMsg, InfoTip, Migas, Seccion, Vacio } from '../components/ui'
+import { COLOR_NIVEL, COLORES, SERIE } from '../lib/colores'
 import { NIVEL_TEXTO } from '../lib/nivel'
 
 interface Riesgo {
@@ -38,7 +38,7 @@ interface Detalle {
 
 function Meta({ icono, children }: { icono: ReactNode; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] text-slate-600">
+    <span className="inline-flex items-center gap-1.5 text-sm text-slate-600">
       <span className="text-slate-400">{icono}</span>
       {children}
     </span>
@@ -72,11 +72,11 @@ export default function CarteraDetalle() {
   return (
     <div className="space-y-5">
       <div>
-        <Link to="/cartera" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-marca-700">
-          <ArrowLeft className="size-4" /> Cartera nacional
-        </Link>
+        <Migas items={[{ a: '/cartera', l: 'Cartera nacional' }, { l: 'Ficha de la obra' }]} />
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <h1 className="max-w-4xl text-lg leading-snug font-semibold text-slate-900 sm:text-xl">{o.nombre}</h1>
+          <h1 className="max-w-4xl font-display text-xl leading-snug font-semibold text-slate-900 sm:text-2xl" title={o.nombre}>
+            {nombreObra(o.nombre)}
+          </h1>
           {o.cuaderno_id && (
             <Link to={`/obras/${o.cuaderno_id}`} className="btn">
               <FileText className="size-4" /> Ver alerta del cuaderno digital
@@ -97,7 +97,7 @@ export default function CarteraDetalle() {
         <section className="tarjeta overflow-hidden">
           <div className="grid gap-5 p-5 md:grid-cols-[1.1fr_1.6fr]">
             <div>
-              <div className="flex items-center gap-1 text-[13px] font-medium text-slate-600">
+              <div className="flex items-center gap-1 text-sm font-medium text-slate-600">
                 Riesgo de terminar con retraso significativo <InfoTip termino="retraso_significativo" />
               </div>
               <div className="mt-2 flex items-baseline gap-3">
@@ -115,7 +115,7 @@ export default function CarteraDetalle() {
               </div>
             </div>
             <div>
-              <div className="mb-2 text-[13px] font-medium text-slate-600">Confiabilidad de este nivel</div>
+              <div className="mb-2 text-sm font-medium text-slate-600">Confiabilidad de este nivel</div>
               {u && tasaNivel !== undefined && (
                 <p className="text-sm leading-relaxed text-slate-600">
                   Entre las obras evaluadas desde {fmtFecha(u.periodo_test_desde)}, <b className="num text-slate-900">{Math.round(100 * tasaNivel)} de cada 100</b> clasificadas en nivel{' '}
@@ -127,7 +127,7 @@ export default function CarteraDetalle() {
             </div>
           </div>
           <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-4">
-            <div className="text-[13px] font-medium text-slate-700">Principales factores que elevan el riesgo</div>
+            <div className="text-sm font-medium text-slate-700">Principales factores que elevan el riesgo</div>
             {suben.length ? (
               <ul className="mt-1.5 grid gap-x-6 gap-y-1 text-sm text-slate-800 md:grid-cols-3">
                 {suben.slice(0, 3).map((f) => (
@@ -193,25 +193,38 @@ export default function CarteraDetalle() {
             </div>
           </Tabs.Content>
           <Tabs.Content value="gasto">
-            <Seccion titulo="Ejecución del gasto (SIAF) y riesgo de seguimiento" ayuda="devengado" subtitulo="Barras: gasto devengado mensual de la inversión. Línea: probabilidad estimada cada mes con la información disponible a esa fecha.">
+            <Seccion titulo="Ejecución del gasto (SIAF) y riesgo de seguimiento" ayuda="devengado" subtitulo="Arriba, la probabilidad estimada cada mes con la información disponible a esa fecha; abajo, el gasto devengado mensual de la inversión.">
               {datos.length === 0 ? (
                 <Vacio titulo="Sin ejecución registrada" texto="La inversión no tiene gasto registrado en SIAF o la obra no tiene código único de inversión propio." />
               ) : (
-                <div className="h-80">
-                  <ResponsiveContainer>
-                    <ComposedChart data={datos} margin={{ left: 6, right: 4, top: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLORES.rejilla} />
-                      <XAxis dataKey="mes" tick={{ fontSize: 11 }} tickFormatter={(m) => fmtMes(m + '-01')} minTickGap={16} />
-                      <YAxis yAxisId="d" tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1e6).toLocaleString('es-PE', { maximumFractionDigits: 1 })} M`} />
-                      <YAxis yAxisId="r" orientation="right" domain={[0, 100]} unit="%" tick={{ fontSize: 11 }} />
-                      <Tooltip labelFormatter={(m) => fmtMes(m + '-01')} formatter={(v, n) => (n === 'Gasto devengado (S/)' ? fmtMillones(Number(v)) : `${v} %`)} />
-                      <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar isAnimationActive={false} yAxisId="d" dataKey="devengado" name="Gasto devengado (S/)" fill={COLORES.marcaClaro} radius={[2, 2, 0, 0]} />
-                      <Line isAnimationActive={false} yAxisId="r" dataKey="riesgo" name="Riesgo estimado (%)" stroke={COLOR_NIVEL.ALTO} strokeWidth={2} dot={false} connectNulls />
-                      {o.fin_programado && <ReferenceLine yAxisId="r" x={String(o.fin_programado).slice(0, 7)} stroke={COLORES.marcaOscuro} strokeDasharray="4 4" label={{ value: 'fin programado', fontSize: 10, position: 'insideTopLeft' }} />}
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
+                <>
+                  <div className="h-56" role="img" aria-label="Riesgo estimado de retraso por mes">
+                    <ResponsiveContainer>
+                      <LineChart data={datos} syncId="evolucion-cartera" margin={{ left: -8, right: 12, top: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLORES.rejilla} />
+                        <XAxis dataKey="mes" tick={{ fontSize: 12 }} tickFormatter={(m) => fmtMes(m + '-01')} minTickGap={16} />
+                        <YAxis domain={[0, 100]} unit="%" tick={{ fontSize: 12 }} width={52} />
+                        <Tooltip labelFormatter={(m) => fmtMes(m + '-01')} formatter={(v) => [`${v}\u00a0%`, 'Riesgo estimado']} />
+                        <Line isAnimationActive={false} dataKey="riesgo" name="Riesgo estimado" stroke={SERIE[0]} strokeWidth={2.5} dot={false} connectNulls />
+                        {o.fin_programado && (
+                          <ReferenceLine x={String(o.fin_programado).slice(0, 7)} stroke="#334155" strokeDasharray="5 4" label={{ value: 'fin programado', fontSize: 12, fill: '#334155', position: 'insideTopLeft' }} />
+                        )}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-2 h-48" role="img" aria-label="Gasto devengado mensual">
+                    <ResponsiveContainer>
+                      <BarChart data={datos} syncId="evolucion-cartera" margin={{ left: -8, right: 12, top: 4 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLORES.rejilla} />
+                        <XAxis dataKey="mes" tick={{ fontSize: 12 }} tickFormatter={(m) => fmtMes(m + '-01')} minTickGap={16} />
+                        <YAxis tick={{ fontSize: 12 }} width={52} tickFormatter={(v) => `${(v / 1e6).toLocaleString('es-PE', { maximumFractionDigits: 1 })}\u00a0M`} />
+                        <Tooltip labelFormatter={(m) => fmtMes(m + '-01')} formatter={(v) => [fmtMillones(Number(v)), 'Gasto devengado']} />
+                        <Legend wrapperStyle={{ fontSize: 13 }} />
+                        <Bar isAnimationActive={false} dataKey="devengado" name="Gasto devengado (millones de soles)" fill={COLORES.marca} radius={[3, 3, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
               )}
             </Seccion>
           </Tabs.Content>

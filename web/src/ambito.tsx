@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { api } from './api'
 
 interface Ctx {
@@ -21,7 +21,7 @@ function leer(): string | null {
 export function AmbitoProvider({ children }: { children: ReactNode }) {
   const [departamento, set] = useState<string | null>(leer())
   const q = useQuery({ queryKey: ['ambitos'], queryFn: () => api<{ departamento: string; obras: number }[]>('/ambitos'), staleTime: Infinity })
-  const setDepartamento = (d: string | null) => {
+  const setDepartamento = useCallback((d: string | null) => {
     set(d)
     try {
       if (d) localStorage.setItem('sato_ambito', d)
@@ -29,8 +29,10 @@ export function AmbitoProvider({ children }: { children: ReactNode }) {
     } catch {
       /* almacenamiento no disponible */
     }
-  }
-  return <AmbitoCtx.Provider value={{ departamento, setDepartamento, opciones: q.data ?? [] }}>{children}</AmbitoCtx.Provider>
+  }, [])
+  const opciones = q.data
+  const valor = useMemo(() => ({ departamento, setDepartamento, opciones: opciones ?? [] }), [departamento, setDepartamento, opciones])
+  return <AmbitoCtx.Provider value={valor}>{children}</AmbitoCtx.Provider>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
