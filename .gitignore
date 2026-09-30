@@ -55,3 +55,7 @@ docs/articulo/plantilla_gesiti*
 
 # archivos temporales de Office
 ~$*
+
+# respaldos de la base de datos (varios GB): se trasladan fuera del repositorio
+backups/
+*.dump
