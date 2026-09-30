@@ -7,13 +7,13 @@ Procedimiento para levantar el sistema completo en otro equipo **sin descargar n
 
 | Archivo | De dónde sale | Nota |
 |---|---|---|
-| `sato_AAAAMMDD_HHMMSS.dump` | `scripts/backup_db.sh` en el equipo original (carpeta `backups/`) | Varios cientos de MB a pocos GB |
+| `sato_AAAAMMDD_HHMMSS.dump` | `scripts/backup_db.sh` en el equipo original (carpeta `backups/`) | Unos 550 MB; en la prueba, restaurar y arrancar tomó 8 minutos |
 | `.env` | raíz del repositorio en el equipo original | Contiene las claves: no se sube a GitHub ni se comparte |
 
 ## Requisitos de la laptop
 
 - Windows 10/11 con **Docker Desktop** instalado y abierto ("Engine running"), **Git** y 8 GB de RAM o más.
-- Unos **20 GB libres** en disco (base restaurada más imágenes de Docker).
+- Unos **10 GB libres** en disco: base restaurada 6,4 GB, respaldo 0,55 GB e imágenes de Docker 0,85 GB, además de Docker Desktop.
 - **Internet la primera vez**, para descargar las imágenes y dependencias. Conviene hacerlo en casa, no en la universidad.
 
 ## Pasos (una sola vez)

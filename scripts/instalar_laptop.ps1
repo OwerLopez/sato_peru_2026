@@ -28,8 +28,10 @@ for ($i = 0; $i -lt 60; $i++) {
     if ($LASTEXITCODE -eq 0) { break }
     Start-Sleep -Seconds 2
 }
-$obras = docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -c "select count(*) from sato.obra" 2>/dev/null'
-if ($LASTEXITCODE -ne 0 -or -not $obras -or [int]$obras -eq 0) {
+# la consulta va por la entrada estandar: PowerShell 5 elimina las comillas dobles de los argumentos a programas externos
+function Contar-Obras { ("select count(*) from sato.obra;" | docker compose exec -T db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB -At 2>/dev/null' | Out-String).Trim() }
+$obras = Contar-Obras
+if ($obras -notmatch '^\d+$' -or [int]$obras -eq 0) {
     if (-not $Respaldo -or -not (Test-Path $Respaldo)) { throw "La base esta vacia. Indique el respaldo con -Respaldo <ruta al archivo .dump>." }
     Paso "Restaurando el respaldo (puede tardar entre 10 y 30 minutos)"
     docker compose cp "$Respaldo" db:/tmp/sato.dump
@@ -38,7 +40,7 @@ if ($LASTEXITCODE -ne 0 -or -not $obras -or [int]$obras -eq 0) {
     $codigo = $LASTEXITCODE
     docker compose exec -T db rm -f /tmp/sato.dump
     if ($codigo -ne 0) { throw "pg_restore termino con errores (codigo $codigo)." }
-    $obras = docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -c "select count(*) from sato.obra"'
+    $obras = Contar-Obras
     Write-Host "Base restaurada: $obras obras."
 } else {
     Write-Host "La base ya tiene datos ($obras obras): no se restaura."
