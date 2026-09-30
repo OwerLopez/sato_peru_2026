@@ -29,8 +29,7 @@ def construir(conn, dep, prov):
              and (%s::text is null or o.provincia = %s) order by p.score desc limit 25""", (corte, dep, dep, prov, prov)).fetchall()
     car = conn.execute(
         """select c.nombre, c.provincia, r.score, c.codigo_infobras from sato.cartera_obra c
-           join lateral (select score, nivel from sato.cartera_riesgo r where r.codigo_infobras = c.codigo_infobras
-                         order by (r.tipo = 'seguimiento') desc, r.fecha_corte desc limit 1) r on true
+           join sato.cartera_riesgo_vigente r on r.codigo_infobras = c.codigo_infobras
            where c.estado_operativo = 'ACTIVA' and r.nivel = 'ALTO' and (%s::text is null or c.departamento = %s)
              and (%s::text is null or c.provincia = %s) order by r.score desc limit 25""", (dep, dep, prov, prov)).fetchall()
     return corte, cua, car
