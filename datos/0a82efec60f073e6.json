@@ -1,0 +1,1 @@
+[{"escenario":"consultas","descripcion":"Absolver todas las consultas pendientes","score_base":0.17799384141498986,"score_escenario":0.17575403437143555,"alerta_escenario":true},{"escenario":"devengado","descripcion":"Ejecución financiera al día (devengado en el último mes)","score_base":0.17799384141498986,"score_escenario":0.17799384141498986,"alerta_escenario":true}]

@@ -1,0 +1,1 @@
+import{Bt as e,Ut as t}from"./index-INSFHNO4.js";import{N as n,i as r}from"./colores-BlBVstvc.js";var i=t(e()),a=[`axis`],o=(0,i.forwardRef)((e,t)=>i.createElement(r,{chartName:`LineChart`,defaultTooltipEventType:`axis`,validateTooltipEventTypes:a,tooltipPayloadSearcher:n,categoricalChartProps:e,ref:t}));export{o as t};

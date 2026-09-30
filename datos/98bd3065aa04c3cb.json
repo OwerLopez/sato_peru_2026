@@ -1,0 +1,1 @@
+[{"escenario":"suspensiones","descripcion":"Sin suspensiones del plazo en los últimos 90 días","score_base":0.1874162337169416,"score_escenario":0.18080624508229842,"alerta_escenario":true},{"escenario":"consultas","descripcion":"Absolver todas las consultas pendientes","score_base":0.1874162337169416,"score_escenario":0.1874162337169416,"alerta_escenario":true}]

@@ -1,0 +1,1 @@
+[{"escenario":"ampliaciones","descripcion":"Sin nuevas ampliaciones de plazo en los últimos 90 días","score_base":0.16157705645505133,"score_escenario":0.15493961604809942,"alerta_escenario":true},{"escenario":"consultas","descripcion":"Absolver todas las consultas pendientes","score_base":0.16157705645505133,"score_escenario":0.15950374630396347,"alerta_escenario":true}]

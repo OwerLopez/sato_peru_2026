@@ -1,0 +1,1 @@
+[{"escenario":"ampliaciones","descripcion":"Sin nuevas ampliaciones de plazo en los últimos 90 días","score_base":0.15683493956111752,"score_escenario":0.15480681088998155,"alerta_escenario":true},{"escenario":"registro","descripcion":"Registro activo del cuaderno (asiento reciente)","score_base":0.15683493956111752,"score_escenario":0.15683493956111752,"alerta_escenario":true}]

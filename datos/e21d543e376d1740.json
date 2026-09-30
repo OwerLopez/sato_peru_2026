@@ -1,0 +1,1 @@
+[{"escenario":"penalidades","descripcion":"Sin aplicación de penalidades en los últimos 90 días","score_base":0.27140007410110434,"score_escenario":0.24198280551798543,"alerta_escenario":true},{"escenario":"consultas","descripcion":"Absolver todas las consultas pendientes","score_base":0.27140007410110434,"score_escenario":0.27108723165821985,"alerta_escenario":true}]

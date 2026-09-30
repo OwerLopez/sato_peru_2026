@@ -1,0 +1,1 @@
+[{"escenario":"penalidades","descripcion":"Sin aplicación de penalidades en los últimos 90 días","score_base":0.16823189335028793,"score_escenario":0.15443562538180605,"alerta_escenario":true},{"escenario":"registro","descripcion":"Registro activo del cuaderno (asiento reciente)","score_base":0.16823189335028793,"score_escenario":0.16823189335028793,"alerta_escenario":true}]
