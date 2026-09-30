@@ -306,7 +306,7 @@ const secciones = [
             ['Disponibilidad durante la recarga', '417 de 417 solicitudes sin error durante una recarga nacional de 26,8 min (p50 2,1 s)', 'Sondeo continuo de la API'],
             ['Pruebas automatizadas', '192 aprobadas y 0 fallidas en el backend (156 unitarias, de API, contratos, base de datos, seguridad, concurrencia y servicios, y 36 de extremo a extremo en navegador, incluidas pantallas de 375 px); 12 de la interfaz', 'pytest, Playwright, Vitest'],
           ],
-          nota: 'La prueba de carga se ejecutó directamente contra la API, con el límite de tasa de la aplicación elevado, porque un generador de carga desde una sola IP solo mediría el limitador. En la primera medición de la interfaz rediseñada la accesibilidad fue 100, 93 y 96; se corrigieron el contraste del texto secundario, un atributo ARIA no permitido y el desplazamiento del diseño al cargar los filtros. Fuente: docs/articulo/evaluacion/.',
+          nota: 'La prueba de carga se ejecutó directamente contra la API, con el límite de tasa de la aplicación elevado, porque un generador de carga desde una sola IP solo mediría el limitador. En la primera medición de la interfaz rediseñada la accesibilidad fue 100, 93 y 96; se corrigieron el contraste del texto secundario, un atributo ARIA no permitido y el desplazamiento del diseño al cargar los filtros. La medición vigente corresponde al sistema de diseño institucional (29 de septiembre de 2026); en ella se corrigió además un desplazamiento del pie de página que reducía el rendimiento del panorama. Fuente: docs/articulo/evaluacion/.',
         },
       },
       { h2: '5.4 Resultados cuantitativos y cualitativos' },
