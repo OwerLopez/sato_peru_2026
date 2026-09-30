@@ -48,32 +48,33 @@ def comas(fig, x: bool = False):
 
 
 def fig_arquitectura():
-    fig, ax = plt.subplots(figsize=(7.2, 3.6))
+    fig, ax = plt.subplots(figsize=(7.4, 4.3))
     ax.set_xlim(0, 100)
-    ax.set_ylim(0, 50)
+    ax.set_ylim(0, 60)
     ax.axis("off")
 
     def caja(x, y, w, h, titulo, cuerpo, color):
         ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.4,rounding_size=1.2", fc=color, ec="#404040", lw=0.7))
         ax.text(x + w / 2, y + h - 2.2, titulo, ha="center", va="top", fontsize=8.2, weight="bold")
-        ax.text(x + w / 2, y + h - 6.2, cuerpo, ha="center", va="top", fontsize=6.8, linespacing=1.35)
+        ax.text(x + w / 2, y + h - 6.2, cuerpo, ha="center", va="top", fontsize=6.6, linespacing=1.35)
 
     def flecha(x1, y1, x2, y2):
         ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2), arrowstyle="-|>", mutation_scale=9, lw=0.8, color="#404040"))
 
-    caja(1, 4, 20, 42, "Fuentes oficiales", "OECE: cuaderno de obra\ndigital (asientos,\nvalorizaciones),\nSEACE/CONOSCE\n\nMEF: Invierte.pe,\nFormato 12-B, SIAF\n\nContraloría: INFOBRAS,\nobras paralizadas", "#e8eef7")
-    caja(26, 4, 22, 42, "Pipeline de datos", "ingest (SHA-256)\nstaging (Parquet)\nintegración: resolución\nde entidades (CUI, RUC)\nfeatures as-of obra-mes\nNLP: léxico, TF-IDF,\nSentence-BERT\n(DuckDB, Python)", "#eef5ea")
-    caja(53, 26, 21, 20, "Modelado", "LightGBM A vs B\nvalidación temporal,\nrolling-origin, bootstrap\nTreeSHAP + evidencia", "#fdf1e6")
-    caja(53, 4, 21, 18, "Persistencia", "PostgreSQL 16\n(texto completo en\nespañol), auditoría\nde calidad de datos", "#f3eef8")
-    caja(79, 26, 20, 20, "Servicio", "API REST FastAPI\nJWT, CSP, límites\nde tasa, informe PDF,\nsuscripciones", "#e8eef7")
-    caja(79, 4, 20, 18, "Interfaz", "React + TypeScript\npanorama, ficha,\nfactores en lenguaje\nclaro (nginx, Docker)", "#eef5ea")
-    flecha(21.5, 25, 25.5, 25)
-    flecha(48.5, 36, 52.5, 36)
-    flecha(48.5, 13, 52.5, 13)
-    flecha(63.5, 25.6, 63.5, 22.6)
-    flecha(74.5, 13, 78.5, 30)
-    flecha(89, 25.6, 89, 22.6)
-    ax.text(50, 0.3, "Worker programado: sincronización mensual con las fuentes y resumen semanal por correo", ha="center", fontsize=6.8, style="italic")
+    caja(1, 14, 20, 42, "Fuentes oficiales", "OECE: cuaderno de obra\ndigital (asientos,\nvalorizaciones),\nSEACE/CONOSCE\n\nMEF: Invierte.pe,\nFormato 12-B, SIAF\n\nContraloría: INFOBRAS,\nobras paralizadas", "#e8eef7")
+    caja(26, 14, 22, 42, "Pipeline de datos", "ingest (SHA-256)\nstaging (Parquet)\nintegración: resolución\nde entidades (CUI, RUC)\nfeatures as-of obra-mes\nNLP: léxico, TF-IDF,\nSentence-BERT\n(DuckDB, Python)", "#eef5ea")
+    caja(53, 36, 21, 20, "Modelado", "LightGBM A vs B\nvalidación temporal,\nrolling-origin, bootstrap\nTreeSHAP + evidencia", "#fdf1e6")
+    caja(53, 14, 21, 18, "Carga y persistencia", "compuerta de integridad\n(32 chequeos, conciliación)\nPostgreSQL 16, vistas\nmaterializadas", "#f3eef8")
+    caja(79, 36, 20, 20, "Servicio", "API REST FastAPI\nJWT, límites de tasa,\ncaché por versión,\ninforme PDF", "#e8eef7")
+    caja(79, 14, 20, 18, "Interfaz", "React + TypeScript\nsistema de diseño\naccesible (nginx,\nDocker)", "#eef5ea")
+    caja(26, 0.5, 73, 10, "Operación autónoma", "worker con candado, reintentos, recuperación y latido\nmonitoreo de deriva (PSI) y anomalías  ·  avisos y resumen semanal por correo", "#f7f7f7")
+    flecha(21.5, 35, 25.5, 35)
+    flecha(48.5, 46, 52.5, 46)
+    flecha(48.5, 23, 52.5, 23)
+    flecha(63.5, 35.6, 63.5, 32.6)
+    flecha(74.5, 23, 78.5, 40)
+    flecha(89, 35.6, 89, 32.6)
+    flecha(62, 11.2, 62, 13.4)
     fig.savefig(OUT / "fig1_arquitectura.png")
     plt.close(fig)
 

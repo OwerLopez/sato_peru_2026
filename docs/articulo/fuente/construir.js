@@ -6,7 +6,7 @@ const fs = require('fs')
 const path = require('path')
 const {
   Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType,
-  HeadingLevel, Header, Footer, PageNumber, BorderStyle, LevelFormat, TableLayoutType, VerticalAlign, PageBreak,
+  HeadingLevel, Header, Footer, PageNumber, BorderStyle, LevelFormat, TableLayoutType, VerticalAlign, PageBreak, ExternalHyperlink,
 } = require(process.env.DOCX_MODULE || 'docx')
 
 const DIR = __dirname
@@ -55,7 +55,21 @@ function resolverCitas(texto) {
   })
 }
 
-// ---------- texto enriquecido: **negrita**, *cursiva* ----------
+// ---------- texto enriquecido: **negrita**, *cursiva*; las URL se vuelven enlaces ----------
+function texto_con_enlaces(t, base) {
+  const out = []
+  const rx = /https?:\/\/[^\s)]+?(?=[.,;:]?(\s|$))/g
+  let last = 0
+  let m
+  while ((m = rx.exec(t))) {
+    if (m.index > last) out.push(new TextRun({ text: t.slice(last, m.index), font: FUENTE, ...base }))
+    out.push(new ExternalHyperlink({ link: m[0], children: [new TextRun({ text: m[0], font: FUENTE, ...base, color: '0563C1', underline: {} })] }))
+    last = m.index + m[0].length
+  }
+  if (last < t.length) out.push(new TextRun({ text: t.slice(last), font: FUENTE, ...base }))
+  return out
+}
+
 function runs(texto, base = {}) {
   const out = []
   const t = resolverCitas(texto)
@@ -63,14 +77,14 @@ function runs(texto, base = {}) {
   let last = 0
   let m
   while ((m = rx.exec(t))) {
-    if (m.index > last) out.push(new TextRun({ text: t.slice(last, m.index), font: FUENTE, ...base }))
+    if (m.index > last) out.push(...texto_con_enlaces(t.slice(last, m.index), base))
     const s = m[0]
     if (s.startsWith('_{')) out.push(new TextRun({ text: s.slice(2, -1), subScript: true, font: FUENTE, ...base }))
     else if (s.startsWith('**')) out.push(new TextRun({ text: s.slice(2, -2), bold: true, font: FUENTE, ...base }))
     else out.push(new TextRun({ text: s.slice(1, -1), italics: true, font: FUENTE, ...base }))
     last = m.index + s.length
   }
-  if (last < t.length) out.push(new TextRun({ text: t.slice(last), font: FUENTE, ...base }))
+  if (last < t.length) out.push(...texto_con_enlaces(t.slice(last), base))
   return out
 }
 
