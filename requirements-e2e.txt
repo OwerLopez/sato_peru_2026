@@ -1,0 +1,2 @@
+# Pruebas de extremo a extremo en navegador (usa Edge o Chrome instalados: no descarga navegadores)
+playwright==1.63.0

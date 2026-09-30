@@ -4,23 +4,19 @@ Requiere SATO_DATABASE_URL apuntando a una BD cargada con `python -m sato.servin
 Se omiten si la base no esta disponible.
 """
 
-import os
 import uuid
 
 import pytest
 
-try:
+from tests.conftest import BD, requiere_bd
+
+if BD:
     from fastapi.testclient import TestClient
 
     from sato.api import db
     from sato.api.main import app
 
-    db.one("select 1 x from sato.modelo limit 1")
-    DISPONIBLE = True
-except Exception:  # noqa: BLE001
-    DISPONIBLE = False
-
-pytestmark = pytest.mark.skipif(not DISPONIBLE or not os.environ.get("SATO_DATABASE_URL"), reason="requiere PostgreSQL cargado")
+pytestmark = requiere_bd
 
 
 @pytest.fixture(scope="module")
@@ -160,7 +156,7 @@ def test_sincronizacion_y_suscripcion(client):
     s = client.get("/api/v1/sistema/sincronizacion").json()
     assert s["proxima_sincronizacion"] and s["corte"]
     assert client.post("/api/v1/suscripciones", json={"email": "no-es-correo"}).status_code == 422
-    assert "invalido" in client.get("/api/v1/suscripciones/confirmar", params={"token": "x" * 30}).text
+    assert "nválido" in client.get("/api/v1/suscripciones/confirmar", params={"token": "x" * 30}).text
 
 
 def test_busqueda_literal_no_usa_comodines(client):
@@ -193,7 +189,7 @@ def test_calibracion_con_datos_observados(client):
 def test_auditoria_de_calidad(client):
     j = client.get("/api/v1/sistema/calidad").json()
     assert j and len(j["chequeos"]) >= 20
-    assert all(c["estado"] in ("OK", "AVISO", "INFO") for c in j["chequeos"])
+    assert all(c["estado"] in ("OK", "AVISO", "INFO") for c in j["chequeos"])  # una carga con CRITICO nunca se confirma
     por = {c["clave"]: c for c in j["chequeos"]}
     assert por["obras"]["valor"] == db.one("select count(*) n from sato.obra")["n"]
     assert por["vigentes_sin_explicacion"]["valor"] == 0

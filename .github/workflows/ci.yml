@@ -26,13 +26,17 @@ jobs:
           cache: pip
       - run: pip install -r requirements-dev.txt
       - name: Lint
-        run: ruff check sato tests
+        run: ruff check sato tests research docs
       - name: Migraciones sobre PostgreSQL limpio
         env:
           DATABASE_URL: postgresql://sato:sato@127.0.0.1:5432/sato
         run: python -c "import psycopg; from sato.serving.load_db import migrate, dsn; c=psycopg.connect(dsn()); migrate(c); c.commit()"
-      - name: Pruebas (las que requieren datos del pipeline se omiten sin data/)
+      - name: Pruebas (unitarias, migraciones y restricciones; las que requieren los datos cargados se omiten)
+        env:
+          SATO_DATABASE_URL: postgresql+psycopg://sato:sato@127.0.0.1:5432/sato
         run: pytest -q
+      - name: Auditoria de dependencias Python
+        run: pip install pip-audit && pip-audit -r requirements.txt -r requirements-api.txt
 
   web:
     runs-on: ubuntu-latest
@@ -45,7 +49,13 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
         working-directory: web
+      - run: npm run lint
+        working-directory: web
+      - run: npm test
+        working-directory: web
       - run: npm run build
+        working-directory: web
+      - run: npm audit --omit=dev --audit-level=high
         working-directory: web
 
   docker:
