@@ -12,4 +12,5 @@ USER sato
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health').status==200 else 1)"
+# La API no publica puertos: solo nginx la alcanza y reemplaza X-Forwarded-For por la IP real del cliente.
 CMD ["uvicorn", "sato.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers", "--forwarded-allow-ips", "*"]

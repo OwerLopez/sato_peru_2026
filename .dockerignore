@@ -10,3 +10,8 @@ web/dist
 .git
 .env
 *.log
+.pytest_cache
+.ruff_cache
+.kilo
+.github
+backups

@@ -3,6 +3,10 @@
 services:
   web:
     ports: !reset []
+    environment:
+      # nginx solo confia en X-Forwarded-For cuando la conexion viene de Caddy
+      SATO_PROXY_CONFIABLE: 172.30.0.10
+    networks: [default, borde]
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -17,6 +21,14 @@ services:
       - caddy_config:/config
     depends_on:
       - web
+    networks:
+      borde:
+        ipv4_address: 172.30.0.10
+networks:
+  borde:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
 volumes:
   caddy_data:
   caddy_config:

@@ -8,6 +8,8 @@ name: sato-aqp
 services:
   db:
     image: postgres:16-alpine
+    # memoria compartida para operaciones paralelas (VACUUM de indices, consultas en paralelo); Docker asigna 64 MB por defecto
+    shm_size: 256mb
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-sato}
       POSTGRES_USER: ${POSTGRES_USER:-sato}
@@ -45,7 +47,10 @@ services:
   web:
     build: { context: ., dockerfile: docker/web.Dockerfile }
     ports:
-      - "${WEB_PORT:-8080}:8080"
+      # solo en la maquina local por defecto (IPv4 e IPv6: "localhost" resuelve primero a ::1 en Windows);
+      # en un servidor publico se usa Caddy (deploy/docker-compose.prod.yml)
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8080}:8080"
+      - "${WEB_BIND6:-[::1]}:${WEB_PORT:-8080}:8080"
     depends_on:
       - api
     restart: unless-stopped
@@ -55,6 +60,7 @@ services:
     build: { context: ., dockerfile: docker/pipeline.Dockerfile }
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-sato}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sato}
+      SATO_CARGA_CAIDA_MAX: ${SATO_CARGA_CAIDA_MAX:-0.2}
       SATO_ADMIN_EMAIL: ${SATO_ADMIN_EMAIL:-}
       SATO_ADMIN_PASSWORD: ${SATO_ADMIN_PASSWORD:-}
     volumes:
@@ -73,6 +79,9 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-sato}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sato}
       SATO_SYNC_DIA: ${SATO_SYNC_DIA:-2}
+      SATO_SYNC_MAX_INTENTOS: ${SATO_SYNC_MAX_INTENTOS:-3}
+      SATO_ALERTAS_EMAIL: ${SATO_ALERTAS_EMAIL:-}
+      SATO_CARGA_CAIDA_MAX: ${SATO_CARGA_CAIDA_MAX:-0.2}
       SATO_BASE_URL: ${SATO_BASE_URL:-http://localhost:8080}
       SATO_SMTP_HOST: ${SATO_SMTP_HOST:-}
       SATO_SMTP_PORT: ${SATO_SMTP_PORT:-587}
