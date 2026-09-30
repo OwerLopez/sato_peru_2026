@@ -73,3 +73,19 @@ sigue respondiendo con los datos vigentes hasta el `COMMIT`. La medición de una
 Un túnel efímero (por ejemplo, `cloudflared tunnel --url http://localhost:8080`) publica la instancia local mientras el equipo
 esté encendido. Implica descargar el binario oficial del proveedor y exponer el equipo a Internet: debe hacerlo o autorizarlo
 expresamente el equipo. No reemplaza un despliegue.
+
+## Publicación temporal sin servidor (túnel de Cloudflare)
+
+Para una demostración sin servidor propio, `deploy/docker-compose.tunel.yml` añade un túnel de Cloudflare
+(`cloudflared`, sin cuenta ni puertos abiertos en el router) que publica la web con HTTPS en una URL
+`*.trycloudflare.com`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/publicar.ps1
+```
+
+El script levanta `db`, `api`, `web` y `tunel`, espera a que el túnel entregue su URL y verifica `/api/health`.
+nginx confía en `X-Forwarded-For` solo cuando la conexión viene del contenedor del túnel (IP fija 172.31.0.10),
+de modo que los límites de tasa se aplican por visitante. Limitaciones: la URL cambia cada vez que se reinicia el
+túnel o el equipo, y el sistema deja de responder si el equipo anfitrión se apaga o entra en suspensión. Para una URL
+estable se usa `deploy/docker-compose.prod.yml` en un servidor con dominio propio.

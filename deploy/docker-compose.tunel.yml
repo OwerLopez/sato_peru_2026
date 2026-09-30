@@ -1,0 +1,27 @@
+# Superposicion para publicar el sistema sin servidor propio mediante un tunel de Cloudflare (sin cuenta,
+# sin abrir puertos del router y con HTTPS en el borde de Cloudflare). La URL *.trycloudflare.com es temporal:
+# cambia cada vez que se reinicia el servicio "tunel" y deja de responder si el equipo anfitrion se apaga.
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.tunel.yml up -d db api web tunel
+#   o bien: powershell -File scripts/publicar.ps1   (levanta todo e imprime la URL publica)
+# Para una URL estable se usa deploy/docker-compose.prod.yml en un servidor con dominio propio.
+services:
+  web:
+    environment:
+      # nginx solo confia en X-Forwarded-For cuando la conexion viene del tunel (IP fija): asi los limites de tasa
+      # se aplican por visitante real y no a todos los visitantes como si fueran una sola IP
+      SATO_PROXY_CONFIABLE: 172.31.0.10
+    networks: [default, tunel]
+  tunel:
+    image: cloudflare/cloudflared:2026.9.3
+    command: tunnel --no-autoupdate --url http://web:8080
+    restart: unless-stopped
+    depends_on:
+      - web
+    networks:
+      tunel:
+        ipv4_address: 172.31.0.10
+networks:
+  tunel:
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24
