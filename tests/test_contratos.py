@@ -143,3 +143,15 @@ def test_contrato_calibracion_y_modelo(api_client):
     assert "password" not in str(m)
     c = api_client.get("/api/v1/modelo/calibracion").json()["alerta_60d"]
     assert [d["decil"] for d in c["deciles"]] == list(range(1, 11))
+
+
+def test_provincias_por_departamento_coinciden_con_la_validacion_de_suscripciones(api_client, bandeja, limpiar_suscripciones):
+    import uuid
+
+    provs = api_client.get("/api/v1/ambitos/AREQUIPA/provincias").json()
+    assert "AREQUIPA" in provs and provs == sorted(provs)
+    email = f"prov-{uuid.uuid4().hex[:8]}@sato.test"
+    limpiar_suscripciones.append(email)
+    # toda provincia ofrecida por la interfaz es aceptada por la API
+    assert api_client.post("/api/v1/suscripciones", json={"email": email, "departamento": "AREQUIPA", "provincia": provs[-1]}).status_code == 202
+    assert api_client.get("/api/v1/ambitos/NO-EXISTE/provincias").json() == []

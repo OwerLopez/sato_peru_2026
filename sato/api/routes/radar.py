@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Path, Query
 
 from sato.api import db
 from sato.api.cache import cacheado
@@ -169,6 +169,15 @@ def ambitos():
              select departamento from cartera_obra union all select departamento from obra) x
            where departamento is not null and departamento not like '%-%'
              and departamento not in ('NO APLICA', 'MULTIDEPARTAMENTAL') group by 1 order by 2 desc""")
+
+
+@router.get("/ambitos/{departamento}/provincias")
+@cacheado
+def provincias(departamento: str = Path(..., max_length=40)):
+    """Provincias con obras del departamento (la misma fuente con la que se validan las suscripciones)."""
+    return [r["provincia"] for r in db.rows(
+        """select provincia from (select provincia from obra where departamento = :d union select provincia from cartera_obra where departamento = :d) x
+           where provincia is not null order by 1""", d=departamento.upper())]
 
 
 @router.get("/filtros")
